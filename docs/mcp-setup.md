@@ -67,12 +67,16 @@ The Clio MCP server handles:
      - `write:activities`
 
 2. **Configure OAuth Flow**
+
+   > **Warning:** Never hardcode client secrets or sensitive credentials in your code. Always load them from environment variables or a secure secrets manager.
+
    ```python
-   # Example configuration
+   import os
+   # Example configuration using environment variables
    CLIO_CONFIG = {
-       "client_id": "your_client_id",
-       "client_secret": "your_client_secret",
-       "redirect_uri": "https://your-domain.com/oauth/clio/callback",
+       "client_id": os.environ.get("CLIO_CLIENT_ID"),
+       "client_secret": os.environ.get("CLIO_CLIENT_SECRET"),
+       "redirect_uri": os.environ.get("CLIO_REDIRECT_URI"),
        "scopes": ["read:matters", "write:matters", "read:contacts", "write:contacts"]
    }
    ```
