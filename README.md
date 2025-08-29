@@ -27,6 +27,12 @@
 - Legal safety validators with 0.85 confidence thresholds
 - Automatic human transfer for complex matters
 
+**🎯 Complete Voice Pipeline Implementation**
+- Full STT → LLM → TTS processing pipeline
+- Real-time WebSocket communication
+- Browser-based voice interface demo
+- Production-ready FastAPI backend
+
 **⚖️ Legal Compliance First**
 - Strict safety constraints and prohibited phrase filtering
 - Automatic disclaimer injection in all responses
@@ -163,9 +169,56 @@
 
 ## 🔧 Quick Start for Law Firms
 
-### 1. Initial Setup (15 minutes)
+### 1. Voice Pipeline Setup (10 minutes)
 ```bash
-# Configure your practice information
+# Clone and install HERMES
+git clone https://github.com/clduab11/Hermes-beta.git
+cd Hermes-beta
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your OpenAI API key
+
+# Run voice pipeline demo
+python setup_demo.py
+
+# Start the voice agent server
+python -m hermes.main
+```
+
+### 2. Interactive Voice Demo
+Access the live demo at `http://localhost:8000/`:
+- **Connect** to establish real-time WebSocket connection
+- **Start Recording** to begin voice interaction
+- **Speak clearly** for AI-powered legal assistance
+- **Test Messages** for text-based interaction
+
+### 3. API Integration Testing
+```bash
+# System health check
+curl http://localhost:8000/health
+
+# Voice synthesis test
+curl -X POST http://localhost:8000/test/synthesize \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Welcome to your law firm voice assistant"}'
+```
+
+### 4. Production Deployment
+```bash
+# Configure for production
+export OPENAI_API_KEY="your_production_key"
+export WHISPER_MODEL="base"
+export CONFIDENCE_THRESHOLD=0.90
+
+# Launch production server
+python -m hermes.main --host 0.0.0.0 --port 8000
+```
+
+### 5. Firm-Specific Configuration (15 minutes)
+```bash
+# Configure your practice information  
 ./hermes setup --firm "Your Law Firm Name" --practice-areas "corporate,litigation"
 
 # Connect your Clio account
@@ -175,7 +228,7 @@
 ./hermes configure phones --main "+1234567890" --after-hours-routing
 ```
 
-### 2. Customize AI Responses
+### 6. Customize AI Responses
 ```bash
 # Upload firm-specific knowledge base
 ./hermes knowledge upload ./firm-policies ./practice-areas ./faq
@@ -184,7 +237,7 @@
 ./hermes compliance setup --jurisdiction "California" --practice-type "general"
 ```
 
-### 3. Go Live
+### 7. Go Live
 ```bash
 # Start HERMES with monitoring
 ./hermes start --environment production --monitoring enabled
