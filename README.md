@@ -4,8 +4,8 @@
 > **Revolutionizing Legal Client Communications with AI-Powered Voice Technology**
 
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
-[![Copyright](https://img.shields.io/badge/Copyright-Parallax%20Analytics-blue.svg)](https://parallax-ai.app)
-[![Legal Tech](https://img.shields.io/badge/Legal%20Tech-AI%20Voice%20Agent-green.svg)
+[![Copyright](https://img.shields.io/badge/Copyright-Parallax%20Analytics-blue.svg)](https://parallaxanalytics.com)
+[![Legal Tech](https://img.shields.io/badge/Legal%20Tech-AI%20Voice%20Agent-green.svg)]()
 
 ---
 
@@ -128,7 +128,7 @@
 
 - ✅ Multi-location deployment
 - ✅ Custom API development
-- ✅ Advanced analytics and reporting
+- ✅ Advanced analytics and reportingwzsqq q
 - ✅ On-premise deployment options
 - ✅ Custom SLA agreements
 - ✅ Dedicated technical team
@@ -169,10 +169,6 @@
 
 ## 🔧 Quick Start for Law Firms
 
-### 1. Initial Setup (15 minutes)
-```bash
-# Configure your practice information
-=======
 ### 1. Voice Pipeline Setup (10 minutes)
 ```bash
 # Clone and install HERMES
@@ -232,10 +228,8 @@ python -m hermes.main --host 0.0.0.0 --port 8000
 ./hermes configure phones --main "+1234567890" --after-hours-routing
 ```
 
-
-
 ### 6. Customize AI Responses
->>>>>>> main
+
 ```bash
 # Upload firm-specific knowledge base
 ./hermes knowledge upload ./firm-policies ./practice-areas ./faq
@@ -320,11 +314,11 @@ Interested in becoming a certified HERMES implementation partner? We offer:
 - **Co-marketing Opportunities**
 - **Priority Support for Partner Clients**
 
-
 Contact our Partner Development team: info@parallax-ai.app
 
 ---
 
 *HERMES: Transforming Legal Practice Through Intelligent Voice Technology*
+
 
 **Built with ❤️ by the Legal Technology Experts at Parallax Analytics**

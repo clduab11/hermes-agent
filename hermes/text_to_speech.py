@@ -53,7 +53,11 @@ class KokoroTTS:
             raise RuntimeError("Client not initialized")
         
         try:
+
+            response = await self._client.get(f"{self._api_url}/")
+
             response = await self._client.get(f"{self._api_url}/health")
+
             response.raise_for_status()
         except httpx.RequestError as e:
             raise ConnectionError(f"Cannot connect to Kokoro TTS API: {str(e)}")

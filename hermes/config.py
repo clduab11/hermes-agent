@@ -54,10 +54,15 @@ class Settings(BaseSettings):
     
     mem0_api_key: Optional[str] = Field(default=None, env="MEM0_API_KEY")
     
+    model_config = {
+        "env_file": ".env",
+        "case_sensitive": False,
+        "extra": "ignore"
+    }
+
     class Config:
         env_file = ".env"
         case_sensitive = False
-
 
 # Global settings instance
 settings = Settings()
