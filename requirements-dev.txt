@@ -1,0 +1,2 @@
+# Development and tooling dependencies for HERMES
+zapier-platform-cli==15.0.0

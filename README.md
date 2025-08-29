@@ -4,8 +4,8 @@
 > **Revolutionizing Legal Client Communications with AI-Powered Voice Technology**
 
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
-[![Copyright](https://img.shields.io/badge/Copyright-Parallax%20Analytics-blue.svg)](https://parallaxanalytics.com)
-[![Legal Tech](https://img.shields.io/badge/Legal%20Tech-AI%20Voice%20Agent-green.svg)]()
+[![Copyright](https://img.shields.io/badge/Copyright-Parallax%20Analytics-blue.svg)](https://parallax-ai.app)
+![Legal Tech](https://img.shields.io/badge/Legal%20Tech-AI%20Voice%20Agent-green.svg)
 
 ---
 
@@ -195,9 +195,9 @@
 ## 📚 Documentation & Support
 
 - 📖 **[Complete Documentation](docs/)** - Implementation guides and API references
-- 🎓 **[Training Portal](training/)** - Staff onboarding and best practices
-- 💬 **[Community Forum](community/)** - Peer support and feature requests
-- 🆘 **[24/7 Support](support/)** - Technical assistance and troubleshooting
+- 🎓 **Training Portal** - Coming soon
+- 💬 **Community Forum** - Coming soon
+- 🆘 **24/7 Support** - Contact [support@parallax-ai.app](mailto:support@parallax-ai.app)
 
 ---
 
@@ -245,10 +245,10 @@ Unauthorized use, reproduction, or distribution of this intellectual property ma
 
 For authorized licensing inquiries, integration partnerships, or professional services:
 
-**Parallax Analytics LLC**  
-📧 legal@parallaxanalytics.com  
-📞 +1 (555) 123-4567  
-🌐 www.parallaxanalytics.com/licensing
+**Parallax Analytics LLC**
+📧 [info@parallax-ai.app](mailto:info@parallax-ai.app)
+📞 +1 (555) 123-4567
+🌐 https://parallax-ai.app/licensing
 
 ---
 
@@ -261,10 +261,11 @@ Interested in becoming a certified HERMES implementation partner? We offer:
 - **Co-marketing Opportunities**
 - **Priority Support for Partner Clients**
 
-Contact our Partner Development team: partnerships@parallaxanalytics.com
+Contact our Partner Development team: partnerships@parallax-ai.app
 
 ---
 
 *HERMES: Transforming Legal Practice Through Intelligent Voice Technology*
 
 **Built with ❤️ by the Legal Technology Experts at Parallax Analytics**
+

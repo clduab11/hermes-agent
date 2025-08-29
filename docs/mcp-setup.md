@@ -68,7 +68,7 @@ The Clio MCP server handles:
 
 2. **Configure OAuth Flow**
 
-   > **Warning:** Never hardcode client secrets or sensitive credentials in your code. Always load them from environment variables or a secure secrets manager.
+    > **Warning:** Never hardcode client secrets or sensitive credentials in your code. Always load them from environment variables or a secure secrets manager.
 
    ```python
    import os
@@ -203,7 +203,7 @@ Enables automated legal research and form processing.
 Never commit sensitive data. Use a secrets management system in production:
 
 ```bash
-set -a; source .env; set +a
+if [ -f .env ]; then set -a; source .env; set +a; fi
 
 # Production (use your platform's secret manager)
 # Google Cloud: gcloud secrets versions access latest --secret="clio-client-secret"
@@ -216,7 +216,7 @@ Configure firewall rules to restrict MCP server access:
 
 ```bash
 # Allow only HERMES application access
-iptables -A INPUT -p tcp --dport 8000 -s 10.0.0.0/8 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8000 -s <HERMES_APP_IP_OR_SUBNET> -j ACCEPT
 iptables -A INPUT -p tcp --dport 8000 -j DROP
 ```
 
@@ -225,13 +225,15 @@ iptables -A INPUT -p tcp --dport 8000 -j DROP
 Each MCP server includes comprehensive logging:
 
 ```python
+import os
+
 # Example logging configuration
 LOGGING_CONFIG = {
     "level": "INFO",
     "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     "handlers": {
         "file": {
-            "filename": "/var/log/hermes/mcp-servers.log",
+            "filename": os.getenv("MCP_LOG_FILE", "/var/log/hermes/mcp-servers.log"),
             "maxBytes": 10485760,  # 10MB
             "backupCount": 5
         },
@@ -329,10 +331,10 @@ CACHE_CONFIG = {
 
 For technical support with MCP server configuration:
 
-- 📧 Email: support@parallaxanalytics.com
+- 📧 Email: support@parallax-ai.app
 - 📞 Phone: +1 (555) 123-4567
-- 🌐 Documentation: https://docs.parallaxanalytics.com/hermes/mcp
-- 💬 Community: https://community.parallaxanalytics.com
+- 🌐 Documentation: https://docs.parallax-ai.app/hermes/mcp
+- 💬 Community: https://community.parallax-ai.app
 
 ---
 
