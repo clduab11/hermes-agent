@@ -67,6 +67,17 @@ The Clio MCP server handles:
      - `write:activities`
 
 2. **Configure OAuth Flow**
+
+    > **Warning:** Never hardcode client secrets or sensitive credentials in your code. Always load them from environment variables or a secure secrets manager.
+
+   ```python
+   import os
+   # Example configuration using environment variables
+   CLIO_CONFIG = {
+       "client_id": os.environ.get("CLIO_CLIENT_ID"),
+       "client_secret": os.environ.get("CLIO_CLIENT_SECRET"),
+       "redirect_uri": os.environ.get("CLIO_REDIRECT_URI"),
+
    ```python
    # Example configuration
    CLIO_CONFIG = {
@@ -199,6 +210,12 @@ Enables automated legal research and form processing.
 Never commit sensitive data. Use a secrets management system in production:
 
 ```bash
+
+# Development
+export $(cat .env | xargs)
+
+if [ -f .env ]; then set -a; source .env; set +a; fi
+
 # Development
 export $(cat .env | xargs)
 
@@ -214,6 +231,8 @@ Configure firewall rules to restrict MCP server access:
 ```bash
 # Allow only HERMES application access
 iptables -A INPUT -p tcp --dport 8000 -s 10.0.0.0/8 -j ACCEPT
+iptables -A INPUT -p tcp --dport 8000 -s <HERMES_APP_IP_OR_SUBNET> -j ACCEPT
+iptables -A INPUT -p tcp --dport 8000 -s 10.0.0.0/8 -j ACCEPT
 iptables -A INPUT -p tcp --dport 8000 -j DROP
 ```
 
@@ -222,13 +241,21 @@ iptables -A INPUT -p tcp --dport 8000 -j DROP
 Each MCP server includes comprehensive logging:
 
 ```python
+import os
+
 # Example logging configuration
 LOGGING_CONFIG = {
     "level": "INFO",
     "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     "handlers": {
         "file": {
+
             "filename": "/var/log/hermes/mcp-servers.log",
+
+            "filename": os.getenv("MCP_LOG_FILE", "/var/log/hermes/mcp-servers.log"),
+
+            "filename": "/var/log/hermes/mcp-servers.log",
+
             "maxBytes": 10485760,  # 10MB
             "backupCount": 5
         },
@@ -326,12 +353,10 @@ CACHE_CONFIG = {
 
 For technical support with MCP server configuration:
 
-- 📧 Email: support@parallaxanalytics.com
-- 📞 Phone: +1 (555) 123-4567
-- 🌐 Documentation: https://docs.parallaxanalytics.com/hermes/mcp
-- 💬 Community: https://community.parallaxanalytics.com
-
----
+- 📧 Email: info@parallax-ai.app
+- 📞 Phone: +1 (662) 848-3547
+- 🌐 Documentation (COMING SOON): https://docs.parallax-ai.app/hermes/mcp
 
 *This guide is part of the HERMES AI Voice Agent System documentation.*
-*Copyright © 2024 Parallax Analytics LLC. All rights reserved.*
+
+*Copyright © 2025 Parallax Analytics LLC. All rights reserved.*

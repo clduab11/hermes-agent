@@ -128,7 +128,7 @@
 
 - ✅ Multi-location deployment
 - ✅ Custom API development
-- ✅ Advanced analytics and reporting
+- ✅ Advanced analytics and reportingwzsqq q
 - ✅ On-premise deployment options
 - ✅ Custom SLA agreements
 - ✅ Dedicated technical team
@@ -229,6 +229,7 @@ python -m hermes.main --host 0.0.0.0 --port 8000
 ```
 
 ### 6. Customize AI Responses
+
 ```bash
 # Upload firm-specific knowledge base
 ./hermes knowledge upload ./firm-policies ./practice-areas ./faq
@@ -238,6 +239,7 @@ python -m hermes.main --host 0.0.0.0 --port 8000
 ```
 
 ### 7. Go Live
+
 ```bash
 # Start HERMES with monitoring
 ./hermes start --environment production --monitoring enabled
@@ -246,11 +248,9 @@ python -m hermes.main --host 0.0.0.0 --port 8000
 ---
 
 ## 📚 Documentation & Support
-
-- 📖 **[Complete Documentation](docs/)** - Implementation guides and API references
 - 🎓 **[Training Portal](training/)** - Staff onboarding and best practices
 - 💬 **[Community Forum](community/)** - Peer support and feature requests
-- 🆘 **[24/7 Support](support/)** - Technical assistance and troubleshooting
+- 🆘 **[24/7 Support](support/)** - Contact [info@parallax-ai.app](mailto:support@parallax-ai.app)
 
 ---
 
@@ -258,7 +258,7 @@ python -m hermes.main --host 0.0.0.0 --port 8000
 
 ### Copyright & Licensing
 
-**© 2024 Parallax Analytics LLC. All Rights Reserved.**
+**© 2025 Parallax Analytics LLC. All Rights Reserved.**
 
 This software and all associated intellectual property, including but not limited to source code, documentation, algorithms, methodologies, and proprietary technologies, are the exclusive property of **Parallax Analytics LLC**.
 
@@ -298,10 +298,10 @@ Unauthorized use, reproduction, or distribution of this intellectual property ma
 
 For authorized licensing inquiries, integration partnerships, or professional services:
 
-**Parallax Analytics LLC**  
-📧 legal@parallaxanalytics.com  
-📞 +1 (555) 123-4567  
-🌐 www.parallaxanalytics.com/licensing
+**Parallax Analytics LLC**
+📧 [info@parallax-ai.app](mailto:info@parallax-ai.app)
+📞 +1 (662) 848-3547
+🌐 https://parallax-ai.app/
 
 ---
 
@@ -314,10 +314,11 @@ Interested in becoming a certified HERMES implementation partner? We offer:
 - **Co-marketing Opportunities**
 - **Priority Support for Partner Clients**
 
-Contact our Partner Development team: partnerships@parallaxanalytics.com
+Contact our Partner Development team: info@parallax-ai.app
 
 ---
 
 *HERMES: Transforming Legal Practice Through Intelligent Voice Technology*
+
 
 **Built with ❤️ by the Legal Technology Experts at Parallax Analytics**

@@ -1,5 +1,5 @@
 # HERMES AI Voice Agent System - Python Dependencies
-# Copyright (c) 2024 Parallax Analytics LLC. All rights reserved.
+# Copyright (c) 2025 Parallax Analytics LLC. All rights reserved.
 
 # Core Framework
 fastapi==0.104.1
