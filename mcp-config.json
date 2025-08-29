@@ -11,7 +11,7 @@
       "description": "Clio CRM integration for legal matter management and client data"
     },
     "zapier-integration": {
-      "command": "python", 
+      "command": "python",
       "args": ["-m", "mcp_servers.zapier"],
       "env": {
         "ZAPIER_API_KEY": "${ZAPIER_API_KEY}"
@@ -55,6 +55,7 @@
     "retryAttempts": 3,
     "logLevel": "INFO"
   },
+  "security": {
     "dataRetentionDays": 90,
     "certificateValidation": {
       "enabled": true,
