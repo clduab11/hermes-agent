@@ -12,6 +12,7 @@
     },
     "zapier-integration": {
       "command": "python",
+      "command": "python", 
       "args": ["-m", "mcp_servers.zapier"],
       "env": {
         "ZAPIER_API_KEY": "${ZAPIER_API_KEY}"
@@ -56,6 +57,7 @@
     "logLevel": "INFO"
   },
   "security": {
+
     "dataRetentionDays": 90,
     "certificateValidation": {
       "enabled": true,
@@ -71,6 +73,12 @@
       "rotationIntervalDays": 90,
       "automatic": true
     }
+
+    "tlsVersion": "1.3",
+    "encryptionRequired": true,
+    "auditLogging": true,
+    "dataRetentionDays": 90
+
   },
   "compliance": {
     "hipaaCompliant": true,
@@ -78,4 +86,8 @@
     "legalDisclaimer": "This system is designed to assist with administrative tasks only and does not provide legal advice.",
     "confidentialityNotice": "All communications are confidential and protected by attorney-client privilege where applicable."
   }
+
 }
+
+}
+

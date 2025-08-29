@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HERMES Voice Assistant Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .status {
+            font-size: 1.1em;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.2);
+        }
+        
+        .status.connected {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+        }
+        
+        .status.disconnected {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #F44336;
+        }
+        
+        .button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .button.recording {
+            background: #f44336;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .messages {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .message.user {
+            background: rgba(33, 150, 243, 0.3);
+            border-left: 4px solid #2196F3;
+        }
+        
+        .message.assistant {
+            background: rgba(76, 175, 80, 0.3);
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .message.error {
+            background: rgba(244, 67, 54, 0.3);
+            border-left: 4px solid #F44336;
+        }
+        
+        .metrics {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🏛️ HERMES</div>
+            <div class="subtitle">High-performance Enterprise Reception & Matter Engagement System</div>
+        </div>
+        
+        <div class="controls">
+            <div id="status" class="status disconnected">
+                Disconnected - Click Connect to start
+            </div>
+            
+            <button id="connectBtn" class="button">Connect</button>
+            <button id="recordBtn" class="button" disabled>Start Recording</button>
+            <button id="testBtn" class="button" disabled>Send Test Message</button>
+        </div>
+        
+        <div class="messages" id="messages">
+            <div class="message assistant">
+                Welcome to HERMES Voice Assistant Demo!<br>
+                <strong>Instructions:</strong>
+                <ol>
+                    <li>Click "Connect" to establish WebSocket connection</li>
+                    <li>Click "Start Recording" to begin voice input (requires microphone permission)</li>
+                    <li>Speak clearly and wait for response</li>
+                    <li>Use "Send Test Message" for text-based testing</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class HermesVoiceClient {
+            constructor() {
+                this.ws = null;
+                this.isConnected = false;
+                this.isRecording = false;
+                this.mediaRecorder = null;
+                this.audioChunks = [];
+                
+                this.initializeElements();
+                this.setupEventListeners();
+            }
+            
+            initializeElements() {
+                this.statusEl = document.getElementById('status');
+                this.connectBtn = document.getElementById('connectBtn');
+                this.recordBtn = document.getElementById('recordBtn');
+                this.testBtn = document.getElementById('testBtn');
+                this.messagesEl = document.getElementById('messages');
+            }
+            
+            setupEventListeners() {
+                this.connectBtn.addEventListener('click', () => this.toggleConnection());
+                this.recordBtn.addEventListener('click', () => this.toggleRecording());
+                this.testBtn.addEventListener('click', () => this.sendTestMessage());
+            }
+            
+            async toggleConnection() {
+                if (this.isConnected) {
+                    this.disconnect();
+                } else {
+                    await this.connect();
+                }
+            }
+            
+            async connect() {
+                try {
+                    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                    const wsUrl = `${protocol}//${window.location.host}/voice`;
+                    
+                    this.ws = new WebSocket(wsUrl);
+                    
+                    this.ws.onopen = () => {
+                        this.isConnected = true;
+                        this.updateStatus('Connected to HERMES', 'connected');
+                        this.connectBtn.textContent = 'Disconnect';
+                        this.recordBtn.disabled = false;
+                        this.testBtn.disabled = false;
+                        this.addMessage('system', 'Connected to HERMES voice assistant');
+                    };
+                    
+                    this.ws.onmessage = (event) => {
+                        this.handleMessage(JSON.parse(event.data));
+                    };
+                    
+                    this.ws.onclose = () => {
+                        this.isConnected = false;
+                        this.updateStatus('Disconnected', 'disconnected');
+                        this.connectBtn.textContent = 'Connect';
+                        this.recordBtn.disabled = true;
+                        this.testBtn.disabled = true;
+                        this.addMessage('system', 'Disconnected from server');
+                    };
+                    
+                    this.ws.onerror = (error) => {
+                        console.error('WebSocket error:', error);
+                        this.addMessage('error', 'Connection error occurred');
+                    };
+                    
+                } catch (error) {
+                    console.error('Connection failed:', error);
+                    this.addMessage('error', `Connection failed: ${error.message}`);
+                }
+            }
+            
+            disconnect() {
+                if (this.ws) {
+                    this.ws.close();
+                }
+            }
+            
+            handleMessage(message) {
+                console.log('Received message:', message);
+                
+                switch (message.type) {
+                    case 'connection_established':
+                        this.addMessage('assistant', `Session started: ${message.session_id}`);
+                        break;
+                        
+                    case 'transcription':
+                        this.addMessage('user', `"${message.text}"`, {
+                            confidence: message.confidence,
+                            language: message.language
+                        });
+                        break;
+                        
+                    case 'response':
+                        this.addMessage('assistant', message.text, {
+                            requires_transfer: message.requires_human_transfer
+                        });
+                        break;
+                        
+                    case 'metrics':
+                        this.updateMetrics(message);
+                        break;
+                        
+                    case 'error':
+                        this.addMessage('error', `Error: ${message.message}`);
+                        break;
+                        
+                    case 'audio_response':
+                        this.addMessage('assistant', '🔊 Audio response received');
+                        break;
+                        
+                    default:
+                        console.log('Unknown message type:', message.type);
+                }
+            }
+            
+            async toggleRecording() {
+                if (this.isRecording) {
+                    this.stopRecording();
+                } else {
+                    await this.startRecording();
+                }
+            }
+            
+            async startRecording() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            sampleRate: 16000,
+                            channelCount: 1,
+                            echoCancellation: true,
+                            noiseSuppression: true
+                        }
+                    });
+                    
+                    this.mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: 'audio/webm;codecs=opus'
+                    });
+                    
+                    this.audioChunks = [];
+                    
+                    this.mediaRecorder.ondataavailable = (event) => {
+                        this.audioChunks.push(event.data);
+                    };
+                    
+                    this.mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+                        this.sendAudio(audioBlob);
+                        stream.getTracks().forEach(track => track.stop());
+                    };
+                    
+                    this.mediaRecorder.start();
+                    this.isRecording = true;
+                    this.recordBtn.textContent = 'Stop Recording';
+                    this.recordBtn.classList.add('recording');
+                    this.updateStatus('Recording... speak now', 'connected');
+                    
+                } catch (error) {
+                    console.error('Recording failed:', error);
+                    this.addMessage('error', `Recording failed: ${error.message}`);
+                }
+            }
+            
+            stopRecording() {
+                if (this.mediaRecorder && this.isRecording) {
+                    this.mediaRecorder.stop();
+                    this.isRecording = false;
+                    this.recordBtn.textContent = 'Start Recording';
+                    this.recordBtn.classList.remove('recording');
+                    this.updateStatus('Processing audio...', 'connected');
+                }
+            }
+            
+            async sendAudio(audioBlob) {
+                if (!this.isConnected) return;
+                
+                try {
+                    // Convert to ArrayBuffer and send as binary
+                    const arrayBuffer = await audioBlob.arrayBuffer();
+                    this.ws.send(arrayBuffer);
+                    this.addMessage('user', '🎤 Audio sent for processing');
+                } catch (error) {
+                    console.error('Failed to send audio:', error);
+                    this.addMessage('error', `Failed to send audio: ${error.message}`);
+                }
+            }
+            
+            sendTestMessage() {
+                if (!this.isConnected) return;
+                
+                const testMessages = [
+                    "Hello, I need to schedule an appointment.",
+                    "What are your office hours?",
+                    "I need help with estate planning.",
+                    "Can you transfer me to an attorney?"
+                ];
+                
+                const message = testMessages[Math.floor(Math.random() * testMessages.length)];
+                
+                this.ws.send(JSON.stringify({
+                    type: 'test_message',
+                    text: message
+                }));
+                
+                this.addMessage('user', `Test: "${message}"`);
+            }
+            
+            updateStatus(text, type) {
+                this.statusEl.textContent = text;
+                this.statusEl.className = `status ${type}`;
+            }
+            
+            addMessage(type, content, metadata = null) {
+                const messageEl = document.createElement('div');
+                messageEl.className = `message ${type}`;
+                
+                let html = content;
+                
+                if (metadata) {
+                    html += '<div class="metrics">';
+                    if (metadata.confidence) {
+                        html += `Confidence: ${(metadata.confidence * 100).toFixed(1)}% `;
+                    }
+                    if (metadata.language) {
+                        html += `Language: ${metadata.language} `;
+                    }
+                    if (metadata.requires_transfer) {
+                        html += `⚠️ Human transfer recommended `;
+                    }
+                    html += '</div>';
+                }
+                
+                messageEl.innerHTML = html;
+                this.messagesEl.appendChild(messageEl);
+                this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
+            }
+            
+            updateMetrics(metrics) {
+                const lastMessage = this.messagesEl.lastElementChild;
+                if (lastMessage) {
+                    const existingMetrics = lastMessage.querySelector('.metrics');
+                    if (!existingMetrics) {
+                        const metricsEl = document.createElement('div');
+                        metricsEl.className = 'metrics';
+                        metricsEl.innerHTML = `Processing time: ${metrics.processing_time.toFixed(3)}s`;
+                        lastMessage.appendChild(metricsEl);
+                    }
+                }
+            }
+        }
+        
+        // Initialize the client when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            window.hermesClient = new HermesVoiceClient();
+        });
+    </script>
+</body>
+</html>

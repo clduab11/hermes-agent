@@ -5,7 +5,7 @@
 
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 [![Copyright](https://img.shields.io/badge/Copyright-Parallax%20Analytics-blue.svg)](https://parallax-ai.app)
-![Legal Tech](https://img.shields.io/badge/Legal%20Tech-AI%20Voice%20Agent-green.svg)
+[![Legal Tech](https://img.shields.io/badge/Legal%20Tech-AI%20Voice%20Agent-green.svg)
 
 ---
 
@@ -26,6 +26,12 @@
 - Tree of Thought reasoning for complex legal queries
 - Legal safety validators with 0.85 confidence thresholds
 - Automatic human transfer for complex matters
+
+**🎯 Complete Voice Pipeline Implementation**
+- Full STT → LLM → TTS processing pipeline
+- Real-time WebSocket communication
+- Browser-based voice interface demo
+- Production-ready FastAPI backend
 
 **⚖️ Legal Compliance First**
 - Strict safety constraints and prohibited phrase filtering
@@ -166,6 +172,57 @@
 ### 1. Initial Setup (15 minutes)
 ```bash
 # Configure your practice information
+=======
+### 1. Voice Pipeline Setup (10 minutes)
+```bash
+# Clone and install HERMES
+git clone https://github.com/clduab11/Hermes-beta.git
+cd Hermes-beta
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your OpenAI API key
+
+# Run voice pipeline demo
+python setup_demo.py
+
+# Start the voice agent server
+python -m hermes.main
+```
+
+### 2. Interactive Voice Demo
+Access the live demo at `http://localhost:8000/`:
+- **Connect** to establish real-time WebSocket connection
+- **Start Recording** to begin voice interaction
+- **Speak clearly** for AI-powered legal assistance
+- **Test Messages** for text-based interaction
+
+### 3. API Integration Testing
+```bash
+# System health check
+curl http://localhost:8000/health
+
+# Voice synthesis test
+curl -X POST http://localhost:8000/test/synthesize \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Welcome to your law firm voice assistant"}'
+```
+
+### 4. Production Deployment
+```bash
+# Configure for production
+export OPENAI_API_KEY="your_production_key"
+export WHISPER_MODEL="base"
+export CONFIDENCE_THRESHOLD=0.90
+
+# Launch production server
+python -m hermes.main --host 0.0.0.0 --port 8000
+```
+
+### 5. Firm-Specific Configuration (15 minutes)
+```bash
+# Configure your practice information  
 ./hermes setup --firm "Your Law Firm Name" --practice-areas "corporate,litigation"
 
 # Connect your Clio account
@@ -175,7 +232,10 @@
 ./hermes configure phones --main "+1234567890" --after-hours-routing
 ```
 
-### 2. Customize AI Responses
+
+
+### 6. Customize AI Responses
+>>>>>>> main
 ```bash
 # Upload firm-specific knowledge base
 ./hermes knowledge upload ./firm-policies ./practice-areas ./faq
@@ -184,7 +244,8 @@
 ./hermes compliance setup --jurisdiction "California" --practice-type "general"
 ```
 
-### 3. Go Live
+### 7. Go Live
+
 ```bash
 # Start HERMES with monitoring
 ./hermes start --environment production --monitoring enabled
@@ -193,11 +254,9 @@
 ---
 
 ## 📚 Documentation & Support
-
-- 📖 **[Complete Documentation](docs/)** - Implementation guides and API references
-- 🎓 **Training Portal** - Coming soon
-- 💬 **Community Forum** - Coming soon
-- 🆘 **24/7 Support** - Contact [support@parallax-ai.app](mailto:support@parallax-ai.app)
+- 🎓 **[Training Portal](training/)** - Staff onboarding and best practices
+- 💬 **[Community Forum](community/)** - Peer support and feature requests
+- 🆘 **[24/7 Support](support/)** - Contact [info@parallax-ai.app](mailto:support@parallax-ai.app)
 
 ---
 
@@ -205,7 +264,7 @@
 
 ### Copyright & Licensing
 
-**© 2024 Parallax Analytics LLC. All Rights Reserved.**
+**© 2025 Parallax Analytics LLC. All Rights Reserved.**
 
 This software and all associated intellectual property, including but not limited to source code, documentation, algorithms, methodologies, and proprietary technologies, are the exclusive property of **Parallax Analytics LLC**.
 
@@ -247,8 +306,8 @@ For authorized licensing inquiries, integration partnerships, or professional se
 
 **Parallax Analytics LLC**
 📧 [info@parallax-ai.app](mailto:info@parallax-ai.app)
-📞 +1 (555) 123-4567
-🌐 https://parallax-ai.app/licensing
+📞 +1 (662) 848-3547
+🌐 https://parallax-ai.app/
 
 ---
 
@@ -261,11 +320,11 @@ Interested in becoming a certified HERMES implementation partner? We offer:
 - **Co-marketing Opportunities**
 - **Priority Support for Partner Clients**
 
-Contact our Partner Development team: partnerships@parallax-ai.app
+
+Contact our Partner Development team: info@parallax-ai.app
 
 ---
 
 *HERMES: Transforming Legal Practice Through Intelligent Voice Technology*
 
 **Built with ❤️ by the Legal Technology Experts at Parallax Analytics**
-
