@@ -199,8 +199,7 @@ Enables automated legal research and form processing.
 Never commit sensitive data. Use a secrets management system in production:
 
 ```bash
-# Development
-export $(cat .env | xargs)
+set -a; source .env; set +a
 
 # Production (use your platform's secret manager)
 # Google Cloud: gcloud secrets versions access latest --secret="clio-client-secret"
