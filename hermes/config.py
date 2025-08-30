@@ -1,8 +1,6 @@
-"""
-Configuration management for HERMES voice agent system.
-"""
-import os
+"""Configuration management for HERMES voice agent system."""
 from typing import Optional
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -16,7 +14,7 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False, env="DEBUG")
     
     # OpenAI Configuration
-    openai_api_key: str = Field(..., env="OPENAI_API_KEY")
+    openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-4", env="OPENAI_MODEL")
     
     # Whisper Configuration
@@ -57,12 +55,8 @@ class Settings(BaseSettings):
     model_config = {
         "env_file": ".env",
         "case_sensitive": False,
-        "extra": "ignore"
+        "extra": "ignore",
     }
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
 
 # Global settings instance
 settings = Settings()

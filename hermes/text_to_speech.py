@@ -237,7 +237,7 @@ class KokoroTTS:
         text = text.replace("@", "at")
         text = text.replace("#", "number")
         text = text.replace("$", "dollars")
-        text = text.replace("%", "percent")
+        text = text.replace("%", " percent")
         
         # Expand common abbreviations
         abbreviations = {

@@ -7,9 +7,17 @@ import logging
 import time
 from typing import Optional, Dict, Any
 
-import whisper
-import torch
 import numpy as np
+
+try:  # Optional heavy dependencies
+    import whisper  # type: ignore
+except Exception:  # pragma: no cover - handled gracefully
+    whisper = None  # type: ignore
+
+try:
+    import torch  # type: ignore
+except Exception:  # pragma: no cover - handled gracefully
+    torch = None  # type: ignore
 from pydantic import BaseModel
 
 from .config import settings
@@ -28,8 +36,8 @@ class TranscriptionResult(BaseModel):
 class WhisperSTT:
     """Speech-to-text processor using OpenAI Whisper."""
     
-    def __init__(self):
-        self._model: Optional[whisper.Whisper] = None
+    def __init__(self) -> None:
+        self._model: Optional[Any] = None
         self._device = settings.whisper_device
         self._model_name = settings.whisper_model
         
@@ -46,8 +54,10 @@ class WhisperSTT:
         
         logger.info("Whisper model loaded successfully")
     
-    def _load_model(self) -> whisper.Whisper:
+    def _load_model(self) -> Any:
         """Load the Whisper model synchronously."""
+        if whisper is None:
+            raise ImportError("whisper library is required for speech-to-text")
         return whisper.load_model(self._model_name, device=self._device)
     
     async def transcribe_audio(self, audio_data: bytes) -> TranscriptionResult:
@@ -187,11 +197,11 @@ class WhisperSTT:
             
             # Calculate RMS energy
             rms_energy = np.sqrt(np.mean(audio_array ** 2))
-            
+
             # Threshold for speech detection (tunable)
             speech_threshold = 0.01
-            
-            return rms_energy > speech_threshold
+
+            return bool(rms_energy > speech_threshold)
             
         except Exception as e:
             logger.warning(f"Voice activity detection failed: {str(e)}")
@@ -199,8 +209,13 @@ class WhisperSTT:
     
     async def cleanup(self) -> None:
         """Clean up resources."""
-        if self._model and torch.cuda.is_available():
+        if (
+            self._model
+            and torch is not None
+            and getattr(torch, "cuda", None)
+            and torch.cuda.is_available()
+        ):
             torch.cuda.empty_cache()
-        
+
         self._model = None
         logger.info("Whisper STT resources cleaned up")
