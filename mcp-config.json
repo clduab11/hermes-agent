@@ -1,63 +1,14 @@
 {
-  "mcpServers": {
-    "clio-integration": {
-      "command": "python",
-      "args": ["-m", "mcp_servers.clio"],
-      "env": {
-        "CLIO_CLIENT_ID": "${CLIO_CLIENT_ID}",
-        "CLIO_CLIENT_SECRET": "${CLIO_CLIENT_SECRET}",
-        "CLIO_REDIRECT_URI": "${CLIO_REDIRECT_URI}"
-      },
-      "description": "Clio CRM integration for legal matter management and client data"
-    },
-    "zapier-integration": {
-      "command": "python",
-      "command": "python", 
-      "args": ["-m", "mcp_servers.zapier"],
-      "env": {
-        "ZAPIER_API_KEY": "${ZAPIER_API_KEY}"
-      },
-      "description": "Zapier automation platform for workflow integration"
-    },
-    "github-repository": {
-      "command": "python",
-      "args": ["-m", "mcp_servers.github"],
-      "env": {
-        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
-      },
-      "description": "GitHub repository management for code and documentation"
-    },
-    "supabase-database": {
-      "command": "python",
-      "args": ["-m", "mcp_servers.supabase"],
-      "env": {
-        "SUPABASE_URL": "${SUPABASE_URL}",
-        "SUPABASE_ANON_KEY": "${SUPABASE_ANON_KEY}",
-        "SUPABASE_SERVICE_ROLE_KEY": "${SUPABASE_SERVICE_ROLE_KEY}"
-      },
-      "description": "Supabase database for conversation logs and client data storage"
-    },
-    "mem0-knowledge": {
-      "command": "python",
-      "args": ["-m", "mcp_servers.mem0"],
-      "env": {
-        "MEM0_API_KEY": "${MEM0_API_KEY}"
-      },
-      "description": "Mem0 knowledge graph for legal context and client relationship management"
-    },
-    "playwright-browser": {
-      "command": "python",
-      "args": ["-m", "mcp_servers.playwright"],
-      "description": "Browser automation for web-based legal research and form processing"
-    }
-  },
+  "mcpServers": {},
   "serverConfiguration": {
     "timeout": 30000,
     "retryAttempts": 3,
     "logLevel": "INFO"
   },
   "security": {
-
+    "tlsVersion": "1.3",
+    "encryptionRequired": true,
+    "auditLogging": true,
     "dataRetentionDays": 90,
     "certificateValidation": {
       "enabled": true,
@@ -73,12 +24,6 @@
       "rotationIntervalDays": 90,
       "automatic": true
     }
-
-    "tlsVersion": "1.3",
-    "encryptionRequired": true,
-    "auditLogging": true,
-    "dataRetentionDays": 90
-
   },
   "compliance": {
     "hipaaCompliant": true,
@@ -86,10 +31,4 @@
     "legalDisclaimer": "This system is designed to assist with administrative tasks only and does not provide legal advice.",
     "confidentialityNotice": "All communications are confidential and protected by attorney-client privilege where applicable."
   }
-
-}
-
-
-}
-
 }

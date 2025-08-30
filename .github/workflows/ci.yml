@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install flake8 mypy bandit trufflehog pytest pytest-asyncio \
+            pydantic-settings pydantic httpx numpy fastapi uvicorn openai
+      - name: Lint
+        run: flake8 hermes tests --select=E9,F63,F7,F82
+      - name: Type check
+        run: mypy hermes/config.py hermes/speech_to_text.py
+        continue-on-error: true
+      - name: Security scan
+        run: |
+          bandit -r hermes
+          trufflehog . || true
+      - name: Test
+        env:
+          PYTHONPATH: .
+        run: pytest
