@@ -108,7 +108,7 @@ class LegalNLPProcessor:
             "attorney_review_threshold": 0.6
         }
     
-    def analyze_text(self, text: str) -> LegalAnalysis:
+    async def analyze_text(self, text: str) -> LegalAnalysis:
         """Perform comprehensive legal analysis of text."""
         try:
             # Extract legal entities
@@ -617,3 +617,8 @@ class LegalNLPProcessor:
 
 # Global processor instance
 legal_nlp = LegalNLPProcessor()
+
+
+def get_legal_nlp_processor() -> LegalNLPProcessor:
+    """Get the global legal NLP processor instance."""
+    return legal_nlp

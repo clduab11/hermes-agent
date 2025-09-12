@@ -369,7 +369,7 @@ async def dashboard_websocket(websocket: WebSocket):
 # Enhanced voice processing with context and multilang support
 @app.post("/api/voice/process")
 async def process_voice_enhanced(request: Dict[str, Any]) -> Dict[str, Any]:
-    """Enhanced voice processing with context and multilang support"""
+    """Enhanced voice processing with context, multilang, and legal NLP support"""
     try:
         audio_data = request.get("audio_data", "")
         session_id = request.get("session_id", f"session_{int(time.time())}")
@@ -378,6 +378,10 @@ async def process_voice_enhanced(request: Dict[str, Any]) -> Dict[str, Any]:
         # Get managers
         context_manager = get_context_manager()
         multilang_processor = get_multilang_processor()
+        
+        # Import legal NLP processor
+        from .voice.legal_nlp import get_legal_nlp_processor
+        legal_nlp = get_legal_nlp_processor()
         
         # Create or update session context
         if session_id not in context_manager.active_sessions:
@@ -389,13 +393,22 @@ async def process_voice_enhanced(request: Dict[str, Any]) -> Dict[str, Any]:
         
         # Process audio with multilang support (mock for demo)
         audio_bytes = audio_data.encode() if isinstance(audio_data, str) else audio_data
-        
-        # Update context with conversation
         text_input = request.get("text", "Sample voice input")
+        
+        # Detect language if not specified
+        detected_language = "en"  # Default
+        if not language_preference:
+            detected_language = await multilang_processor.detect_language(text_input)
+        
+        # Extract legal entities from the input
+        legal_analysis = await legal_nlp.analyze_text(text_input)
+        
+        # Update context with conversation and legal analysis
         updated_context = await context_manager.update_conversation_context(
             session_id=session_id,
             text_input=text_input,
-            detected_intent="voice_inquiry"
+            detected_intent="voice_inquiry",
+            legal_entities=legal_analysis.entities
         )
         
         # Get contextual suggestions
@@ -404,11 +417,24 @@ async def process_voice_enhanced(request: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "session_id": session_id,
             "transcription": text_input,
+            "language": {
+                "detected": detected_language,
+                "preference": language_preference,
+                "confidence": 0.95
+            },
             "emotional_state": updated_context.emotional_state.primary_emotion.value,
             "conversation_phase": updated_context.conversation_phase.value,
             "urgency_level": updated_context.urgency_level,
+            "legal_analysis": {
+                "entities": [{"type": e.entity_type.value, "text": e.text, "confidence": e.confidence} 
+                           for e in legal_analysis.entities],
+                "risk_level": legal_analysis.overall_risk.value,
+                "compliance_score": legal_analysis.compliance_score,
+                "requires_attorney": legal_analysis.overall_risk.value in ["high", "critical"]
+            },
             "suggestions": suggestions[:3],  # Top 3 suggestions
-            "processing_time": 0.5
+            "processing_time": 0.5,
+            "disclaimer": legal_analysis.disclaimers[0] if legal_analysis.disclaimers else None
         }
         
     except Exception as e:

@@ -189,7 +189,8 @@ class VoiceContextManager:
         text_input: str = None,
         audio_features: Dict[str, float] = None,
         extracted_entities: Dict[str, Any] = None,
-        detected_intent: str = None
+        detected_intent: str = None,
+        legal_entities: List = None
     ) -> ConversationContext:
         """Update conversation context with new information"""
         
@@ -216,11 +217,24 @@ class VoiceContextManager:
                 context.conversation_phase = new_phase
         
         # Extract and store entities
+        legal_entities_dict = {}
         if self.legal_nlp and text_input:
-            legal_entities = await self.legal_nlp.extract_legal_entities(text_input)
-            if extracted_entities:
-                legal_entities.update(extracted_entities)
-            context.entities_extracted.update(legal_entities)
+            legal_entities_from_nlp = await self.legal_nlp.extract_legal_entities(text_input)
+            legal_entities_dict.update(legal_entities_from_nlp)
+        
+        # Add any legal entities passed directly
+        if legal_entities:
+            for entity in legal_entities:
+                legal_entities_dict[entity.text] = {
+                    "type": entity.entity_type.value,
+                    "confidence": entity.confidence
+                }
+        
+        if extracted_entities:
+            legal_entities_dict.update(extracted_entities)
+            
+        if legal_entities_dict:
+            context.entities_extracted.update(legal_entities_dict)
         
         # Update intent history
         if detected_intent:

@@ -221,62 +221,6 @@ class MCPOrchestrator:
         
         # External servers need auth tokens
         return bool(config.auth_token and config.url)
-                priority=9
-            ),
-            MCPServerConfig(
-                name="git_tools",
-                server_type=MCPServerType.GIT_TOOLS,
-                url="localhost:8001",
-                capabilities=["version_control", "branch_management", "commits"],
-                priority=7
-            ),
-            MCPServerConfig(
-                name="puppeteer",
-                server_type=MCPServerType.PUPPETEER,
-                url="localhost:8002", 
-                capabilities=["browser_automation", "ui_testing", "screenshot"],
-                priority=5
-            ),
-            MCPServerConfig(
-                name="sequential_thinking",
-                server_type=MCPServerType.SEQUENTIAL_THINKING,
-                url="localhost:8003",
-                capabilities=["reasoning", "decision_trees", "compliance_checks"],
-                priority=8
-            ),
-            MCPServerConfig(
-                name="github",
-                server_type=MCPServerType.GITHUB,
-                url="api.github.com",
-                capabilities=["repo_management", "issues", "pull_requests"],
-                priority=6
-            ),
-            MCPServerConfig(
-                name="mem0",
-                server_type=MCPServerType.MEM0,
-                url="localhost:8004",
-                capabilities=["knowledge_graph", "learning", "memory"],
-                priority=8
-            ),
-            MCPServerConfig(
-                name="supabase",
-                server_type=MCPServerType.SUPABASE,
-                url="localhost:8005",
-                capabilities=["database", "realtime", "auth", "storage"],
-                priority=9
-            ),
-            MCPServerConfig(
-                name="omnisearch",
-                server_type=MCPServerType.OMNISEARCH,
-                url="localhost:8006",
-                capabilities=["search", "legal_research", "case_law"],
-                priority=7
-            )
-        ]
-        
-        for server in default_servers:
-            self.servers[server.name] = server
-            logger.info(f"Loaded MCP server: {server.name} ({server.server_type})")
     
     async def register_server(self, config: MCPServerConfig) -> bool:
         """Register a new MCP server."""
