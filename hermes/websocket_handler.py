@@ -11,6 +11,8 @@ from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from .voice_pipeline import VoicePipeline, VoiceInteraction
+from .auth.jwt_handler import JWTHandler
+from .auth.models import TokenPayload
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +23,7 @@ class ConnectionInfo(BaseModel):
     websocket: WebSocket
     client_ip: str
     user_agent: Optional[str] = None
+    tenant_id: Optional[str] = None
     connected_at: float
     
     class Config:
@@ -33,8 +36,9 @@ class VoiceWebSocketHandler:
     Manages connections and coordinates voice processing pipeline.
     """
     
-    def __init__(self, voice_pipeline: VoicePipeline):
+    def __init__(self, voice_pipeline: VoicePipeline, jwt_handler: JWTHandler | None = None):
         self.voice_pipeline = voice_pipeline
+        self.jwt_handler = jwt_handler or JWTHandler()
         self.active_connections: Dict[str, ConnectionInfo] = {}
         self._message_handlers = {
             "audio_chunk": self._handle_audio_chunk,
@@ -44,39 +48,48 @@ class VoiceWebSocketHandler:
         }
     
     async def connect(self, websocket: WebSocket, client_ip: str) -> str:
-        """
-        Accept new WebSocket connection.
-        
-        Args:
-            websocket: WebSocket connection
-            client_ip: Client IP address
-            
-        Returns:
-            Session ID for the connection
-        """
+        """Accept new authenticated WebSocket connection."""
+
+        token = websocket.query_params.get("token") or websocket.headers.get("Authorization")
+        if token and token.lower().startswith("bearer "):
+            token = token.split()[1]
+        if not token:
+            await websocket.close(code=4401)
+            raise WebSocketDisconnect(code=4401)
+        try:
+            payload: TokenPayload = self.jwt_handler.decode(token)
+        except Exception:
+            await websocket.close(code=4401)
+            raise WebSocketDisconnect(code=4401)
+
         await websocket.accept()
-        
+
         session_id = str(uuid.uuid4())
-        
+
         connection_info = ConnectionInfo(
             session_id=session_id,
             websocket=websocket,
             client_ip=client_ip,
             user_agent=websocket.headers.get("user-agent"),
-            connected_at=asyncio.get_event_loop().time()
+            connected_at=asyncio.get_event_loop().time(),
+            tenant_id=payload.tenant_id,
         )
-        
+
         self.active_connections[session_id] = connection_info
-        
-        logger.info(f"New WebSocket connection: {session_id} from {client_ip}")
-        
-        # Send connection acknowledgment
-        await self._send_message(session_id, {
-            "type": "connection_established",
-            "session_id": session_id,
-            "message": "HERMES voice assistant ready"
-        })
-        
+
+        logger.info(
+            f"New WebSocket connection: {session_id} from {client_ip} tenant {payload.tenant_id}"
+        )
+
+        await self._send_message(
+            session_id,
+            {
+                "type": "connection_established",
+                "session_id": session_id,
+                "message": "HERMES voice assistant ready",
+            },
+        )
+
         return session_id
     
     async def disconnect(self, session_id: str) -> None:
