@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HERMES Legal AI - Professional Dashboard for Law Firms">
+    <title>HERMES Legal AI Dashboard</title>
+    
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#1a365d">
+    <link rel="apple-touch-icon" href="/static/assets/icons/icon-192x192.png">
+    
+    <!-- Accessibility and SEO -->
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    
+    <!-- CSS Framework and Custom Styles -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* Legal Theme Colors */
+        :root {
+            --navy-primary: #1a365d;
+            --navy-secondary: #2c5282;
+            --gold-accent: #d69e2e;
+            --gold-light: #f7fafc;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --success: #38a169;
+            --warning: #ed8936;
+            --error: #e53e3e;
+            --border-color: #e2e8f0;
+        }
+        
+        /* Custom Legal Theme */
+        .legal-gradient {
+            background: linear-gradient(135deg, var(--navy-primary) 0%, var(--navy-secondary) 100%);
+        }
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, var(--gold-accent) 0%, #ecc94b 100%);
+        }
+        
+        .sidebar {
+            background: var(--navy-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-collapsed {
+            width: 80px;
+        }
+        
+        .main-content {
+            transition: margin-left 0.3s ease;
+        }
+        
+        /* Accessibility Enhancements */
+        .focus-visible:focus {
+            outline: 2px solid var(--gold-accent);
+            outline-offset: 2px;
+        }
+        
+        /* Loading Animation */
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Voice Interface Styles */
+        .voice-indicator {
+            animation: pulse 2s infinite;
+        }
+        
+        .voice-recording {
+            animation: recording-pulse 0.8s ease-in-out infinite alternate;
+        }
+        
+        @keyframes recording-pulse {
+            from { background-color: var(--error); }
+            to { background-color: #fc8181; }
+        }
+        
+        /* Card Hover Effects */
+        .dashboard-card {
+            transition: all 0.2s ease;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Analytics Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+        }
+        
+        /* Print Styles */
+        @media print {
+            .no-print { display: none; }
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 text-center">
+            <div class="loading-spinner w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p class="text-gray-700">Loading HERMES Dashboard...</p>
+        </div>
+    </div>
+    
+    <!-- Main Layout -->
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <nav id="sidebar" class="sidebar w-64 text-white fixed h-full z-40 shadow-lg" role="navigation" aria-label="Main navigation">
+            <!-- Logo -->
+            <div class="p-6 border-b border-blue-700">
+                <div class="flex items-center">
+                    <i class="fas fa-balance-scale text-2xl text-yellow-400 mr-3" aria-hidden="true"></i>
+                    <div>
+                        <h1 class="text-xl font-bold">HERMES</h1>
+                        <p class="text-blue-300 text-sm">Legal AI</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation Menu -->
+            <div class="flex flex-col h-full">
+                <ul class="flex-1 p-4 space-y-2" role="menu">
+                    <li role="none">
+                        <a href="#dashboard" 
+                           class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-700 transition-colors focus-visible:focus"
+                           role="menuitem">
+                            <i class="fas fa-tachometer-alt w-5 text-center mr-3" aria-hidden="true"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li role="none">
+                        <a href="#voice" 
+                           class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-700 transition-colors focus-visible:focus"
+                           role="menuitem">
+                            <i class="fas fa-microphone w-5 text-center mr-3" aria-hidden="true"></i>
+                            <span>Voice AI</span>
+                        </a>
+                    </li>
+                    <li role="none">
+                        <a href="#clients" 
+                           class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-700 transition-colors focus-visible:focus"
+                           role="menuitem">
+                            <i class="fas fa-users w-5 text-center mr-3" aria-hidden="true"></i>
+                            <span>Clients & Matters</span>
+                        </a>
+                    </li>
+                    <li role="none">
+                        <a href="#analytics" 
+                           class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-700 transition-colors focus-visible:focus"
+                           role="menuitem">
+                            <i class="fas fa-chart-line w-5 text-center mr-3" aria-hidden="true"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li role="none">
+                        <a href="#integrations" 
+                           class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-700 transition-colors focus-visible:focus"
+                           role="menuitem">
+                            <i class="fas fa-plug w-5 text-center mr-3" aria-hidden="true"></i>
+                            <span>Integrations</span>
+                        </a>
+                    </li>
+                    <li role="none">
+                        <a href="#audit" 
+                           class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-700 transition-colors focus-visible:focus"
+                           role="menuitem">
+                            <i class="fas fa-clipboard-check w-5 text-center mr-3" aria-hidden="true"></i>
+                            <span>Audit Trail</span>
+                        </a>
+                    </li>
+                    <li role="none">
+                        <a href="#settings" 
+                           class="nav-link flex items-center p-3 rounded-lg hover:bg-blue-700 transition-colors focus-visible:focus"
+                           role="menuitem">
+                            <i class="fas fa-cog w-5 text-center mr-3" aria-hidden="true"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- User Profile -->
+                <div class="p-4 border-t border-blue-700">
+                    <div class="flex items-center">
+                        <img id="userAvatar" class="w-10 h-10 rounded-full mr-3" src="/static/assets/default-avatar.png" alt="User Avatar">
+                        <div class="flex-1">
+                            <p id="userName" class="font-medium">Loading...</p>
+                            <p id="userRole" class="text-sm text-blue-300">...</p>
+                        </div>
+                        <button id="logoutBtn" class="text-blue-300 hover:text-white focus-visible:focus" title="Logout">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="main-content flex-1 ml-64 overflow-auto">
+            <!-- Top Bar -->
+            <header class="bg-white shadow-sm border-b p-4 flex items-center justify-between">
+                <div class="flex items-center">
+                    <button id="sidebarToggle" class="md:hidden text-gray-600 mr-4" aria-label="Toggle sidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h2 id="pageTitle" class="text-2xl font-semibold text-gray-800">Dashboard</h2>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Search -->
+                    <div class="relative">
+                        <input type="search" 
+                               id="globalSearch" 
+                               class="w-64 pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                               placeholder="Search clients, matters, calls..."
+                               aria-label="Global search">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400" aria-hidden="true"></i>
+                    </div>
+                    
+                    <!-- Notifications -->
+                    <button id="notificationBtn" class="relative text-gray-600 hover:text-gray-800 focus-visible:focus" aria-label="Notifications">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span id="notificationBadge" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1 hidden">0</span>
+                    </button>
+                    
+                    <!-- Voice Status -->
+                    <div id="voiceStatus" class="flex items-center">
+                        <div id="voiceIndicator" class="w-3 h-3 rounded-full bg-gray-400 mr-2" aria-label="Voice system status"></div>
+                        <span class="text-sm text-gray-600">Voice Ready</span>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Dashboard Content Container -->
+            <div id="contentContainer" class="p-6">
+                <!-- Dashboard Overview -->
+                <section id="dashboardSection" class="space-y-6">
+                    <!-- Key Metrics Row -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Total Calls -->
+                        <div class="dashboard-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                    <i class="fas fa-phone text-xl" aria-hidden="true"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-600">Total Calls Today</p>
+                                    <p id="totalCalls" class="text-2xl font-bold text-gray-900">--</p>
+                                    <p class="text-sm text-gray-500">
+                                        <span id="callsTrend" class="text-green-600">+12%</span> from yesterday
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Conversion Rate -->
+                        <div class="dashboard-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                    <i class="fas fa-chart-line text-xl" aria-hidden="true"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-600">Conversion Rate</p>
+                                    <p id="conversionRate" class="text-2xl font-bold text-gray-900">--%</p>
+                                    <p class="text-sm text-gray-500">
+                                        <span id="conversionTrend" class="text-green-600">+5%</span> this week
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Response Time -->
+                        <div class="dashboard-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                                    <i class="fas fa-clock text-xl" aria-hidden="true"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-600">Avg Response Time</p>
+                                    <p id="responseTime" class="text-2xl font-bold text-gray-900">--ms</p>
+                                    <p class="text-sm text-gray-500">
+                                        <span id="responseTrend" class="text-green-600">-15ms</span> improvement
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Client Satisfaction -->
+                        <div class="dashboard-card bg-white rounded-lg shadow p-6">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                                    <i class="fas fa-smile text-xl" aria-hidden="true"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-600">Client Satisfaction</p>
+                                    <p id="satisfaction" class="text-2xl font-bold text-gray-900">--.--</p>
+                                    <p class="text-sm text-gray-500">
+                                        <span id="satisfactionTrend" class="text-green-600">+0.2</span> this month
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Call Volume Chart -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Call Volume Trend</h3>
+                            <div class="chart-container">
+                                <canvas id="callVolumeChart" aria-label="Call volume over time"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Revenue Impact -->
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Revenue Impact</h3>
+                            <div class="chart-container">
+                                <canvas id="revenueChart" aria-label="Revenue impact over time"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Activity -->
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="p-6 border-b">
+                            <h3 class="text-lg font-semibold text-gray-900">Recent Activity</h3>
+                        </div>
+                        <div class="divide-y">
+                            <div id="recentActivity" class="p-6">
+                                <div class="animate-pulse">
+                                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Voice Interface Section -->
+                <section id="voiceSection" class="hidden space-y-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Voice AI Interface</h3>
+                        
+                        <!-- Voice Controls -->
+                        <div class="text-center mb-6">
+                            <button id="voiceRecordBtn" 
+                                    class="w-20 h-20 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-200 focus-visible:focus"
+                                    aria-label="Start voice recording">
+                                <i class="fas fa-microphone text-2xl" aria-hidden="true"></i>
+                            </button>
+                            <p class="text-sm text-gray-600 mt-2">Click to start voice interaction</p>
+                        </div>
+                        
+                        <!-- Voice Transcript -->
+                        <div class="bg-gray-50 rounded-lg p-4 min-h-32">
+                            <h4 class="font-medium text-gray-900 mb-2">Live Transcript</h4>
+                            <div id="voiceTranscript" class="text-gray-700 whitespace-pre-wrap">
+                                Ready for voice input...
+                            </div>
+                        </div>
+                        
+                        <!-- Voice Visualizer -->
+                        <div class="mt-6">
+                            <canvas id="voiceVisualizer" class="w-full h-20 bg-gray-100 rounded"></canvas>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Other sections will be dynamically loaded -->
+                <section id="clientsSection" class="hidden">
+                    <!-- Clients and matters content -->
+                </section>
+                
+                <section id="analyticsSection" class="hidden">
+                    <!-- Analytics content -->
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2" aria-live="polite">
+        <!-- Toast messages will be dynamically added here -->
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/dashboard/websocket-manager.js"></script>
+    <script src="/static/dashboard/app_simple.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js')
+                .then(registration => console.log('SW registered'))
+                .catch(error => console.log('SW registration failed'));
+        }
+    </script>
+</body>
+</html>
