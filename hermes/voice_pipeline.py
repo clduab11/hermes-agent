@@ -5,7 +5,7 @@ import asyncio
 import logging
 import random
 import time
-from typing import Optional, Dict, Any, AsyncGenerator, List
+from typing import Optional, Dict, Any, AsyncGenerator, List, TypedDict, Literal
 
 import openai
 from pydantic import BaseModel
@@ -29,18 +29,37 @@ class VoiceInteraction(BaseModel):
     requires_human_transfer: bool = False
 
 
+class ChatMessage(TypedDict):
+    role: Literal["user", "assistant", "system"]
+    content: str
+
+
 class VoicePipeline:
     """
     Main voice processing pipeline orchestrating STT -> LLM -> TTS.
     """
-    
+
+    _HISTORY_LIMIT = 20
+    _GENERAL_PREFIXES = [
+        "Certainly,",
+        "Of course,",
+        "Sure,",
+        "Absolutely,",
+    ]
+    _OFFER_PREFIXES = [
+        "I'd be happy to help,",
+    ]
+    _COMPLIANCE_PREFIXES = [
+        "",
+    ]
+
     def __init__(self):
         self.stt = WhisperSTT()
         self.tts = KokoroTTS()
         self._openai_client: Optional[openai.AsyncOpenAI] = None
         self._initialized = False
         # Maintain conversational context per session for more human-like interactions
-        self._conversations: Dict[str, List[Dict[str, str]]] = {}
+        self._conversations: Dict[str, List[ChatMessage]] = {}
         
     async def initialize(self) -> None:
         """Initialize all pipeline components."""
@@ -154,9 +173,9 @@ class VoicePipeline:
         history = self._conversations.setdefault(session_id, [])
         history.append({"role": "user", "content": text})
 
-        # Limit history to last 10 exchanges
-        if len(history) > 20:
-            del history[: len(history) - 20]
+        # Limit history to last 10 exchanges (20 messages)
+        if len(history) > self._HISTORY_LIMIT:
+            del history[:-self._HISTORY_LIMIT]
 
         try:
             response = await self._openai_client.chat.completions.create(
@@ -171,6 +190,8 @@ class VoicePipeline:
 
             # Save assistant response to history
             history.append({"role": "assistant", "content": response_text})
+            if len(history) > self._HISTORY_LIMIT:
+                del history[:-self._HISTORY_LIMIT]
 
             # Post-process response
             response_text = self._post_process_response(response_text)
@@ -276,16 +297,42 @@ Respond naturally and conversationally, as if speaking to someone on the phone."
         return response.strip()
 
     def _humanize_response(self, response: str) -> str:
-        """Add natural-sounding prefix to make responses feel more human."""
-        prefixes = [
-            "Certainly,",
-            "Of course,",
-            "Sure,",
-            "Absolutely,",
-            "I'd be happy to,"
-        ]
+        """Add natural-sounding prefix to make responses feel more human, with conditional logic."""
+
+        def is_compliance_response(text: str) -> bool:
+            compliance_phrases = [
+                "I can't provide legal advice",
+                "I am unable to",
+                "I cannot",
+                "I'm not able to",
+                "Please hold while I transfer your call",
+            ]
+            return any(phrase in text for phrase in compliance_phrases)
+
+        def is_offer_response(text: str) -> bool:
+            offer_phrases = [
+                "assist you",
+                "help you",
+                "provide",
+                "do that",
+                "look into",
+                "arrange",
+                "schedule",
+                "connect you",
+            ]
+            return any(phrase in text for phrase in offer_phrases)
+
         if response:
-            response = f"{random.choice(prefixes)} {response}"
+            if is_compliance_response(response):
+                prefix = random.choice(self._COMPLIANCE_PREFIXES)
+            elif is_offer_response(response):
+                prefix = random.choice(self._OFFER_PREFIXES + self._GENERAL_PREFIXES)
+            else:
+                prefix = random.choice(self._GENERAL_PREFIXES)
+
+            if prefix:
+                response = f"{prefix} {response}"
+
         return response
     
     async def stream_process_voice(self, session_id: str, audio_stream: AsyncGenerator[bytes, None]) -> AsyncGenerator[bytes, None]:
