@@ -32,6 +32,7 @@ from .database import init_database, close_database, get_database_session
 # Import new API modules
 from .api import clio_endpoints
 from .api import analytics_endpoints
+from .api import billing_endpoints
 from .audit import api as audit_api
 from .analytics.engine import AnalyticsEngine
 from .voice.context_manager import get_context_manager
@@ -176,7 +177,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Include API routers
 app.include_router(clio_endpoints.router)
-app.include_router(analytics_endpoints.router) 
+app.include_router(analytics_endpoints.router)
+app.include_router(billing_endpoints.router)
 app.include_router(audit_api.router)
 
 

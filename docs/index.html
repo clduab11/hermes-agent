@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HERMES – AI Voice Agent for Law Firms</title>
+  <meta name="description" content="AI-powered voice receptionist for law firms. Clio integration, compliance and sub-100ms latency." />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="antialiased text-gray-800">
+  <header class="bg-blue-900 text-white py-12">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-4xl font-bold mb-4">HERMES – AI Voice Agent for Law Firms</h1>
+      <p class="mb-6">Transform client communications with 24/7 intelligent reception.</p>
+      <div class="space-x-4">
+        <a href="https://calendly.com/demo-hermes" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded">Schedule Demo</a>
+        <a href="#pricing" class="bg-white text-blue-900 px-6 py-3 rounded">View Pricing</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="max-w-4xl mx-auto p-8">
+    <h2 class="text-2xl font-semibold mb-4">Why HERMES?</h2>
+    <ul class="list-disc pl-5 space-y-2">
+      <li>Ultra-low latency voice pipeline with WebSocket streaming</li>
+      <li>Native Clio CRM integration and automated intake</li>
+      <li>HIPAA-ready architecture with audit logging</li>
+      <li>Multi-tenant isolation and JWT security</li>
+    </ul>
+  </section>
+
+  <section class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-2xl font-semibold mb-4">Interactive Demo</h2>
+      <iframe src="../static/demo.html" class="w-full h-96 border" title="Voice demo"></iframe>
+    </div>
+  </section>
+
+  <section id="pricing" class="max-w-4xl mx-auto p-8">
+    <h2 class="text-2xl font-semibold mb-4">Pricing</h2>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="border p-6 rounded">
+        <h3 class="text-xl font-bold">Professional</h3>
+        <p class="text-3xl font-bold mb-2">$2,497<span class="text-base font-normal">/mo</span></p>
+        <p>Up to 2,000 interactions</p>
+      </div>
+      <div class="border p-6 rounded">
+        <h3 class="text-xl font-bold">Enterprise</h3>
+        <p class="text-3xl font-bold mb-2">$7,497<span class="text-base font-normal">/mo</span></p>
+        <p>Unlimited interactions</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-2xl font-semibold mb-4">Testimonials</h2>
+      <p class="italic">"HERMES cut our intake time in half." – Placeholder Law Firm</p>
+    </div>
+  </section>
+
+  <section class="max-w-4xl mx-auto p-8">
+    <h2 class="text-2xl font-semibold mb-4">ROI Calculator</h2>
+    <div>
+      <label class="block mb-2">Monthly hours saved</label>
+      <input id="hours" type="number" class="border p-2" value="20" />
+      <label class="block mb-2 mt-4">Hourly rate ($)</label>
+      <input id="rate" type="number" class="border p-2" value="300" />
+      <button id="calc" class="bg-blue-900 text-white px-4 py-2 ml-2">Calculate</button>
+      <p id="roi" class="mt-4 font-bold"></p>
+    </div>
+  </section>
+
+  <footer class="bg-blue-900 text-white text-center py-6">
+    <p>© 2025 Parallax Analytics LLC</p>
+  </footer>
+
+  <script>
+    document.getElementById('calc').addEventListener('click', () => {
+      const hours = parseFloat(document.getElementById('hours').value) || 0;
+      const rate = parseFloat(document.getElementById('rate').value) || 0;
+      const value = hours * rate;
+      document.getElementById('roi').innerText = `Estimated monthly ROI: $${value.toFixed(2)}`;
+    });
+  </script>
+</body>
+</html>

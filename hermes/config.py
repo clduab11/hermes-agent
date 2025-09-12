@@ -65,6 +65,14 @@ class Settings(BaseSettings):
     
     mem0_api_key: Optional[str] = Field(default=None, description="Mem0 API key")
 
+    # Billing Configuration
+    stripe_api_key: Optional[str] = Field(default=None, description="Stripe API key")
+    stripe_webhook_secret: Optional[str] = Field(default=None, description="Stripe webhook signing secret")
+    stripe_price_pro: Optional[str] = Field(default=None, description="Stripe price ID for Professional plan")
+    stripe_price_enterprise: Optional[str] = Field(default=None, description="Stripe price ID for Enterprise plan")
+    stripe_overage_price: Optional[str] = Field(default=None, description="Stripe price ID for interaction overage")
+    stripe_trial_days: int = Field(default=14, ge=0, description="Trial period length in days")
+
 
 # Global settings instance
 settings = Settings()
