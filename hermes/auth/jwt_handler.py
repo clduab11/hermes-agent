@@ -1,10 +1,11 @@
 """JWT token generation and validation."""
 from __future__ import annotations
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
+from typing import Iterable
+
 import jwt
 
-from .models import TokenPayload, TokenPair
+from .models import Role, TokenPayload, TokenPair
 from ..config import settings
 
 
@@ -25,26 +26,44 @@ class JWTHandler:
         self.access_expire_minutes = access_expire_minutes or settings.access_token_expire_minutes
         self.refresh_expire_days = refresh_expire_days or settings.refresh_token_expire_days
 
-    def create_token_pair(self, subject: str, tenant_id: str) -> TokenPair:
+    def create_token_pair(
+        self, subject: str, tenant_id: str, roles: Iterable[Role] | None = None
+    ) -> TokenPair:
+        """Create a new access/refresh token pair."""
+
+        roles_list = list(roles or [])
         now = datetime.now(timezone.utc)
+        iat = int(now.timestamp())
         access_payload = {
             "sub": subject,
             "tenant_id": tenant_id,
+            "roles": roles_list,
             "type": "access",
             "exp": int((now + timedelta(minutes=self.access_expire_minutes)).timestamp()),
-            "iat": now,
+            "iat": iat,
         }
         refresh_payload = {
             "sub": subject,
             "tenant_id": tenant_id,
+            "roles": roles_list,
             "type": "refresh",
             "exp": int((now + timedelta(days=self.refresh_expire_days)).timestamp()),
-            "iat": now,
+            "iat": iat,
         }
         access_token = jwt.encode(access_payload, self.private_key, algorithm=self.algorithm)
         refresh_token = jwt.encode(refresh_payload, self.private_key, algorithm=self.algorithm)
         return TokenPair(access_token=access_token, refresh_token=refresh_token)
 
+    def refresh(self, refresh_token: str) -> TokenPair:
+        """Generate a new token pair from a refresh token."""
+
+        payload = self.decode(refresh_token)
+        if payload.type != "refresh":
+            raise ValueError("Token is not a refresh token")
+        return self.create_token_pair(payload.sub, payload.tenant_id, payload.roles)
+
     def decode(self, token: str) -> TokenPayload:
+        """Decode a JWT token and return a :class:`TokenPayload`."""
+
         payload = jwt.decode(token, self.public_key, algorithms=[self.algorithm])
         return TokenPayload(**payload)

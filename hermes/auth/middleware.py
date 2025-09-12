@@ -4,11 +4,10 @@ from typing import Callable
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response, JSONResponse
+from starlette.responses import JSONResponse, Response
 
 from .jwt_handler import JWTHandler
 from .models import TokenPayload
-from ..config import settings
 from ..database.tenant_context import tenant_context
 
 
@@ -32,12 +31,16 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
             return JSONResponse(status_code=401, content={"detail": "Missing token"})
         try:
             payload: TokenPayload = self.jwt_handler.decode(token)
+            if payload.type != "access":
+                raise ValueError("Wrong token type")
         except Exception:
             return JSONResponse(status_code=401, content={"detail": "Invalid token"})
 
-        # set tenant context
+        # set tenant context and request state
         token_tenant = payload.tenant_id
         request.state.tenant_id = token_tenant
+        request.state.user_id = payload.sub
+        request.state.roles = payload.roles
         token_var = tenant_context.set(token_tenant)
         try:
             response = await call_next(request)
