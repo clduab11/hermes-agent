@@ -31,14 +31,14 @@ class JWTHandler:
             "sub": subject,
             "tenant_id": tenant_id,
             "type": "access",
-            "exp": now + timedelta(minutes=self.access_expire_minutes),
+            "exp": int((now + timedelta(minutes=self.access_expire_minutes)).timestamp()),
             "iat": now,
         }
         refresh_payload = {
             "sub": subject,
             "tenant_id": tenant_id,
             "type": "refresh",
-            "exp": now + timedelta(days=self.refresh_expire_days),
+            "exp": int((now + timedelta(days=self.refresh_expire_days)).timestamp()),
             "iat": now,
         }
         access_token = jwt.encode(access_payload, self.private_key, algorithm=self.algorithm)
