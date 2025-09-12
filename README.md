@@ -22,7 +22,7 @@
 - 99.9% uptime SLA with enterprise-grade reliability
 
 **🧠 Intelligent Response Engine**
-- Advanced 8B LLM integration via OpenRouter API
+- Advanced LLM integration via cloud-based APIs
 - Tree of Thought reasoning for complex legal queries
 - Legal safety validators with 0.85 confidence thresholds
 - Automatic human transfer for complex matters
