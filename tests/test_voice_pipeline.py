@@ -1,14 +1,15 @@
 """
 Test voice pipeline components without requiring actual audio processing.
 """
-import pytest
-import asyncio
 import os
-from unittest.mock import Mock, AsyncMock, patch
 
-# Set test environment variables
+# Set test environment variables BEFORE importing settings
 os.environ["OPENAI_API_KEY"] = "test-key-123"
 os.environ["DEBUG"] = "true"
+
+import pytest
+import asyncio
+from unittest.mock import Mock, AsyncMock, patch
 
 from hermes.config import settings
 from hermes.voice_pipeline import VoicePipeline
@@ -240,10 +241,14 @@ class TestConfiguration:
     
     def test_settings_loading(self):
         """Test settings are loaded correctly."""
-        assert settings.openai_api_key == "test-key-123"
-        assert settings.debug is True
-        assert settings.whisper_model == "base"
-        assert settings.confidence_threshold == 0.85
+        # Create a fresh settings instance that will read current environment variables
+        from hermes.config import Settings
+        test_settings = Settings()
+        
+        assert test_settings.openai_api_key == "test-key-123"
+        assert test_settings.debug is True
+        assert test_settings.whisper_model == "base"
+        assert test_settings.confidence_threshold == 0.85
     
     def test_audio_configuration(self):
         """Test audio-related configuration."""

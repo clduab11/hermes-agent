@@ -219,7 +219,8 @@ async def voice_websocket(websocket: WebSocket):
         logger.error(f"WebSocket error: {str(e)}")
         try:
             await websocket.close(code=1011, reason="Internal server error")
-        except:
+        except Exception:
+            # Connection might already be closed, which is acceptable
             pass
 
 

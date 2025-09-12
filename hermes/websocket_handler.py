@@ -105,7 +105,9 @@ class VoiceWebSocketHandler:
             try:
                 await connection_info.websocket.close()
             except Exception:
-                pass  # Connection might already be closed
+                # Connection might already be closed or in an invalid state, 
+                # this is acceptable during cleanup
+                pass
             
             del self.active_connections[session_id]
             
