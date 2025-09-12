@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import useWebRTC from '../hooks/useWebRTC.js';
 
 export default function ConversationView({ scenario }) {
@@ -6,11 +6,13 @@ export default function ConversationView({ scenario }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
-    const ctx = canvasRef.current.getContext('2d');
-    ctx.clearRect(0, 0, 300, 50);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#4caf50';
-    const width = Math.min(volume * 300, 300);
-    ctx.fillRect(0, 0, width, 50);
+    const width = Math.min(volume * canvas.width, canvas.width);
+    ctx.fillRect(0, 0, width, canvas.height);
   }, [volume]);
 
   return (

@@ -6,14 +6,20 @@ import PartnerLogos from './components/PartnerLogos.jsx';
 
 export default function App() {
   const [scenario, setScenario] = useState(null);
+  const SCENARIOS = {
+    INTAKE: 'intake',
+    EMERGENCY: 'emergency',
+    BILLING: 'billing',
+    COURT: 'court'
+  };
   return (
     <div className="app">
       <h1>Hermes Voice AI Demo</h1>
       <div className="scenario-buttons">
-        <button onClick={() => setScenario('intake')}>Car Accident Intake</button>
-        <button onClick={() => setScenario('emergency')}>2 AM Arrest</button>
-        <button onClick={() => setScenario('billing')}>Invoice Question</button>
-        <button onClick={() => setScenario('court')}>Court Reminder</button>
+        <button onClick={() => setScenario(SCENARIOS.INTAKE)}>Car Accident Intake</button>
+        <button onClick={() => setScenario(SCENARIOS.EMERGENCY)}>2 AM Arrest</button>
+        <button onClick={() => setScenario(SCENARIOS.BILLING)}>Invoice Question</button>
+        <button onClick={() => setScenario(SCENARIOS.COURT)}>Court Reminder</button>
       </div>
       {scenario && <DemoContainer scenario={scenario} />}
       <RoiCalculator />

@@ -3,24 +3,40 @@ import { createMatter, syncContact, createTimeEntry, logActivity } from '../serv
 
 const router = Router();
 
-router.post('/create-matter', async (req, res) => {
-  const matter = await createMatter(req.body);
-  res.json(matter);
+router.post('/create-matter', async (req, res, next) => {
+  try {
+    const matter = await createMatter(req.body);
+    res.json(matter);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.post('/sync-contact', async (req, res) => {
-  const contact = await syncContact(req.body);
-  res.json(contact);
+router.post('/sync-contact', async (req, res, next) => {
+  try {
+    const contact = await syncContact(req.body);
+    res.json(contact);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.post('/time-entry', async (req, res) => {
-  const entry = await createTimeEntry(req.body);
-  res.json(entry);
+router.post('/time-entry', async (req, res, next) => {
+  try {
+    const entry = await createTimeEntry(req.body);
+    res.json(entry);
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.post('/log-activity', async (req, res) => {
-  const activity = await logActivity(req.body);
-  res.json(activity);
+router.post('/log-activity', async (req, res, next) => {
+  try {
+    const activity = await logActivity(req.body);
+    res.json(activity);
+  } catch (error) {
+    next(error);
+  }
 });
 
 export default router;

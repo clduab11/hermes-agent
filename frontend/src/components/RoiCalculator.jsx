@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 export default function RoiCalculator() {
   const [hours, setHours] = useState(10);
   const [rate, setRate] = useState(200);
-
-  const savings = hours * rate * 0.3; // simple demo formula
+  const SAVINGS_FACTOR = 0.3;
+  const savings = hours * rate * SAVINGS_FACTOR; // simple demo formula
 
   return (
     <div className="roi-calculator" style={{ marginTop: '2rem' }}>
