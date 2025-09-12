@@ -54,6 +54,7 @@ playwright==1.40.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-dotenv==1.0.0
+pyjwt[crypto]==2.8.0
 
 # Monitoring & Logging
 prometheus-client==0.19.0

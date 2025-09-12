@@ -1,0 +1,3 @@
+-- Migration: add tenant isolation columns and policies
+-- Adds tenant_id to tables and sets up row-level security policies.
+-- This is a placeholder for demonstration purposes.

@@ -37,6 +37,13 @@ class Settings(BaseSettings):
     confidence_threshold: float = Field(default=0.85, env="CONFIDENCE_THRESHOLD")
     enable_disclaimers: bool = Field(default=True, env="ENABLE_DISCLAIMERS")
     audit_logging: bool = Field(default=True, env="AUDIT_LOGGING")
+
+    # JWT Authentication
+    jwt_private_key: str = Field(default="", env="JWT_PRIVATE_KEY")
+    jwt_public_key: str = Field(default="", env="JWT_PUBLIC_KEY")
+    jwt_algorithm: str = Field(default="RS256", env="JWT_ALGORITHM")
+    access_token_expire_minutes: int = Field(default=15, env="ACCESS_TOKEN_EXPIRE_MINUTES")
+    refresh_token_expire_days: int = Field(default=7, env="REFRESH_TOKEN_EXPIRE_DAYS")
     
     # MCP Configuration
     clio_client_id: Optional[str] = Field(default=None, env="CLIO_CLIENT_ID")

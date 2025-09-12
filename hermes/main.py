@@ -10,7 +10,7 @@ import time
 from contextlib import asynccontextmanager
 from typing import Dict, Any
 
-from fastapi import FastAPI, WebSocket, HTTPException, Request
+from fastapi import FastAPI, WebSocket, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -19,6 +19,9 @@ import uvicorn
 from .config import settings
 from .voice_pipeline import VoicePipeline
 from .websocket_handler import VoiceWebSocketHandler
+from .auth import JWTAuthMiddleware, JWTHandler, TenantManager
+from .auth.models import TokenPair
+from pydantic import BaseModel
 
 # Configure logging
 logging.basicConfig(
@@ -28,6 +31,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Global instances
+jwt_handler: JWTHandler = JWTHandler()
+tenant_manager: TenantManager = TenantManager()
 voice_pipeline: VoicePipeline = None
 websocket_handler: VoiceWebSocketHandler = None
 
@@ -45,7 +50,7 @@ async def lifespan(app: FastAPI):
         await voice_pipeline.initialize()
         
         # Initialize WebSocket handler
-        websocket_handler = VoiceWebSocketHandler(voice_pipeline)
+        websocket_handler = VoiceWebSocketHandler(voice_pipeline, jwt_handler=jwt_handler)
         
         logger.info("HERMES system initialized successfully")
         yield
@@ -74,6 +79,20 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# Authentication middleware
+app.add_middleware(JWTAuthMiddleware, jwt_handler=jwt_handler)
+
+
+class TokenRequest(BaseModel):
+    subject: str
+    tenant_id: str
+
+
+@app.post("/auth/token", response_model=TokenPair)
+async def auth_token(request: TokenRequest) -> TokenPair:
+    """Generate a token pair for testing purposes."""
+    return jwt_handler.create_token_pair(request.subject, request.tenant_id)
 
 # Add CORS middleware
 app.add_middleware(
