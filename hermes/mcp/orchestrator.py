@@ -131,13 +131,96 @@ class MCPOrchestrator:
         logger.info("MCP Orchestrator initialized")
     
     async def _load_default_servers(self):
-        """Load default MCP server configurations."""
+        """Load default MCP server configurations with concrete implementations."""
         default_servers = [
+            # Redis cache server
             MCPServerConfig(
                 name="redis",
                 server_type=MCPServerType.REDIS,
-                url="redis://localhost:6379",
+                url=settings.redis_url or "redis://localhost:6379",
                 capabilities=["cache", "session", "pubsub", "rate_limiting"],
+                description="Redis cache for session management and real-time features",
+                is_internal=True
+            ),
+            
+            # Clio CRM Integration
+            MCPServerConfig(
+                name="clio",
+                server_type=MCPServerType.CLIO,
+                url="https://app.clio.com/api/v4",
+                capabilities=["contacts", "matters", "activities", "documents", "billing"],
+                description="Clio CRM integration for legal case management",
+                auth_token=settings.clio_client_id,
+                auth_config={
+                    "client_id": settings.clio_client_id,
+                    "client_secret": settings.clio_client_secret,
+                    "redirect_uri": settings.clio_redirect_uri
+                }
+            ),
+            
+            # Mem0 Knowledge Graph
+            MCPServerConfig(
+                name="mem0",
+                server_type=MCPServerType.MEM0,
+                url="https://api.mem0.ai/v1",
+                capabilities=["entities", "relations", "search", "reasoning", "graph"],
+                description="Mem0 knowledge graph for legal knowledge management",
+                auth_token=settings.mem0_api_key
+            ),
+            
+            # GitHub Integration
+            MCPServerConfig(
+                name="github",
+                server_type=MCPServerType.GITHUB,
+                url="https://api.github.com",
+                capabilities=["repositories", "issues", "pull_requests", "actions", "search"],
+                description="GitHub integration for document templates and automation",
+                auth_token=settings.github_token
+            ),
+            
+            # Supabase Database
+            MCPServerConfig(
+                name="supabase",
+                server_type=MCPServerType.SUPABASE,
+                url=settings.supabase_url,
+                capabilities=["database", "auth", "storage", "functions", "realtime"],
+                description="Supabase database for secure legal data storage",
+                auth_token=settings.supabase_service_role_key
+            ),
+            
+            # Zapier Automation
+            MCPServerConfig(
+                name="zapier",
+                server_type=MCPServerType.ZAPIER,
+                url="https://hooks.zapier.com/hooks/catch",
+                capabilities=["webhooks", "triggers", "actions", "workflows"],
+                description="Zapier integration for legal workflow automation",
+                auth_token=settings.zapier_api_key
+            ),
+        ]
+        
+        # Register servers that have valid configurations
+        registered_count = 0
+        for server_config in default_servers:
+            if self._is_server_configurable(server_config):
+                try:
+                    await self.register_server(server_config)
+                    registered_count += 1
+                except Exception as e:
+                    logger.error(f"Failed to register MCP server {server_config.name}: {e}")
+            else:
+                logger.debug(f"Skipping MCP server {server_config.name} - incomplete configuration")
+        
+        logger.info(f"Registered {registered_count} MCP servers")
+    
+    def _is_server_configurable(self, config: MCPServerConfig) -> bool:
+        """Check if a server configuration is complete and valid."""
+        # Internal servers (Redis) can be registered without auth tokens
+        if config.server_type == MCPServerType.REDIS:
+            return bool(config.url)
+        
+        # External servers need auth tokens
+        return bool(config.auth_token and config.url)
                 priority=9
             ),
             MCPServerConfig(

@@ -9,8 +9,9 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from typing import Dict, Any
+from datetime import datetime, timedelta
 
-from fastapi import FastAPI, WebSocket, HTTPException, Request, Depends
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -26,6 +27,7 @@ from .auxiliary_services import initialize_auxiliary_services, cleanup_auxiliary
 from .mcp.orchestrator import mcp_orchestrator
 from .mcp.database_optimizer import db_optimizer
 from .mcp.knowledge_integrator import knowledge_integrator
+from .database import init_database, close_database, get_database_session
 
 # Import new API modules
 from .api import clio_endpoints
@@ -60,6 +62,10 @@ async def lifespan(app: FastAPI):
     logger.info("Starting HERMES AI Voice Agent System with MCP Integration...")
     
     try:
+        # Initialize database connection
+        await init_database()
+        logger.info("Database initialization completed")
+        
         # Initialize MCP orchestrator
         await mcp_orchestrator.initialize()
         
@@ -106,6 +112,10 @@ async def lifespan(app: FastAPI):
         
         # Cleanup event streaming
         await event_streaming.cleanup()
+        
+        # Cleanup database connection
+        await close_database()
+        logger.info("Database connection closed")
             
         # Cleanup MCP components
         await knowledge_integrator.cleanup()
@@ -273,6 +283,29 @@ async def test_synthesis(request: Dict[str, str]) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"TTS synthesis test failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Synthesis failed: {str(e)}")
+
+
+# WebSocket endpoint for real-time voice processing
+@app.websocket("/ws/voice")
+async def voice_websocket(websocket: WebSocket):
+    """WebSocket endpoint for real-time voice processing with low latency."""
+    if not websocket_handler:
+        await websocket.close(code=1013, reason="Voice pipeline not initialized")
+        return
+        
+    client_ip = websocket.client.host if websocket.client else "unknown"
+    
+    try:
+        session_id = await websocket_handler.connect(websocket, client_ip)
+        await websocket_handler.handle_client(session_id)
+    except WebSocketDisconnect:
+        logger.info(f"Voice WebSocket client disconnected")
+    except Exception as e:
+        logger.error(f"Voice WebSocket error: {str(e)}")
+        try:
+            await websocket.close(code=1011, reason="Internal server error")
+        except:
+            pass
 
 
 # WebSocket endpoint for real-time dashboard updates

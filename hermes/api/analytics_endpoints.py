@@ -23,25 +23,46 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/analytics", tags=["analytics"])
 
 
+# Helper function to get analytics engine
+async def get_analytics_engine(
+    tenant_context = Depends(get_tenant_context)
+) -> AnalyticsEngine:
+    """Get analytics engine for API operations."""
+    # Get database session if available
+    from ..database import get_database_session
+    db_session = await get_database_session()
+    
+    # Initialize analytics engine
+    engine = AnalyticsEngine(db_session=db_session)
+    await engine.initialize()
+    return engine
+
+
 @router.get("/dashboard/overview")
 async def get_dashboard_overview(
     time_range: TimeRange = Query(TimeRange.DAY, description="Time range for metrics"),
     current_user = Depends(get_current_user),
     tenant_context = Depends(get_tenant_context),
+    analytics_engine: AnalyticsEngine = Depends(get_analytics_engine),
     _: None = Depends(require_permission("analytics:read"))
 ):
     """Get dashboard overview data."""
     try:
-        # Mock data for dashboard - in production this would use AnalyticsEngine
+        # Get real analytics data from engine
+        call_stats = await analytics_engine.get_call_statistics(
+            tenant_id=tenant_context.tenant_id, 
+            time_range=time_range
+        )
+        
         overview_data = {
-            "total_calls": 127,
-            "calls_trend": "+12%",
-            "conversion_rate": 78.5,
-            "conversion_trend": "+5%", 
-            "response_time": 245,
-            "response_trend": "-15ms",
-            "satisfaction": 4.7,
-            "satisfaction_trend": "+0.2"
+            "total_calls": call_stats.total_calls,
+            "calls_trend": "+12%",  # This would be calculated from historical data
+            "conversion_rate": call_stats.conversion_rate,
+            "conversion_trend": "+5%",  # This would be calculated from historical data
+            "response_time": 245,  # This would come from voice metrics
+            "response_trend": "-15ms",  # This would be calculated from historical data
+            "satisfaction": call_stats.client_satisfaction,
+            "satisfaction_trend": "+0.2"  # This would be calculated from historical data
         }
         
         return {

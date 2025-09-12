@@ -116,14 +116,61 @@ class SystemPerformance(BaseModel):
 class AnalyticsEngine:
     """Main analytics engine for processing and aggregating metrics."""
     
-    def __init__(self, db_session: AsyncSession):
+    def __init__(self, db_session: Optional[AsyncSession] = None):
         self.db = db_session
         self._metric_cache = {}
         self._cache_ttl = 300  # 5 minutes
+        self._initialized = False
+        self._mock_data_enabled = db_session is None
+        
+        if self._mock_data_enabled:
+            logger.warning("Analytics engine initialized without database session - using mock data")
+    
+    async def initialize(self):
+        """Initialize the analytics engine."""
+        if not self._mock_data_enabled and self.db:
+            # Create analytics tables if they don't exist
+            await self._ensure_analytics_tables()
+        self._initialized = True
+        logger.info("Analytics engine initialized")
+    
+    async def _ensure_analytics_tables(self):
+        """Ensure analytics tables exist in the database."""
+        try:
+            # Create analytics_metrics table if it doesn't exist
+            create_table_query = text("""
+                CREATE TABLE IF NOT EXISTS analytics_metrics (
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    value DECIMAL NOT NULL,
+                    timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+                    tenant_id VARCHAR(100) NOT NULL,
+                    metadata JSONB DEFAULT '{}',
+                    metric_type VARCHAR(50) NOT NULL,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_analytics_tenant_time (tenant_id, timestamp),
+                    INDEX idx_analytics_metric_type (metric_type),
+                    INDEX idx_analytics_name (name)
+                )
+            """)
+            await self.db.execute(create_table_query)
+            await self.db.commit()
+            logger.info("Analytics tables ensured")
+        except Exception as e:
+            logger.error(f"Failed to ensure analytics tables: {e}")
+            await self.db.rollback()
         
     async def record_metric(self, metric: AnalyticsMetric) -> bool:
         """Record a new analytics metric."""
         try:
+            if self._mock_data_enabled:
+                # Store in memory cache for mock mode
+                cache_key = f"{metric.tenant_id}:{metric.name}:{metric.timestamp.isoformat()}"
+                self._metric_cache[cache_key] = metric
+                logger.debug(f"Recorded metric (mock): {metric.name} = {metric.value}")
+                return True
+            
+            # Real database implementation
             query = text("""
                 INSERT INTO analytics_metrics 
                 (name, value, timestamp, tenant_id, metadata, metric_type)
@@ -145,12 +192,17 @@ class AnalyticsEngine:
             
         except Exception as e:
             logger.error(f"Failed to record metric: {e}")
-            await self.db.rollback()
+            if not self._mock_data_enabled:
+                await self.db.rollback()
             return False
     
     async def query_metrics(self, query: AnalyticsQuery) -> List[Dict[str, Any]]:
         """Execute analytics query and return results."""
         try:
+            if self._mock_data_enabled:
+                # Return mock data when no database is available
+                return await self._generate_mock_metrics(query)
+            
             # Build dynamic query based on parameters
             base_query = """
                 SELECT 
@@ -212,6 +264,40 @@ class AnalyticsEngine:
         except Exception as e:
             logger.error(f"Failed to query metrics: {e}")
             return []
+    
+    async def _generate_mock_metrics(self, query: AnalyticsQuery) -> List[Dict[str, Any]]:
+        """Generate mock metrics data for testing/demo purposes."""
+        mock_metrics = []
+        now = datetime.utcnow()
+        
+        # Generate mock data based on query parameters
+        for metric_type in query.metric_types or [MetricType.CALL_VOLUME]:
+            if metric_type == MetricType.CALL_VOLUME:
+                mock_metrics.extend([
+                    {"name": "total_calls", "value": 127, "period": now.isoformat(), 
+                     "tenant_id": query.tenant_id or "default", "metric_type": metric_type.value},
+                    {"name": "answered_calls", "value": 98, "period": now.isoformat(),
+                     "tenant_id": query.tenant_id or "default", "metric_type": metric_type.value},
+                    {"name": "missed_calls", "value": 29, "period": now.isoformat(),
+                     "tenant_id": query.tenant_id or "default", "metric_type": metric_type.value},
+                ])
+            elif metric_type == MetricType.CONVERSION_RATE:
+                mock_metrics.append({
+                    "name": "conversion_rate", "value": 78.5, "period": now.isoformat(),
+                    "tenant_id": query.tenant_id or "default", "metric_type": metric_type.value
+                })
+            elif metric_type == MetricType.RESPONSE_TIME:
+                mock_metrics.append({
+                    "name": "average_response_time", "value": 245, "period": now.isoformat(),
+                    "tenant_id": query.tenant_id or "default", "metric_type": metric_type.value
+                })
+            elif metric_type == MetricType.CLIENT_SATISFACTION:
+                mock_metrics.append({
+                    "name": "client_satisfaction", "value": 4.7, "period": now.isoformat(),
+                    "tenant_id": query.tenant_id or "default", "metric_type": metric_type.value
+                })
+        
+        return mock_metrics
     
     async def get_call_statistics(self, tenant_id: str, time_range: TimeRange = TimeRange.DAY) -> CallStatistics:
         """Get comprehensive call statistics."""

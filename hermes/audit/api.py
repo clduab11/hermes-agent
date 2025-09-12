@@ -123,9 +123,14 @@ async def get_analytics_engine(
     tenant_context = Depends(get_tenant_context)
 ) -> AnalyticsEngine:
     """Get analytics engine for audit operations."""
-    # This would typically inject the database session
-    # For now, we'll use a mock implementation
-    return AnalyticsEngine(db_session=None)  # Mock session
+    # Get database session if available
+    from ..database import get_database_session
+    db_session = await get_database_session()
+    
+    # Initialize analytics engine
+    engine = AnalyticsEngine(db_session=db_session)
+    await engine.initialize()
+    return engine
 
 
 @router.post("/events", response_model=AuditEventResponse)
