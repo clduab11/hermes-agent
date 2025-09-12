@@ -122,10 +122,10 @@ class WhisperSTT:
         """
         # Convert bytes to numpy array
         # Assuming 16-bit PCM audio at sample rate defined in settings
-        audio_array = np.frombuffer(audio_data, dtype=np.int16)
+        audio_int16 = np.frombuffer(audio_data, dtype=np.int16)
         
         # Convert to float32 and normalize to [-1, 1]
-        audio_array = audio_array.astype(np.float32) / 32768.0
+        audio_array = audio_int16.astype(np.float32) / 32768.0
         
         # Ensure we have the right sample rate
         # Whisper expects 16kHz audio
@@ -144,6 +144,9 @@ class WhisperSTT:
         Returns:
             Whisper transcription result
         """
+        if self._model is None:
+            raise RuntimeError("Whisper model not initialized.")
+        
         return self._model.transcribe(
             audio_array,
             language=None,  # Auto-detect language
