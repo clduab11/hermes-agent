@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_SOCKET_IO_URL=http://localhost:3001
+  backend:
+    build: ./backend
+    ports:
+      - "3001:3001"
+    command: npm start
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
