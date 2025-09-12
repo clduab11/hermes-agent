@@ -179,6 +179,7 @@ pip install -r requirements.txt
 # Configure environment
 cp .env.example .env
 # Edit .env with your OpenAI API key
+# See docs/environment-variables.md for all variables.
 
 # Run voice pipeline demo
 python setup_demo.py
