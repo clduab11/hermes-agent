@@ -26,6 +26,12 @@ from .auxiliary_services import initialize_auxiliary_services, cleanup_auxiliary
 from .mcp.orchestrator import mcp_orchestrator
 from .mcp.database_optimizer import db_optimizer
 from .mcp.knowledge_integrator import knowledge_integrator
+
+# Import new API modules
+from .api import clio_endpoints
+from .api import analytics_endpoints
+from .audit import api as audit_api
+from .analytics.engine import AnalyticsEngine
 from pydantic import BaseModel
 
 # Configure logging
@@ -127,6 +133,21 @@ async def auth_token(request: TokenRequest) -> TokenPair:
     """Generate a token pair for testing purposes."""
     return jwt_handler.create_token_pair(request.subject, request.tenant_id)
 
+
+@app.get("/api/auth/user")
+async def get_current_user_info():
+    """Get current user information for dashboard."""
+    # Mock user data for demo
+    return {
+        "id": "demo_user",
+        "name": "Demo Attorney",
+        "email": "demo@hermes-ai.com",
+        "role": "Senior Attorney",
+        "avatar_url": "/static/assets/default-avatar.png",
+        "tenant_id": "demo_tenant",
+        "permissions": ["dashboard:read", "analytics:read", "clio:read", "audit:read"]
+    }
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -139,12 +160,23 @@ app.add_middleware(
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Include API routers
+app.include_router(clio_endpoints.router)
+app.include_router(analytics_endpoints.router) 
+app.include_router(audit_api.router)
+
 
 # Demo page endpoint
 @app.get("/")
 async def demo_page():
     """Serve the demo page."""
     return FileResponse("static/demo.html")
+
+# Dashboard endpoint  
+@app.get("/dashboard")
+async def dashboard():
+    """Serve the professional dashboard."""
+    return FileResponse("static/dashboard/index.html")
 
 
 # Health check endpoint
