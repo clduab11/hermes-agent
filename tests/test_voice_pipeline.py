@@ -53,6 +53,49 @@ class TestVoicePipelineComponents:
         
         assert "appointment" in result.lower()
         mock_client.chat.completions.create.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_conversation_history_passed_and_truncated(self):
+        """Conversation history is stored, passed to LLM, and truncated."""
+        pipeline = VoicePipeline()
+
+        mock_response = Mock()
+        mock_response.choices = [Mock()]
+        mock_response.choices[0].message.content = "Response"
+
+        mock_client = AsyncMock()
+        mock_client.chat.completions.create.return_value = mock_response
+        pipeline._openai_client = mock_client
+
+        session = "history-session"
+
+        await pipeline._process_with_llm("first", session)
+        await pipeline._process_with_llm("second", session)
+
+        # Verify previous exchange included in second call
+        call_args = mock_client.chat.completions.create.call_args_list[-1]
+        messages = call_args.kwargs["messages"]
+        assert messages[1]["content"] == "first"
+        assert messages[2]["role"] == "assistant"
+
+        # Exceed history limit to trigger truncation
+        for i in range(pipeline._HISTORY_LIMIT):
+            await pipeline._process_with_llm(f"msg{i}", session)
+
+        history = pipeline._conversations[session]
+        assert len(history) == pipeline._HISTORY_LIMIT
+        assert history[0]["content"] == "msg" + str(pipeline._HISTORY_LIMIT // 2)
+
+    def test_humanize_response_prefixes(self):
+        """Humanization adds or skips prefixes appropriately."""
+        pipeline = VoicePipeline()
+
+        with patch("hermes.voice_pipeline.random.choice", lambda seq: seq[0]):
+            offer = pipeline._humanize_response("I can assist you with that")
+            assert offer.startswith(pipeline._OFFER_PREFIXES[0])
+
+            compliance = pipeline._humanize_response("I cannot provide that")
+            assert compliance == "I cannot provide that"
     
     def test_prohibited_content_detection(self):
         """Test prohibited content detection."""
