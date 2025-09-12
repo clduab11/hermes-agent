@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HERMES - AI-Powered Legal Voice Agent Dashboard">
+    <title>HERMES Legal AI Dashboard</title>
+    
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Legal-themed typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Source+Sans+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="/static/assets/legal-theme/styles.css">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#1a365d">
+    
+    <!-- iOS PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="HERMES Legal AI">
+    <link rel="apple-touch-icon" href="/static/assets/icons/icon-192x192.png">
+    
+    <!-- Security headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; connect-src 'self' wss: ws:;">
+</head>
+<body class="legal-dashboard" data-theme="professional">
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner">
+            <div class="spinner-ring"></div>
+            <p>Loading HERMES Dashboard...</p>
+        </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <nav class="main-nav" role="navigation" aria-label="Main navigation">
+        <div class="nav-brand">
+            <img src="/static/assets/icons/hermes-logo.svg" alt="HERMES Legal AI" class="logo">
+            <h1 class="brand-title">HERMES</h1>
+            <span class="brand-subtitle">Legal AI Assistant</span>
+        </div>
+        
+        <div class="nav-menu">
+            <ul class="nav-items" role="menubar">
+                <li role="none">
+                    <a href="#dashboard" class="nav-link active" role="menuitem" aria-current="page">
+                        <i class="fas fa-tachometer-alt" aria-hidden="true"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li role="none">
+                    <a href="#voice-interface" class="nav-link" role="menuitem">
+                        <i class="fas fa-microphone" aria-hidden="true"></i>
+                        <span>Voice Interface</span>
+                    </a>
+                </li>
+                <li role="none">
+                    <a href="#analytics" class="nav-link" role="menuitem">
+                        <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li role="none">
+                    <a href="#clients" class="nav-link" role="menuitem">
+                        <i class="fas fa-users" aria-hidden="true"></i>
+                        <span>Clients</span>
+                    </a>
+                </li>
+                <li role="none">
+                    <a href="#matters" class="nav-link" role="menuitem">
+                        <i class="fas fa-briefcase" aria-hidden="true"></i>
+                        <span>Matters</span>
+                    </a>
+                </li>
+                <li role="none">
+                    <a href="#workflows" class="nav-link" role="menuitem">
+                        <i class="fas fa-sitemap" aria-hidden="true"></i>
+                        <span>Workflows</span>
+                    </a>
+                </li>
+                <li role="none">
+                    <a href="#admin" class="nav-link" role="menuitem">
+                        <i class="fas fa-cogs" aria-hidden="true"></i>
+                        <span>Admin</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="nav-user">
+            <div class="user-menu">
+                <button class="user-button" aria-expanded="false" aria-haspopup="true">
+                    <img src="/static/assets/icons/default-avatar.svg" alt="" class="user-avatar">
+                    <span class="user-name" id="current-user-name">Loading...</span>
+                    <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                </button>
+                <ul class="user-dropdown" role="menu">
+                    <li role="none">
+                        <a href="#profile" role="menuitem">
+                            <i class="fas fa-user" aria-hidden="true"></i>
+                            Profile
+                        </a>
+                    </li>
+                    <li role="none">
+                        <a href="#settings" role="menuitem">
+                            <i class="fas fa-sliders-h" aria-hidden="true"></i>
+                            Settings
+                        </a>
+                    </li>
+                    <li role="none">
+                        <a href="#help" role="menuitem">
+                            <i class="fas fa-question-circle" aria-hidden="true"></i>
+                            Help & Support
+                        </a>
+                    </li>
+                    <li role="separator" class="divider"></li>
+                    <li role="none">
+                        <a href="#logout" role="menuitem" class="logout-link">
+                            <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                            Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content" role="main">
+        
+        <!-- Status Bar -->
+        <section class="status-bar" aria-live="polite">
+            <div class="status-item">
+                <span class="status-label">System Status:</span>
+                <span class="status-value online" id="system-status">Online</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Voice Engine:</span>
+                <span class="status-value online" id="voice-status">Ready</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Active Sessions:</span>
+                <span class="status-value" id="active-sessions">0</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Today's Calls:</span>
+                <span class="status-value" id="daily-calls">0</span>
+            </div>
+        </section>
+
+        <!-- Page Content Container -->
+        <div class="content-container">
+            
+            <!-- Dashboard Page -->
+            <section id="dashboard-page" class="page-section active" aria-labelledby="dashboard-title">
+                <header class="page-header">
+                    <h2 id="dashboard-title" class="page-title">Dashboard Overview</h2>
+                    <p class="page-description">Monitor your AI voice agent performance and client interactions</p>
+                </header>
+                
+                <!-- Key Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-phone" aria-hidden="true"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>Total Calls</h3>
+                            <span class="metric-value" id="total-calls">0</span>
+                            <span class="metric-change positive">+12% vs last month</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-clock" aria-hidden="true"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>Avg Response Time</h3>
+                            <span class="metric-value" id="avg-response">0ms</span>
+                            <span class="metric-change positive">-5% vs last month</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-star" aria-hidden="true"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>Client Satisfaction</h3>
+                            <span class="metric-value" id="satisfaction">0%</span>
+                            <span class="metric-change positive">+3% vs last month</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <div class="metric-icon">
+                            <i class="fas fa-briefcase" aria-hidden="true"></i>
+                        </div>
+                        <div class="metric-content">
+                            <h3>New Matters</h3>
+                            <span class="metric-value" id="new-matters">0</span>
+                            <span class="metric-change positive">+8% vs last month</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h3>Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button class="action-btn primary" onclick="startVoiceSession()">
+                            <i class="fas fa-microphone-alt" aria-hidden="true"></i>
+                            Start Voice Session
+                        </button>
+                        <button class="action-btn secondary" onclick="createMatter()">
+                            <i class="fas fa-plus" aria-hidden="true"></i>
+                            Create New Matter
+                        </button>
+                        <button class="action-btn secondary" onclick="scheduleCall()">
+                            <i class="fas fa-calendar-plus" aria-hidden="true"></i>
+                            Schedule Call
+                        </button>
+                        <button class="action-btn secondary" onclick="generateReport()">
+                            <i class="fas fa-file-alt" aria-hidden="true"></i>
+                            Generate Report
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="activity-feed">
+                    <h3>Recent Activity</h3>
+                    <div id="recent-activity" class="activity-list">
+                        <!-- Activity items will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Voice Interface Page -->
+            <section id="voice-interface-page" class="page-section" aria-labelledby="voice-title">
+                <header class="page-header">
+                    <h2 id="voice-title" class="page-title">Voice Interface</h2>
+                    <p class="page-description">Real-time AI voice interaction with clients</p>
+                </header>
+                
+                <!-- Voice Interface will be loaded here -->
+                <div id="voice-interface-container">
+                    <!-- Voice interface component will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Analytics Page -->
+            <section id="analytics-page" class="page-section" aria-labelledby="analytics-title">
+                <header class="page-header">
+                    <h2 id="analytics-title" class="page-title">Analytics</h2>
+                    <p class="page-description">Performance insights and business intelligence</p>
+                </header>
+                
+                <!-- Analytics Dashboard will be loaded here -->
+                <div id="analytics-container">
+                    <!-- Analytics component will be inserted here -->
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" aria-label="Toggle navigation menu">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Scripts -->
+    <script src="/static/dashboard/app.js"></script>
+    <script src="/static/dashboard/voice-interface.js"></script>
+    <script src="/static/dashboard/analytics.js"></script>
+    
+    <!-- Service Worker for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed');
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
