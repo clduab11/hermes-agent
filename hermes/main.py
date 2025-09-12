@@ -21,6 +21,8 @@ from .voice_pipeline import VoicePipeline
 from .websocket_handler import VoiceWebSocketHandler
 from .auth import JWTAuthMiddleware, JWTHandler, TenantManager
 from .auth.models import TokenPair
+from .event_streaming import event_streaming
+from .auxiliary_services import initialize_auxiliary_services, cleanup_auxiliary_services
 from .mcp.orchestrator import mcp_orchestrator
 from .mcp.database_optimizer import db_optimizer
 from .mcp.knowledge_integrator import knowledge_integrator
@@ -57,14 +59,22 @@ async def lifespan(app: FastAPI):
         # Initialize knowledge integrator
         await knowledge_integrator.initialize()
         
-        # Initialize voice pipeline
-        voice_pipeline = VoicePipeline()
+        # Initialize event streaming service
+        await event_streaming.initialize()
+        logger.info("Event streaming service initialized")
+        
+        # Initialize auxiliary services (compliance, audit, performance monitoring)
+        await initialize_auxiliary_services(event_streaming)
+        logger.info("Auxiliary services initialized")
+        
+        # Initialize voice pipeline with event streaming
+        voice_pipeline = VoicePipeline(event_streaming=event_streaming)
         await voice_pipeline.initialize()
         
         # Initialize WebSocket handler
         websocket_handler = VoiceWebSocketHandler(voice_pipeline, jwt_handler=jwt_handler)
         
-        logger.info("HERMES system with MCP orchestration initialized successfully")
+        logger.info("HERMES system with MCP orchestration and event streaming initialized successfully")
         yield
         
     except Exception as e:
@@ -80,6 +90,12 @@ async def lifespan(app: FastAPI):
         
         if voice_pipeline:
             await voice_pipeline.cleanup()
+            
+        # Cleanup auxiliary services
+        await cleanup_auxiliary_services()
+        
+        # Cleanup event streaming
+        await event_streaming.cleanup()
             
         # Cleanup MCP components
         await knowledge_integrator.cleanup()

@@ -6,6 +6,8 @@ import logging
 import random
 import time
 from typing import Optional, Dict, Any, AsyncGenerator, List, TypedDict, Literal
+from datetime import datetime, timezone
+from uuid import uuid4
 
 import openai
 from pydantic import BaseModel
@@ -13,6 +15,7 @@ from pydantic import BaseModel
 from .config import settings
 from .speech_to_text import WhisperSTT, TranscriptionResult
 from .text_to_speech import KokoroTTS, SynthesisResult
+from .event_streaming import EventStreamingService, VoiceEvent, EventType
 
 logger = logging.getLogger(__name__)
 
@@ -53,13 +56,15 @@ class VoicePipeline:
         "",
     ]
 
-    def __init__(self):
+    def __init__(self, event_streaming: Optional[EventStreamingService] = None):
         self.stt = WhisperSTT()
         self.tts = KokoroTTS()
         self._openai_client: Optional[openai.AsyncOpenAI] = None
         self._initialized = False
         # Maintain conversational context per session for more human-like interactions
         self._conversations: Dict[str, List[ChatMessage]] = {}
+        # Event streaming for auxiliary services
+        self.event_streaming = event_streaming
         
     async def initialize(self) -> None:
         """Initialize all pipeline components."""
@@ -98,12 +103,54 @@ class VoicePipeline:
             audio_input=audio_data
         )
         
+        # Extract tenant_id from session (in production, get from JWT/auth)
+        tenant_id = "demo_tenant"  # TODO: Get from actual session/auth
+        correlation_id = str(uuid4())
+        
         start_time = time.time()
         
         try:
+            # Publish interaction started event
+            if self.event_streaming:
+                await self.event_streaming.publish_event(VoiceEvent(
+                    event_type=EventType.VOICE_INTERACTION_STARTED,
+                    session_id=session_id,
+                    tenant_id=tenant_id,
+                    user_id=None,  # TODO: Get from auth
+                    timestamp=datetime.now(timezone.utc),
+                    data={
+                        "audio_size_bytes": len(audio_data),
+                        "processing_started": True
+                    },
+                    metadata={"pipeline_version": "1.0"},
+                    correlation_id=correlation_id
+                ))
+            
             # Step 1: Speech-to-Text
             logger.info(f"[{session_id}] Starting STT processing...")
+            stt_start = time.time()
             interaction.transcription = await self.stt.transcribe_audio(audio_data)
+            stt_time = time.time() - stt_start
+            
+            # Publish STT completion event
+            if self.event_streaming:
+                await self.event_streaming.publish_event(VoiceEvent(
+                    event_type=EventType.STT_PROCESSED,
+                    session_id=session_id,
+                    tenant_id=tenant_id,
+                    user_id=None,
+                    timestamp=datetime.now(timezone.utc),
+                    data={
+                        "transcription": {
+                            "text": interaction.transcription.text,
+                            "confidence": interaction.transcription.confidence
+                        },
+                        "processing_time_ms": stt_time * 1000,
+                        "language_detected": interaction.transcription.language_code
+                    },
+                    metadata={"stt_model": "whisper"},
+                    correlation_id=correlation_id
+                ))
             
             # Check if we have meaningful speech
             if not interaction.transcription.text.strip():
@@ -122,19 +169,84 @@ class VoicePipeline:
             
             # Step 3: LLM Processing
             logger.info(f"[{session_id}] Processing with LLM: '{interaction.transcription.text[:50]}...'")
+            llm_start = time.time()
             interaction.llm_response = await self._process_with_llm(
                 interaction.transcription.text,
                 session_id
             )
+            llm_time = time.time() - llm_start
+            
+            # Publish LLM completion event
+            if self.event_streaming:
+                await self.event_streaming.publish_event(VoiceEvent(
+                    event_type=EventType.LLM_PROCESSED,
+                    session_id=session_id,
+                    tenant_id=tenant_id,
+                    user_id=None,
+                    timestamp=datetime.now(timezone.utc),
+                    data={
+                        "response_text": interaction.llm_response,
+                        "processing_time_ms": llm_time * 1000,
+                        "input_tokens": len(interaction.transcription.text.split()),
+                        "output_tokens": len(interaction.llm_response.split())
+                    },
+                    metadata={"llm_model": settings.openai_model},
+                    correlation_id=correlation_id
+                ))
             
             # Step 4: Text-to-Speech
             if interaction.llm_response:
                 logger.info(f"[{session_id}] Starting TTS synthesis...")
+                tts_start = time.time()
                 interaction.audio_output = await self.tts.synthesize_text(
                     interaction.llm_response
                 )
+                tts_time = time.time() - tts_start
+                
+                # Publish TTS completion event
+                if self.event_streaming:
+                    await self.event_streaming.publish_event(VoiceEvent(
+                        event_type=EventType.TTS_PROCESSED,
+                        session_id=session_id,
+                        tenant_id=tenant_id,
+                        user_id=None,
+                        timestamp=datetime.now(timezone.utc),
+                        data={
+                            "synthesized_text": interaction.llm_response,
+                            "audio_size_bytes": len(interaction.audio_output.audio_data),
+                            "processing_time_ms": tts_time * 1000,
+                            "voice_used": interaction.audio_output.voice_id,
+                            "duration_seconds": interaction.audio_output.duration_seconds
+                        },
+                        metadata={"tts_engine": "kokoro"},
+                        correlation_id=correlation_id
+                    ))
             
             interaction.total_processing_time = time.time() - start_time
+            
+            # Publish interaction completion event
+            if self.event_streaming:
+                await self.event_streaming.publish_event(VoiceEvent(
+                    event_type=EventType.VOICE_INTERACTION_COMPLETED,
+                    session_id=session_id,
+                    tenant_id=tenant_id,
+                    user_id=None,
+                    timestamp=datetime.now(timezone.utc),
+                    data={
+                        "total_processing_time": interaction.total_processing_time,
+                        "confidence_score": interaction.confidence_score,
+                        "requires_human_transfer": interaction.requires_human_transfer,
+                        "stt_time_ms": stt_time * 1000 if 'stt_time' in locals() else 0,
+                        "llm_time_ms": llm_time * 1000 if 'llm_time' in locals() else 0,
+                        "tts_time_ms": tts_time * 1000 if 'tts_time' in locals() else 0,
+                        "human_transfer_initiated": False  # TODO: Track actual transfers
+                    },
+                    metadata={
+                        "performance_target_met": interaction.total_processing_time < 0.1,
+                        "pipeline_success": True
+                    },
+                    correlation_id=correlation_id
+                ))
             
             logger.info(
                 f"[{session_id}] Voice interaction completed in "
@@ -142,6 +254,29 @@ class VoicePipeline:
             )
             
             return interaction
+            
+        except Exception as e:
+            interaction.total_processing_time = time.time() - start_time
+            
+            # Publish error event
+            if self.event_streaming:
+                await self.event_streaming.publish_event(VoiceEvent(
+                    event_type=EventType.ERROR_OCCURRED,
+                    session_id=session_id,
+                    tenant_id=tenant_id,
+                    user_id=None,
+                    timestamp=datetime.now(timezone.utc),
+                    data={
+                        "error_message": str(e),
+                        "error_type": type(e).__name__,
+                        "processing_time_before_error": interaction.total_processing_time
+                    },
+                    metadata={"pipeline_stage": "voice_interaction"},
+                    correlation_id=correlation_id
+                ))
+                
+            logger.error(f"[{session_id}] Voice processing failed: {str(e)}")
+            raise
             
         except Exception as e:
             interaction.total_processing_time = time.time() - start_time
@@ -295,6 +430,44 @@ Respond naturally and conversationally, as if speaking to someone on the phone."
         response = response.replace(" but ", " but, ")
 
         return response.strip()
+
+    def _requires_human_transfer(self, user_input: str, ai_response: str) -> bool:
+        """
+        Determine if interaction requires human transfer based on content analysis.
+        
+        Args:
+            user_input: User's transcribed input
+            ai_response: AI's response
+            
+        Returns:
+            True if human transfer is recommended
+        """
+        # Check for complex legal questions
+        complex_legal_indicators = [
+            "lawsuit", "sue", "legal action", "court", "judge", "trial",
+            "settlement", "damages", "liability", "contract dispute",
+            "criminal charges", "divorce", "custody", "estate planning"
+        ]
+        
+        user_lower = user_input.lower()
+        for indicator in complex_legal_indicators:
+            if indicator in user_lower:
+                return True
+        
+        # Check if AI response indicates uncertainty
+        uncertainty_indicators = [
+            "I can't provide legal advice",
+            "connect you with an attorney",
+            "speak with a lawyer",
+            "consult with our legal team"
+        ]
+        
+        ai_lower = ai_response.lower()
+        for indicator in uncertainty_indicators:
+            if indicator in ai_lower:
+                return True
+                
+        return False
 
     def _humanize_response(self, response: str) -> str:
         """Add natural-sounding prefix to make responses feel more human, with conditional logic."""
