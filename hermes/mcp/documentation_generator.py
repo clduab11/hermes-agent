@@ -14,17 +14,22 @@ from datetime import datetime
 from dataclasses import dataclass
 from pathlib import Path
 
+import openai
+
+from ..config import settings
+
 logger = logging.getLogger(__name__)
 
 
 @dataclass
 class DocumentationSection:
     """Represents a documentation section."""
+
     title: str
     content: str
     order: int
-    subsections: List['DocumentationSection'] = None
-    
+    subsections: List["DocumentationSection"] = None
+
     def __post_init__(self):
         if self.subsections is None:
             self.subsections = []
@@ -33,64 +38,97 @@ class DocumentationSection:
 class DocumentationGenerator:
     """
     Automatically generates comprehensive documentation.
-    
+
     Features:
     - API documentation from FastAPI schema
-    - MCP integration tutorials 
+    - MCP integration tutorials
     - Deployment guides for GCP Cloud Run
     - Architecture documentation
     - Legal compliance documentation
     """
-    
+
     def __init__(self):
         self.docs_dir = Path("docs")
         self.generated_files: List[str] = []
-        
+        self._openai_client: Optional[openai.AsyncOpenAI] = None
+
+    async def _translate_to_american_english(self, text: str) -> str:
+        """Translate text to American English using OpenAI."""
+        if not text.strip() or not settings.openai_api_key:
+            return text
+
+        if self._openai_client is None:
+            self._openai_client = openai.AsyncOpenAI(api_key=settings.openai_api_key)
+
+        try:
+            response = await self._openai_client.responses.create(
+                model=settings.openai_model,
+                input=(
+                    "Translate the following text to American English. "
+                    "If it is already American English, return it unchanged:\n"
+                    f"{text}"
+                ),
+            )
+            return response.output_text.strip()
+        except Exception as e:
+            logger.warning(
+                "Translation to American English failed; using original text: %s", e
+            )
+            return text
+
     async def generate_all_documentation(self) -> Dict[str, Any]:
         """Generate all documentation types."""
         logger.info("Starting comprehensive documentation generation...")
-        
+
         # Ensure docs directory exists
         self.docs_dir.mkdir(exist_ok=True)
-        
+
         results = {}
-        
+
         try:
             # Generate different types of documentation
             results["api_documentation"] = await self._generate_api_documentation()
-            results["mcp_integration_guide"] = await self._generate_mcp_integration_guide()
+            results["mcp_integration_guide"] = (
+                await self._generate_mcp_integration_guide()
+            )
             results["deployment_guide"] = await self._generate_deployment_guide()
-            results["architecture_documentation"] = await self._generate_architecture_documentation()
-            results["legal_compliance_guide"] = await self._generate_legal_compliance_guide()
+            results["architecture_documentation"] = (
+                await self._generate_architecture_documentation()
+            )
+            results["legal_compliance_guide"] = (
+                await self._generate_legal_compliance_guide()
+            )
             results["user_manual"] = await self._generate_user_manual()
-            
+
             # Generate index file
             results["index_file"] = await self._generate_documentation_index()
-            
+
             return {
                 "status": "completed",
                 "files_generated": self.generated_files,
                 "documentation_coverage": "98%",
                 "last_updated": datetime.utcnow().isoformat(),
-                "results": results
+                "results": results,
             }
-            
+
         except Exception as e:
             logger.error(f"Documentation generation failed: {e}")
             return {
                 "status": "failed",
                 "error": str(e),
-                "files_generated": self.generated_files
+                "files_generated": self.generated_files,
             }
-    
+
     async def _generate_api_documentation(self) -> Dict[str, Any]:
         """Generate comprehensive API documentation."""
         logger.info("Generating API documentation...")
-        
+
         api_docs = DocumentationSection("HERMES API Documentation", "", 1)
-        
+
         # Overview section
-        overview = DocumentationSection("Overview", """
+        overview = DocumentationSection(
+            "Overview",
+            """
 # HERMES API Documentation
 
 The HERMES AI Voice Agent System provides a comprehensive REST API and WebSocket interface for real-time voice interactions with legal AI capabilities.
@@ -108,11 +146,15 @@ curl -X POST /auth/token \\
   -H "Content-Type: application/json" \\
   -d '{"subject": "user@example.com", "tenant_id": "your-tenant-id"}'
 ```
-        """, 1)
+        """,
+            1,
+        )
         api_docs.subsections.append(overview)
-        
+
         # Core endpoints section
-        endpoints = DocumentationSection("Core Endpoints", """
+        endpoints = DocumentationSection(
+            "Core Endpoints",
+            """
 ## Health Check
 Check system health and component status.
 
@@ -172,11 +214,15 @@ Get list of available TTS voices.
 ```http
 GET /voices
 ```
-        """, 2)
+        """,
+            2,
+        )
         api_docs.subsections.append(endpoints)
-        
+
         # MCP endpoints section
-        mcp_endpoints = DocumentationSection("MCP Orchestration Endpoints", """
+        mcp_endpoints = DocumentationSection(
+            "MCP Orchestration Endpoints",
+            """
 ## Execute Strategic Task
 Execute a specific MCP strategic task.
 
@@ -211,11 +257,15 @@ Execute all strategic tasks simultaneously.
 ```http
 POST /mcp/orchestrate
 ```
-        """, 3)
+        """,
+            3,
+        )
         api_docs.subsections.append(mcp_endpoints)
-        
+
         # Knowledge endpoints section
-        knowledge_endpoints = DocumentationSection("Knowledge Management Endpoints", """
+        knowledge_endpoints = DocumentationSection(
+            "Knowledge Management Endpoints",
+            """
 ## Search Legal Knowledge
 Search across legal knowledge sources.
 
@@ -236,11 +286,15 @@ Get knowledge usage insights for optimization.
 ```http
 GET /knowledge/insights/{tenant_id}
 ```
-        """, 4)
+        """,
+            4,
+        )
         api_docs.subsections.append(knowledge_endpoints)
-        
+
         # WebSocket section
-        websocket_docs = DocumentationSection("WebSocket Interface", """
+        websocket_docs = DocumentationSection(
+            "WebSocket Interface",
+            """
 ## Voice WebSocket Connection
 Real-time voice interaction via WebSocket.
 
@@ -275,28 +329,32 @@ ws.send(JSON.stringify({
 - `start_recording` - Start audio recording
 - `stop_recording` - Stop audio recording
 - `get_status` - Get connection status
-        """, 5)
+        """,
+            5,
+        )
         api_docs.subsections.append(websocket_docs)
-        
+
         # Save API documentation
         api_content = await self._render_documentation_section(api_docs)
         api_file = self.docs_dir / "api.md"
-        
-        with open(api_file, 'w') as f:
+
+        with open(api_file, "w") as f:
             f.write(api_content)
-            
+
         self.generated_files.append(str(api_file))
-        
+
         logger.info("API documentation generated successfully")
         return {"file": str(api_file), "sections": len(api_docs.subsections)}
-    
+
     async def _generate_mcp_integration_guide(self) -> Dict[str, Any]:
         """Generate MCP integration tutorial."""
         logger.info("Generating MCP integration guide...")
-        
+
         mcp_guide = DocumentationSection("MCP Integration Guide", "", 1)
-        
-        intro = DocumentationSection("Introduction to MCP Integration", """
+
+        intro = DocumentationSection(
+            "Introduction to MCP Integration",
+            """
 # HERMES MCP Integration Guide
 
 This guide explains how HERMES leverages Model Context Protocol (MCP) servers for agentic orchestration and autonomous development.
@@ -323,10 +381,14 @@ The MCP Orchestrator coordinates these servers to enable:
 - Cross-system integration
 - Intelligent workflow orchestration
 - Real-time performance optimization
-        """, 1)
+        """,
+            1,
+        )
         mcp_guide.subsections.append(intro)
-        
-        setup = DocumentationSection("Setup and Configuration", """
+
+        setup = DocumentationSection(
+            "Setup and Configuration",
+            """
 ## MCP Configuration
 
 Configure MCP servers in `mcp-config.json`:
@@ -377,10 +439,14 @@ result = await mcp_orchestrator.execute_strategic_task(
     tenant_id="your-tenant"
 )
 ```
-        """, 2)
+        """,
+            2,
+        )
         mcp_guide.subsections.append(setup)
-        
-        patterns = DocumentationSection("Agentic Orchestration Patterns", """
+
+        patterns = DocumentationSection(
+            "Agentic Orchestration Patterns",
+            """
 ## Pattern 1: Database-Knowledge Integration
 
 ```python
@@ -417,24 +483,26 @@ search_results = await knowledge_integrator.search_legal_knowledge(
 )
 # Results automatically update knowledge relationships
 ```
-        """, 3)
+        """,
+            3,
+        )
         mcp_guide.subsections.append(patterns)
-        
+
         mcp_content = await self._render_documentation_section(mcp_guide)
         mcp_file = self.docs_dir / "mcp-integration.md"
-        
-        with open(mcp_file, 'w') as f:
+
+        with open(mcp_file, "w") as f:
             f.write(mcp_content)
-            
+
         self.generated_files.append(str(mcp_file))
-        
+
         logger.info("MCP integration guide generated successfully")
         return {"file": str(mcp_file), "sections": len(mcp_guide.subsections)}
-    
+
     async def _generate_deployment_guide(self) -> Dict[str, Any]:
         """Generate deployment guide for GCP Cloud Run."""
         logger.info("Generating deployment guide...")
-        
+
         deployment_content = """
 # HERMES Deployment Guide
 
@@ -628,20 +696,20 @@ gcloud logging read --limit 50 "resource.type=cloud_run_revision"
 gcloud run services proxy hermes-voice-agent --port 8080
 ```
         """
-        
+
         deployment_file = self.docs_dir / "deployment.md"
-        with open(deployment_file, 'w') as f:
+        with open(deployment_file, "w") as f:
             f.write(deployment_content)
-            
+
         self.generated_files.append(str(deployment_file))
-        
+
         logger.info("Deployment guide generated successfully")
         return {"file": str(deployment_file), "sections": 8}
-    
+
     async def _generate_architecture_documentation(self) -> Dict[str, Any]:
         """Generate architecture documentation."""
         logger.info("Generating architecture documentation...")
-        
+
         architecture_content = """
 # HERMES Architecture Documentation
 
@@ -875,20 +943,20 @@ HERMES is a microservices-based AI voice agent system designed for law firms, fe
 - **Mobile SDK**: Native mobile applications
 - **API Gateway**: Centralized API management and analytics
         """
-        
+
         architecture_file = self.docs_dir / "architecture.md"
-        with open(architecture_file, 'w') as f:
+        with open(architecture_file, "w") as f:
             f.write(architecture_content)
-            
+
         self.generated_files.append(str(architecture_file))
-        
+
         logger.info("Architecture documentation generated successfully")
         return {"file": str(architecture_file), "sections": 10}
-    
+
     async def _generate_legal_compliance_guide(self) -> Dict[str, Any]:
         """Generate legal compliance documentation."""
         logger.info("Generating legal compliance guide...")
-        
+
         compliance_content = """
 # HERMES Legal Compliance Guide
 
@@ -1116,20 +1184,20 @@ All AI responses include appropriate disclaimers:
 - **Account Management**: accounts@parallax-ai.app
 - **Training**: training@parallax-ai.app
         """
-        
+
         compliance_file = self.docs_dir / "legal-compliance.md"
-        with open(compliance_file, 'w') as f:
+        with open(compliance_file, "w") as f:
             f.write(compliance_content)
-            
+
         self.generated_files.append(str(compliance_file))
-        
+
         logger.info("Legal compliance guide generated successfully")
         return {"file": str(compliance_file), "sections": 12}
-    
+
     async def _generate_user_manual(self) -> Dict[str, Any]:
         """Generate user manual."""
         logger.info("Generating user manual...")
-        
+
         manual_content = """
 # HERMES User Manual
 
@@ -1389,21 +1457,22 @@ Remember that using HERMES requires:
 
 *For additional support or questions, please contact our support team at support@parallax-ai.app or visit our documentation portal.*
         """
-        
+
         manual_file = self.docs_dir / "user-manual.md"
-        with open(manual_file, 'w') as f:
+        with open(manual_file, "w") as f:
             f.write(manual_content)
-            
+
         self.generated_files.append(str(manual_file))
-        
+
         logger.info("User manual generated successfully")
         return {"file": str(manual_file), "sections": 15}
-    
+
     async def _generate_documentation_index(self) -> Dict[str, Any]:
         """Generate documentation index file."""
         logger.info("Generating documentation index...")
-        
-        index_content = """
+
+        index_content = (
+            """
 # HERMES Documentation
 
 Welcome to the HERMES AI Voice Agent System documentation. This comprehensive guide covers everything you need to know about deploying, using, and maintaining HERMES.
@@ -1454,8 +1523,12 @@ Comprehensive coverage of HIPAA, GDPR, attorney-client privilege, and other lega
 
 - **Documentation Version**: 1.0.0
 - **HERMES Version**: 1.0.0
-- **Last Updated**: """ + datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC') + """
-- **Generated Files**: """ + str(len(self.generated_files)) + """ files
+- **Last Updated**: """
+            + datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+            + """
+- **Generated Files**: """
+            + str(len(self.generated_files))
+            + """ files
 
 ## Support
 
@@ -1469,24 +1542,25 @@ For questions about this documentation or HERMES in general:
 
 *This documentation was automatically generated by HERMES MCP Documentation Generator.*
         """
-        
+        )
+
         index_file = self.docs_dir / "README.md"
-        with open(index_file, 'w') as f:
+        with open(index_file, "w") as f:
             f.write(index_content)
-            
+
         self.generated_files.append(str(index_file))
-        
+
         logger.info("Documentation index generated successfully")
         return {"file": str(index_file), "sections": 6}
-    
+
     async def _render_documentation_section(self, section: DocumentationSection) -> str:
         """Render a documentation section to markdown."""
-        content = section.content
-        
+        content = await self._translate_to_american_english(section.content)
+
         if section.subsections:
             for subsection in sorted(section.subsections, key=lambda x: x.order):
                 content += "\n\n" + await self._render_documentation_section(subsection)
-                
+
         return content
 
 
