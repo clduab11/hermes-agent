@@ -1,0 +1,40 @@
+openapi: 3.0.0
+info:
+  title: Hermes Demo API
+  version: 0.1.0
+paths:
+  /api/twilio/inbound:
+    post:
+      summary: Handle inbound Twilio calls
+      responses:
+        '200': { description: OK }
+  /api/twilio/voice-stream:
+    post:
+      summary: Twilio media stream endpoint
+      responses:
+        '200': { description: OK }
+  /api/twilio/call-log:
+    post:
+      summary: Log demo calls
+      responses:
+        '200': { description: OK }
+  /api/clio/create-matter:
+    post:
+      summary: Create a Clio matter
+      responses:
+        '200': { description: OK }
+  /api/clio/sync-contact:
+    post:
+      summary: Sync contact information
+      responses:
+        '200': { description: OK }
+  /api/clio/time-entry:
+    post:
+      summary: Create time entry
+      responses:
+        '200': { description: OK }
+  /api/clio/log-activity:
+    post:
+      summary: Log activity
+      responses:
+        '200': { description: OK }
