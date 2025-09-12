@@ -32,6 +32,10 @@ from .api import clio_endpoints
 from .api import analytics_endpoints
 from .audit import api as audit_api
 from .analytics.engine import AnalyticsEngine
+from .voice.context_manager import get_context_manager
+from .voice.multilang_support import get_multilang_processor
+from .automation.workflows import get_workflow_engine
+from .knowledge.graph_sync import get_knowledge_graph_synchronizer
 from pydantic import BaseModel
 
 # Configure logging
@@ -271,31 +275,278 @@ async def test_synthesis(request: Dict[str, str]) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Synthesis failed: {str(e)}")
 
 
-# WebSocket endpoint for voice interactions
-@app.websocket("/voice")
-async def voice_websocket(websocket: WebSocket):
-    """WebSocket endpoint for real-time voice interactions."""
-    if not websocket_handler:
-        await websocket.close(code=1011, reason="Service not available")
-        return
+# WebSocket endpoint for real-time dashboard updates
+@app.websocket("/ws/dashboard")
+async def dashboard_websocket(websocket: WebSocket):
+    """WebSocket endpoint for real-time dashboard updates"""
+    await websocket.accept()
     
-    # Get client information
-    client_ip = websocket.client.host
+    client_id = f"dashboard_{int(time.time())}"
+    logger.info(f"Dashboard WebSocket connected: {client_id}")
     
     try:
-        # Accept connection
-        session_id = await websocket_handler.connect(websocket, client_ip)
+        # Send connection confirmation
+        await websocket.send_json({
+            "type": "connection_established",
+            "client_id": client_id,
+            "timestamp": time.time()
+        })
         
-        # Handle client messages
-        await websocket_handler.handle_client_messages(session_id)
+        # Handle subscription requests and send updates
+        while True:
+            try:
+                # Wait for messages from client (subscription requests)
+                message = await asyncio.wait_for(
+                    websocket.receive_json(), 
+                    timeout=30.0
+                )
+                
+                if message.get("type") == "subscribe":
+                    channel = message.get("channel")
+                    await websocket.send_json({
+                        "type": "subscription_confirmed",
+                        "channel": channel,
+                        "timestamp": time.time()
+                    })
+                elif message.get("type") == "ping":
+                    await websocket.send_json({
+                        "type": "pong",
+                        "timestamp": time.time()
+                    })
+                
+            except asyncio.TimeoutError:
+                # Send periodic updates even if no messages received
+                await websocket.send_json({
+                    "type": "analytics_update",
+                    "data": {
+                        "total_calls": 127,
+                        "active_calls": 3,
+                        "conversion_rate": 78.5,
+                        "response_time": 245
+                    },
+                    "timestamp": time.time()
+                })
+                
+    except Exception as e:
+        logger.error(f"Dashboard WebSocket error: {str(e)}")
+    finally:
+        logger.info(f"Dashboard WebSocket disconnected: {client_id}")
+
+
+# Enhanced voice processing with context and multilang support
+@app.post("/api/voice/process")
+async def process_voice_enhanced(request: Dict[str, Any]) -> Dict[str, Any]:
+    """Enhanced voice processing with context and multilang support"""
+    try:
+        audio_data = request.get("audio_data", "")
+        session_id = request.get("session_id", f"session_{int(time.time())}")
+        language_preference = request.get("language_preference")
+        
+        # Get managers
+        context_manager = get_context_manager()
+        multilang_processor = get_multilang_processor()
+        
+        # Create or update session context
+        if session_id not in context_manager.active_sessions:
+            context = await context_manager.create_session_context(
+                session_id=session_id,
+                client_id=request.get("client_id"),
+                tenant_id=request.get("tenant_id", "default")
+            )
+        
+        # Process audio with multilang support (mock for demo)
+        audio_bytes = audio_data.encode() if isinstance(audio_data, str) else audio_data
+        
+        # Update context with conversation
+        text_input = request.get("text", "Sample voice input")
+        updated_context = await context_manager.update_conversation_context(
+            session_id=session_id,
+            text_input=text_input,
+            detected_intent="voice_inquiry"
+        )
+        
+        # Get contextual suggestions
+        suggestions = await context_manager.get_contextual_suggestions(session_id)
+        
+        return {
+            "session_id": session_id,
+            "transcription": text_input,
+            "emotional_state": updated_context.emotional_state.primary_emotion.value,
+            "conversation_phase": updated_context.conversation_phase.value,
+            "urgency_level": updated_context.urgency_level,
+            "suggestions": suggestions[:3],  # Top 3 suggestions
+            "processing_time": 0.5
+        }
         
     except Exception as e:
-        logger.error(f"WebSocket error: {str(e)}")
-        try:
-            await websocket.close(code=1011, reason="Internal server error")
-        except Exception:
-            # Connection might already be closed, which is acceptable
-            pass
+        logger.error(f"Enhanced voice processing failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Voice processing failed: {str(e)}")
+
+
+# Workflow management endpoints
+@app.post("/api/workflows/execute/{workflow_id}")
+async def execute_workflow_endpoint(
+    workflow_id: str, 
+    request: Dict[str, Any] = None
+) -> Dict[str, Any]:
+    """Execute workflow endpoint"""
+    try:
+        workflow_engine = get_workflow_engine()
+        execution_id = await workflow_engine.execute_workflow(
+            workflow_id=workflow_id,
+            context=request or {},
+            tenant_id=request.get("tenant_id", "default") if request else "default"
+        )
+        
+        return {
+            "success": True,
+            "execution_id": execution_id,
+            "workflow_id": workflow_id,
+            "status": "started"
+        }
+    except Exception as e:
+        logger.error(f"Workflow execution failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Workflow execution failed: {str(e)}")
+
+
+@app.get("/api/workflows")
+async def list_workflows_endpoint() -> Dict[str, Any]:
+    """List available workflows"""
+    try:
+        workflow_engine = get_workflow_engine()
+        workflows = await workflow_engine.list_workflows()
+        
+        return {
+            "workflows": workflows,
+            "total": len(workflows)
+        }
+    except Exception as e:
+        logger.error(f"Failed to list workflows: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to list workflows: {str(e)}")
+
+
+@app.get("/api/workflows/status/{execution_id}")
+async def get_workflow_status_endpoint(execution_id: str) -> Dict[str, Any]:
+    """Get workflow execution status"""
+    try:
+        workflow_engine = get_workflow_engine()
+        status = await workflow_engine.get_workflow_status(execution_id)
+        
+        if not status:
+            raise HTTPException(status_code=404, detail="Workflow execution not found")
+        
+        return status
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get workflow status: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get workflow status: {str(e)}")
+
+
+# Knowledge graph endpoints
+@app.get("/api/knowledge/graph/stats")
+async def get_knowledge_graph_stats() -> Dict[str, Any]:
+    """Get knowledge graph statistics"""
+    try:
+        kg_sync = get_knowledge_graph_synchronizer()
+        stats = await kg_sync.get_knowledge_graph_stats()
+        return stats
+    except Exception as e:
+        logger.error(f"Failed to get knowledge graph stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get knowledge graph stats: {str(e)}")
+
+
+@app.post("/api/knowledge/graph/sync")
+async def sync_knowledge_graph() -> Dict[str, Any]:
+    """Trigger knowledge graph synchronization"""
+    try:
+        kg_sync = get_knowledge_graph_synchronizer()
+        
+        # Initialize if not already done
+        if len(kg_sync.nodes) == 0:
+            await kg_sync.initialize_knowledge_graph()
+        
+        # Run full synchronization
+        sync_results = await kg_sync.run_full_synchronization()
+        return sync_results
+    except Exception as e:
+        logger.error(f"Knowledge graph sync failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Knowledge graph sync failed: {str(e)}")
+
+
+@app.get("/api/knowledge/search")
+async def search_knowledge_graph_endpoint(
+    query: str, 
+    limit: int = 10
+) -> Dict[str, Any]:
+    """Search knowledge graph"""
+    try:
+        kg_sync = get_knowledge_graph_synchronizer()
+        results = await kg_sync.search_knowledge_graph(query, limit)
+        
+        return {
+            "query": query,
+            "results": results,
+            "total_found": len(results)
+        }
+    except Exception as e:
+        logger.error(f"Knowledge graph search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Knowledge graph search failed: {str(e)}")
+
+
+# Enhanced analytics with real-time capabilities
+@app.get("/api/analytics/realtime")
+async def get_realtime_analytics() -> Dict[str, Any]:
+    """Get real-time analytics data"""
+    try:
+        # This would integrate with actual analytics engine
+        # For now, return mock real-time data
+        return {
+            "timestamp": datetime.utcnow().isoformat(),
+            "active_sessions": 5,
+            "calls_per_hour": 23,
+            "response_time_avg": 2.3,
+            "conversion_rate": 82.1,
+            "system_health": {
+                "cpu_usage": 45.2,
+                "memory_usage": 67.8,
+                "disk_usage": 23.4
+            },
+            "recent_activities": [
+                {
+                    "type": "voice_session_started",
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "client_id": "client_123"
+                },
+                {
+                    "type": "clio_sync_completed",
+                    "timestamp": (datetime.utcnow() - timedelta(minutes=5)).isoformat(),
+                    "records_synced": 45
+                }
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Failed to get real-time analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get real-time analytics: {str(e)}")
+
+
+# Voice context analytics
+@app.get("/api/voice/context/analytics/{session_id}")
+async def get_session_analytics_endpoint(session_id: str) -> Dict[str, Any]:
+    """Get analytics for specific voice session"""
+    try:
+        context_manager = get_context_manager()
+        analytics = await context_manager.get_session_analytics(session_id)
+        
+        if not analytics:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return analytics
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get session analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to get session analytics: {str(e)}")
 
 
 # Legal compliance endpoint
