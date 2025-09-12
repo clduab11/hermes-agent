@@ -26,7 +26,10 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.lower().startswith("bearer "):
             return JSONResponse(status_code=401, content={"detail": "Missing credentials"})
-        token = auth_header.split()[1]
+        try:
+            token = auth_header.split()[1]
+        except IndexError:
+            return JSONResponse(status_code=401, content={"detail": "Missing token"})
         try:
             payload: TokenPayload = self.jwt_handler.decode(token)
         except Exception:
