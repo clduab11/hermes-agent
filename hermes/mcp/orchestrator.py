@@ -9,10 +9,12 @@ agentic orchestration patterns across the Hermes ecosystem.
 import asyncio
 import json
 import logging
-from typing import Dict, Any, List, Optional, Union
+from typing import Dict, Any, List, Optional, Union, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 import httpx
+import uuid
+from enum import Enum
 # import mcp  # MCP library will be configured later
 
 from ..config import settings
@@ -20,10 +22,34 @@ from ..config import settings
 logger = logging.getLogger(__name__)
 
 
+class MCPServerType(str, Enum):
+    """Types of MCP servers in the ecosystem."""
+    REDIS = "redis"
+    GIT_TOOLS = "git_tools" 
+    PUPPETEER = "puppeteer"
+    SEQUENTIAL_THINKING = "sequential_thinking"
+    FILESYSTEM = "filesystem"
+    GITHUB = "github"
+    MEM0 = "mem0"
+    SUPABASE = "supabase"
+    OMNISEARCH = "omnisearch"
+    PLAYWRIGHT = "playwright"
+
+
+class TaskStatus(str, Enum):
+    """Task execution states."""
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
 @dataclass
 class MCPServerConfig:
     """Configuration for an MCP server."""
     name: str
+    server_type: MCPServerType
     url: str
     auth_token: Optional[str] = None
     timeout: int = 30
@@ -32,6 +58,8 @@ class MCPServerConfig:
     health_check_interval: int = 300  # 5 minutes
     last_health_check: Optional[datetime] = None
     is_healthy: bool = True
+    priority: int = 1  # 1-10, higher means higher priority
+    load_balancing: bool = False
 
 
 @dataclass  
@@ -42,10 +70,276 @@ class MCPTask:
     description: str
     servers: List[str]
     dependencies: List[str] = field(default_factory=list)
-    status: str = "pending"  # pending, running, completed, failed
+    status: TaskStatus = TaskStatus.PENDING
     result: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    started_at: Optional[datetime] = None
+    completed_at: Optional[datetime] = None
+    priority: int = 1
+    retry_count: int = 0
+    max_retries: int = 3
+
+
+@dataclass
+class WorkflowStep:
+    """Individual step in an orchestrated workflow."""
+    step_id: str
+    server_name: str
+    action: str
+    parameters: Dict[str, Any]
+    depends_on: List[str] = field(default_factory=list)
+    timeout: int = 30
+    retry_attempts: int = 3
+    status: TaskStatus = TaskStatus.PENDING
+    result: Optional[Any] = None
+    error: Optional[str] = None
+
+
+@dataclass
+class OrchestrationWorkflow:
+    """Complex workflow spanning multiple MCP servers."""
+    workflow_id: str
+    name: str
+    description: str
+    steps: List[WorkflowStep]
+    status: TaskStatus = TaskStatus.PENDING
     created_at: datetime = field(default_factory=datetime.utcnow)
     completed_at: Optional[datetime] = None
+    results: Dict[str, Any] = field(default_factory=dict)
+
+
+class MCPOrchestrator:
+    """Main orchestrator for managing MCP server interactions."""
+    
+    def __init__(self):
+        self.servers: Dict[str, MCPServerConfig] = {}
+        self.active_tasks: Dict[str, MCPTask] = {}
+        self.active_workflows: Dict[str, OrchestrationWorkflow] = {}
+        self.task_queue = asyncio.Queue()
+        self.health_check_task: Optional[asyncio.Task] = None
+        self.processing_task: Optional[asyncio.Task] = None
+        
+    async def initialize(self):
+        """Initialize the orchestrator with default MCP servers."""
+        await self._load_default_servers()
+        
+        # Start background tasks
+        self.health_check_task = asyncio.create_task(self._health_check_loop())
+        self.processing_task = asyncio.create_task(self._process_task_queue())
+        
+        logger.info("MCP Orchestrator initialized")
+    
+    async def _load_default_servers(self):
+        """Load default MCP server configurations."""
+        default_servers = [
+            MCPServerConfig(
+                name="redis",
+                server_type=MCPServerType.REDIS,
+                url="redis://localhost:6379",
+                capabilities=["cache", "session", "pubsub", "rate_limiting"],
+                priority=9
+            ),
+            MCPServerConfig(
+                name="git_tools",
+                server_type=MCPServerType.GIT_TOOLS,
+                url="localhost:8001",
+                capabilities=["version_control", "branch_management", "commits"],
+                priority=7
+            ),
+            MCPServerConfig(
+                name="puppeteer",
+                server_type=MCPServerType.PUPPETEER,
+                url="localhost:8002", 
+                capabilities=["browser_automation", "ui_testing", "screenshot"],
+                priority=5
+            ),
+            MCPServerConfig(
+                name="sequential_thinking",
+                server_type=MCPServerType.SEQUENTIAL_THINKING,
+                url="localhost:8003",
+                capabilities=["reasoning", "decision_trees", "compliance_checks"],
+                priority=8
+            ),
+            MCPServerConfig(
+                name="github",
+                server_type=MCPServerType.GITHUB,
+                url="api.github.com",
+                capabilities=["repo_management", "issues", "pull_requests"],
+                priority=6
+            ),
+            MCPServerConfig(
+                name="mem0",
+                server_type=MCPServerType.MEM0,
+                url="localhost:8004",
+                capabilities=["knowledge_graph", "learning", "memory"],
+                priority=8
+            ),
+            MCPServerConfig(
+                name="supabase",
+                server_type=MCPServerType.SUPABASE,
+                url="localhost:8005",
+                capabilities=["database", "realtime", "auth", "storage"],
+                priority=9
+            ),
+            MCPServerConfig(
+                name="omnisearch",
+                server_type=MCPServerType.OMNISEARCH,
+                url="localhost:8006",
+                capabilities=["search", "legal_research", "case_law"],
+                priority=7
+            )
+        ]
+        
+        for server in default_servers:
+            self.servers[server.name] = server
+            logger.info(f"Loaded MCP server: {server.name} ({server.server_type})")
+    
+    async def register_server(self, config: MCPServerConfig) -> bool:
+        """Register a new MCP server."""
+        try:
+            # Validate server connectivity
+            is_healthy = await self._check_server_health(config)
+            config.is_healthy = is_healthy
+            config.last_health_check = datetime.utcnow()
+            
+            self.servers[config.name] = config
+            logger.info(f"Registered MCP server: {config.name}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to register MCP server {config.name}: {e}")
+            return False
+    
+    async def execute_task(self, task: MCPTask) -> Dict[str, Any]:
+        """Execute a task across multiple MCP servers."""
+        try:
+            task.status = TaskStatus.RUNNING
+            task.started_at = datetime.utcnow()
+            self.active_tasks[task.task_id] = task
+            
+            logger.info(f"Starting task: {task.name} ({task.task_id})")
+            
+            # Execute task on each required server
+            results = {}
+            for server_name in task.servers:
+                if server_name not in self.servers:
+                    raise ValueError(f"Unknown MCP server: {server_name}")
+                
+                server = self.servers[server_name]
+                if not server.is_healthy:
+                    raise RuntimeError(f"MCP server {server_name} is unhealthy")
+                
+                # Execute on server
+                server_result = await self._execute_on_server(server, task)
+                results[server_name] = server_result
+            
+            task.status = TaskStatus.COMPLETED
+            task.completed_at = datetime.utcnow()
+            task.result = results
+            
+            logger.info(f"Completed task: {task.name}")
+            return results
+            
+        except Exception as e:
+            task.status = TaskStatus.FAILED
+            task.error = str(e)
+            task.completed_at = datetime.utcnow()
+            logger.error(f"Task failed: {task.name} - {e}")
+            raise
+    
+    async def _execute_on_server(self, server: MCPServerConfig, task: MCPTask) -> Any:
+        """Execute a task on a specific MCP server."""
+        try:
+            async with httpx.AsyncClient(timeout=server.timeout) as client:
+                response = await client.post(
+                    f"http://{server.url}/execute",
+                    json={
+                        "task_id": task.task_id,
+                        "action": task.name,
+                        "parameters": task.description
+                    },
+                    headers={"Authorization": f"Bearer {server.auth_token}"} if server.auth_token else {}
+                )
+                response.raise_for_status()
+                return response.json()
+                
+        except Exception as e:
+            logger.error(f"Failed to execute task on server {server.name}: {e}")
+            raise
+    
+    async def _check_server_health(self, server: MCPServerConfig) -> bool:
+        """Check if an MCP server is healthy and responsive."""
+        try:
+            async with httpx.AsyncClient(timeout=5) as client:
+                response = await client.get(f"http://{server.url}/health")
+                return response.status_code == 200
+        except:
+            return False
+    
+    async def _health_check_loop(self):
+        """Background task for periodic health checks."""
+        while True:
+            try:
+                for server in self.servers.values():
+                    if (datetime.utcnow() - (server.last_health_check or datetime.min)).total_seconds() > server.health_check_interval:
+                        is_healthy = await self._check_server_health(server)
+                        server.is_healthy = is_healthy
+                        server.last_health_check = datetime.utcnow()
+                        
+                        if not is_healthy:
+                            logger.warning(f"MCP server {server.name} is unhealthy")
+                
+                await asyncio.sleep(60)  # Check every minute
+                
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Health check loop error: {e}")
+                await asyncio.sleep(60)
+    
+    async def _process_task_queue(self):
+        """Background task for processing queued tasks."""
+        while True:
+            try:
+                # Get task from queue (with timeout to allow cancellation)
+                task = await asyncio.wait_for(self.task_queue.get(), timeout=1.0)
+                
+                # Execute task
+                await self.execute_task(task)
+                self.task_queue.task_done()
+                
+            except asyncio.TimeoutError:
+                continue
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Task processing error: {e}")
+    
+    async def queue_task(self, task: MCPTask):
+        """Add a task to the processing queue."""
+        await self.task_queue.put(task)
+    
+    async def get_task_status(self, task_id: str) -> Optional[MCPTask]:
+        """Get the status of a specific task."""
+        return self.active_tasks.get(task_id)
+    
+    async def shutdown(self):
+        """Gracefully shutdown the orchestrator."""
+        logger.info("Shutting down MCP Orchestrator")
+        
+        if self.health_check_task:
+            self.health_check_task.cancel()
+            
+        if self.processing_task:
+            self.processing_task.cancel()
+            
+        # Wait for tasks to complete
+        await self.task_queue.join()
+
+
+# Global orchestrator instance
+orchestrator = MCPOrchestrator()
 
 
 class MCPOrchestrator:
