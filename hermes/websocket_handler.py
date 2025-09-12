@@ -6,6 +6,7 @@ import json
 import logging
 import uuid
 from typing import Dict, Any, Optional
+from datetime import datetime, timezone
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
@@ -13,6 +14,7 @@ from pydantic import BaseModel
 from .voice_pipeline import VoicePipeline, VoiceInteraction
 from .auth.jwt_handler import JWTHandler
 from .auth.models import TokenPayload
+from .event_streaming import EventStreamingService, VoiceEvent, EventType
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +42,7 @@ class VoiceWebSocketHandler:
         self.voice_pipeline = voice_pipeline
         self.jwt_handler = jwt_handler or JWTHandler()
         self.active_connections: Dict[str, ConnectionInfo] = {}
+        self.event_streaming = voice_pipeline.event_streaming  # Get event streaming from pipeline
         self._message_handlers = {
             "audio_chunk": self._handle_audio_chunk,
             "start_session": self._handle_start_session,
@@ -81,6 +84,23 @@ class VoiceWebSocketHandler:
             f"New WebSocket connection: {session_id} from {client_ip} tenant {payload.tenant_id}"
         )
 
+        # Publish connection established event
+        if self.event_streaming:
+            await self.event_streaming.publish_event(VoiceEvent(
+                event_type=EventType.CONNECTION_ESTABLISHED,
+                session_id=session_id,
+                tenant_id=payload.tenant_id,
+                user_id=payload.user_id,
+                timestamp=datetime.now(timezone.utc),
+                data={
+                    "client_ip": client_ip,
+                    "user_agent": connection_info.user_agent,
+                    "connection_time": connection_info.connected_at
+                },
+                metadata={"source": "websocket_handler"},
+                correlation_id=str(uuid.uuid4())
+            ))
+
         await self._send_message(
             session_id,
             {
@@ -101,6 +121,22 @@ class VoiceWebSocketHandler:
         """
         if session_id in self.active_connections:
             connection_info = self.active_connections[session_id]
+            
+            # Publish connection terminated event
+            if self.event_streaming:
+                await self.event_streaming.publish_event(VoiceEvent(
+                    event_type=EventType.CONNECTION_TERMINATED,
+                    session_id=session_id,
+                    tenant_id=connection_info.tenant_id,
+                    user_id=None,
+                    timestamp=datetime.now(timezone.utc),
+                    data={
+                        "duration_seconds": asyncio.get_event_loop().time() - connection_info.connected_at,
+                        "client_ip": connection_info.client_ip
+                    },
+                    metadata={"source": "websocket_handler"},
+                    correlation_id=str(uuid.uuid4())
+                ))
             
             try:
                 await connection_info.websocket.close()
