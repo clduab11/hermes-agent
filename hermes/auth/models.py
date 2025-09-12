@@ -40,7 +40,33 @@ class User(BaseModel):
 
     id: str
     tenant_id: str
+    email: str
+    full_name: str
+    password_hash: str
     roles: List[Role] = []
+    is_active: bool = True
+    created_at: str
+    updated_at: str
+    last_login_at: str | None = None
+
+
+class UserCreate(BaseModel):
+    """Data for creating a new user."""
+    
+    email: str
+    full_name: str
+    password_hash: str
+    roles: List[Role] | None = None
+
+
+class UserUpdate(BaseModel):
+    """Data for updating a user."""
+    
+    email: str | None = None
+    full_name: str | None = None
+    password_hash: str | None = None
+    roles: List[Role] | None = None
+    is_active: bool | None = None
 
 
 class TokenPair(BaseModel):
