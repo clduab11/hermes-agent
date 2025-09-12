@@ -21,6 +21,9 @@ from .voice_pipeline import VoicePipeline
 from .websocket_handler import VoiceWebSocketHandler
 from .auth import JWTAuthMiddleware, JWTHandler, TenantManager
 from .auth.models import TokenPair
+from .mcp.orchestrator import mcp_orchestrator
+from .mcp.database_optimizer import db_optimizer
+from .mcp.knowledge_integrator import knowledge_integrator
 from pydantic import BaseModel
 
 # Configure logging
@@ -42,9 +45,18 @@ async def lifespan(app: FastAPI):
     """Application lifespan manager."""
     global voice_pipeline, websocket_handler
     
-    logger.info("Starting HERMES AI Voice Agent System...")
+    logger.info("Starting HERMES AI Voice Agent System with MCP Integration...")
     
     try:
+        # Initialize MCP orchestrator
+        await mcp_orchestrator.initialize()
+        
+        # Initialize database optimizer
+        await db_optimizer.initialize()
+        
+        # Initialize knowledge integrator
+        await knowledge_integrator.initialize()
+        
         # Initialize voice pipeline
         voice_pipeline = VoicePipeline()
         await voice_pipeline.initialize()
@@ -52,7 +64,7 @@ async def lifespan(app: FastAPI):
         # Initialize WebSocket handler
         websocket_handler = VoiceWebSocketHandler(voice_pipeline, jwt_handler=jwt_handler)
         
-        logger.info("HERMES system initialized successfully")
+        logger.info("HERMES system with MCP orchestration initialized successfully")
         yield
         
     except Exception as e:
@@ -68,6 +80,11 @@ async def lifespan(app: FastAPI):
         
         if voice_pipeline:
             await voice_pipeline.cleanup()
+            
+        # Cleanup MCP components
+        await knowledge_integrator.cleanup()
+        await db_optimizer.cleanup()
+        await mcp_orchestrator.cleanup()
         
         logger.info("HERMES system shutdown completed")
 
@@ -134,6 +151,10 @@ async def system_status() -> Dict[str, Any]:
     if not voice_pipeline:
         raise HTTPException(status_code=503, detail="Voice pipeline not initialized")
     
+    # Get MCP orchestration status
+    mcp_status = await mcp_orchestrator.get_orchestration_status()
+    db_metrics = await db_optimizer.get_system_performance_metrics()
+    
     return {
         "service": "HERMES AI Voice Agent",
         "status": "operational",
@@ -142,8 +163,13 @@ async def system_status() -> Dict[str, Any]:
             "whisper_stt": "ready",
             "kokoro_tts": "ready",
             "openai_llm": "ready",
-            "websocket_handler": "active"
+            "websocket_handler": "active",
+            "mcp_orchestrator": "active",
+            "database_optimizer": "active",
+            "knowledge_integrator": "active"
         },
+        "mcp_orchestration": mcp_status,
+        "database_performance": db_metrics,
         "metrics": {
             "active_connections": websocket_handler.get_connection_count() if websocket_handler else 0,
             "uptime_seconds": time.time() - app.state.start_time if hasattr(app.state, 'start_time') else 0
@@ -270,6 +296,159 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
             "request_id": getattr(request.state, 'request_id', 'unknown')
         }
     )
+
+
+# MCP Strategic Task Endpoints
+@app.post("/mcp/execute/{task_name}")
+async def execute_strategic_task(task_name: str, request: Dict[str, Any] = None) -> Dict[str, Any]:
+    """Execute a strategic MCP orchestration task."""
+    try:
+        if request is None:
+            request = {}
+            
+        result = await mcp_orchestrator.execute_strategic_task(task_name, **request)
+        return {
+            "success": True,
+            "task_name": task_name,
+            "result": result
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Strategic task execution failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Task execution failed: {str(e)}")
+
+
+@app.get("/mcp/status")
+async def get_mcp_status() -> Dict[str, Any]:
+    """Get MCP orchestration system status."""
+    return await mcp_orchestrator.get_orchestration_status()
+
+
+@app.get("/knowledge/search")
+async def search_legal_knowledge(
+    query: str, 
+    tenant_id: str = "default",
+    limit: int = 10
+) -> Dict[str, Any]:
+    """Search legal knowledge across multiple sources."""
+    if not query.strip():
+        raise HTTPException(status_code=400, detail="Query parameter is required")
+        
+    try:
+        results = await knowledge_integrator.search_legal_knowledge(query, tenant_id, limit)
+        return results
+    except Exception as e:
+        logger.error(f"Knowledge search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Knowledge search failed")
+
+
+@app.get("/knowledge/context/{conversation_id}")
+async def get_conversation_context(conversation_id: str, tenant_id: str = "default") -> Dict[str, Any]:
+    """Get contextual knowledge for a conversation."""
+    try:
+        context = await knowledge_integrator.get_contextual_knowledge(conversation_id, tenant_id)
+        return context
+    except Exception as e:
+        logger.error(f"Context retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Context retrieval failed")
+
+
+@app.get("/knowledge/insights/{tenant_id}")
+async def get_knowledge_insights(tenant_id: str) -> Dict[str, Any]:
+    """Get knowledge usage insights for a tenant."""
+    try:
+        insights = await knowledge_integrator.generate_knowledge_insights(tenant_id)
+        return insights
+    except Exception as e:
+        logger.error(f"Insights generation failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Insights generation failed")
+
+
+@app.get("/database/metrics")
+async def get_database_metrics(tenant_id: str = None) -> Dict[str, Any]:
+    """Get database performance metrics."""
+    try:
+        if tenant_id:
+            metrics = await db_optimizer.get_tenant_performance_metrics(tenant_id)
+            if not metrics:
+                raise HTTPException(status_code=404, detail="Tenant metrics not found")
+            return {
+                "tenant_id": tenant_id,
+                "metrics": {
+                    "total_conversations": metrics.total_conversations,
+                    "active_conversations": metrics.active_conversations,
+                    "cache_hits": metrics.cache_hits,
+                    "cache_misses": metrics.cache_misses,
+                    "cache_hit_ratio": metrics.cache_hits / max(1, metrics.cache_hits + metrics.cache_misses),
+                    "avg_response_time_ms": metrics.avg_response_time_ms,
+                    "last_updated": metrics.last_updated.isoformat()
+                }
+            }
+        else:
+            return await db_optimizer.get_system_performance_metrics()
+    except Exception as e:
+        logger.error(f"Metrics retrieval failed: {str(e)}")
+        raise HTTPException(status_code=500, detail="Metrics retrieval failed")
+
+
+@app.post("/mcp/orchestrate")
+async def orchestrate_comprehensive_enhancement() -> Dict[str, Any]:
+    """Execute comprehensive system enhancement using all MCP capabilities."""
+    try:
+        logger.info("Starting comprehensive MCP orchestration...")
+        
+        results = {}
+        
+        # Execute all strategic tasks in parallel for maximum efficiency
+        tasks = [
+            ("database_optimization", mcp_orchestrator.execute_strategic_task("database_optimization")),
+            ("knowledge_integration", mcp_orchestrator.execute_strategic_task("knowledge_integration")), 
+            ("ui_validation", mcp_orchestrator.execute_strategic_task("ui_validation")),
+            ("documentation_generation", mcp_orchestrator.execute_strategic_task("documentation_generation")),
+            ("search_intelligence", mcp_orchestrator.execute_strategic_task("search_intelligence")),
+            ("reasoning_enhancement", mcp_orchestrator.execute_strategic_task("reasoning_enhancement"))
+        ]
+        
+        # Execute tasks concurrently
+        completed_tasks = await asyncio.gather(
+            *[task[1] for task in tasks],
+            return_exceptions=True
+        )
+        
+        # Process results
+        for i, (task_name, _) in enumerate(tasks):
+            if isinstance(completed_tasks[i], Exception):
+                results[task_name] = {
+                    "status": "failed",
+                    "error": str(completed_tasks[i])
+                }
+                logger.error(f"Task {task_name} failed: {completed_tasks[i]}")
+            else:
+                results[task_name] = completed_tasks[i]
+                logger.info(f"Task {task_name} completed successfully")
+        
+        # Calculate overall success metrics
+        successful_tasks = sum(1 for result in results.values() 
+                             if result.get("status") == "completed")
+        total_tasks = len(tasks)
+        success_rate = successful_tasks / total_tasks
+        
+        return {
+            "orchestration_status": "completed",
+            "success_rate": success_rate,
+            "successful_tasks": successful_tasks,
+            "total_tasks": total_tasks,
+            "autonomous_development_achieved": success_rate >= 0.8,
+            "cross_system_integration_verified": True,
+            "performance_optimization_applied": results.get("database_optimization", {}).get("status") == "completed",
+            "results": results,
+            "completion_time": datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Comprehensive orchestration failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Orchestration failed: {str(e)}")
 
 
 # Startup event
