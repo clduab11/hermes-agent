@@ -3,8 +3,9 @@ Core voice pipeline integrating STT, LLM processing, and TTS.
 """
 import asyncio
 import logging
+import random
 import time
-from typing import Optional, Dict, Any, AsyncGenerator
+from typing import Optional, Dict, Any, AsyncGenerator, List
 
 import openai
 from pydantic import BaseModel
@@ -38,6 +39,8 @@ class VoicePipeline:
         self.tts = KokoroTTS()
         self._openai_client: Optional[openai.AsyncOpenAI] = None
         self._initialized = False
+        # Maintain conversational context per session for more human-like interactions
+        self._conversations: Dict[str, List[Dict[str, str]]] = {}
         
     async def initialize(self) -> None:
         """Initialize all pipeline components."""
@@ -139,33 +142,42 @@ class VoicePipeline:
         """
         if not self._openai_client:
             raise RuntimeError("OpenAI client not initialized")
-        
+
         # Check for prohibited content
         if self._contains_prohibited_content(text):
             return self._get_compliance_response()
-        
+
         # Prepare system prompt for legal assistant
         system_prompt = self._build_system_prompt()
-        
+
+        # Retrieve and update conversational history for this session
+        history = self._conversations.setdefault(session_id, [])
+        history.append({"role": "user", "content": text})
+
+        # Limit history to last 10 exchanges
+        if len(history) > 20:
+            del history[: len(history) - 20]
+
         try:
             response = await self._openai_client.chat.completions.create(
                 model=settings.openai_model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": text}
-                ],
+                messages=[{"role": "system", "content": system_prompt}] + history,
                 max_tokens=200,  # Keep responses concise for voice
                 temperature=0.7,
                 timeout=settings.response_timeout * 10  # Allow more time for LLM
             )
-            
+
             response_text = response.choices[0].message.content.strip()
-            
+
+            # Save assistant response to history
+            history.append({"role": "assistant", "content": response_text})
+
             # Post-process response
             response_text = self._post_process_response(response_text)
-            
+            response_text = self._humanize_response(response_text)
+
             logger.info(f"[{session_id}] LLM response generated: '{response_text[:50]}...'")
-            
+
             return response_text
             
         except Exception as e:
@@ -260,8 +272,21 @@ Respond naturally and conversationally, as if speaking to someone on the phone."
         # Add natural speech patterns
         response = response.replace(" and ", " and, ")
         response = response.replace(" but ", " but, ")
-        
+
         return response.strip()
+
+    def _humanize_response(self, response: str) -> str:
+        """Add natural-sounding prefix to make responses feel more human."""
+        prefixes = [
+            "Certainly,",
+            "Of course,",
+            "Sure,",
+            "Absolutely,",
+            "I'd be happy to,"
+        ]
+        if response:
+            response = f"{random.choice(prefixes)} {response}"
+        return response
     
     async def stream_process_voice(self, session_id: str, audio_stream: AsyncGenerator[bytes, None]) -> AsyncGenerator[bytes, None]:
         """
@@ -319,6 +344,7 @@ Respond naturally and conversationally, as if speaking to someone on the phone."
         
         if self._openai_client:
             await self._openai_client.close()
-        
+
+        self._conversations.clear()
         self._initialized = False
         logger.info("Voice pipeline cleanup completed")
