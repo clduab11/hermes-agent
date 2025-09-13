@@ -36,7 +36,6 @@ class TestVoicePipelineComponents:
                 pipeline.tts, "initialize", new_callable=AsyncMock
             ) as mock_tts_init,
         ):
-
             await pipeline.initialize()
 
             assert pipeline._initialized is True
@@ -51,9 +50,9 @@ class TestVoicePipelineComponents:
         # Mock OpenAI client
         mock_response = Mock()
         mock_response.choices = [Mock()]
-        mock_response.choices[0].message.content = (
-            "I'd be happy to help you schedule an appointment."
-        )
+        mock_response.choices[
+            0
+        ].message.content = "I'd be happy to help you schedule an appointment."
 
         mock_client = AsyncMock()
         mock_client.chat.completions.create.return_value = mock_response

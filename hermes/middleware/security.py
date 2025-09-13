@@ -26,9 +26,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # HSTS (HTTP Strict Transport Security)
         if self.enable_hsts and request.url.scheme == "https":
-            response.headers["Strict-Transport-Security"] = (
-                "max-age=31536000; includeSubDomains"
-            )
+            response.headers[
+                "Strict-Transport-Security"
+            ] = "max-age=31536000; includeSubDomains"
 
         # Content Security Policy
         if self.enable_csp:

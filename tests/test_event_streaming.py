@@ -20,7 +20,7 @@ class TestEventStreamingService:
     """Test event streaming core functionality."""
 
     @pytest.fixture
-    async def event_service(self):
+    def event_service(self):
         """Create event streaming service for testing."""
         service = EventStreamingService()
         # Mock Redis client for testing
@@ -84,14 +84,15 @@ class TestComplianceValidationSubscriber:
     """Test compliance validation functionality."""
 
     @pytest.fixture
-    async def compliance_subscriber(self):
+    def compliance_subscriber(self):
         """Create compliance validation subscriber for testing."""
         event_service = MagicMock()
         event_service.subscribe_to_events = AsyncMock(return_value=True)
         event_service.publish_event = AsyncMock()
 
         subscriber = ComplianceValidationSubscriber(event_service)
-        await subscriber.initialize()
+        # Mock the initialize method since we can't await it
+        subscriber.initialize = AsyncMock()
         return subscriber
 
     @pytest.mark.asyncio

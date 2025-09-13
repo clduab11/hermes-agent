@@ -604,7 +604,6 @@ class KnowledgeIntegrator:
                 tenant_id in entity.metadata.get("tenant_ids", [])
                 or entity.entity_type == EntityType.LEGAL_CONCEPT
             ):
-
                 results.append(
                     {
                         "title": entity.name,
@@ -738,7 +737,6 @@ class KnowledgeIntegrator:
                             relationship.from_entity_id == entity2_id
                             and relationship.to_entity_id == entity1_id
                         ):
-
                             # Strengthen the relationship
                             relationship.strength = min(
                                 1.0, relationship.strength + 0.1
