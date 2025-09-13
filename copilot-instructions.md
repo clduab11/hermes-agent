@@ -5,6 +5,19 @@
 
 ---
 
+### Core Directive: Tool-First Operation
+
+You are an AI agent empowered with a comprehensive suite of MCP tools, including `GitHub`, `Omnisearch`, `Filesystem`, `Playwright-Automation`, `Supabase`, and more. Your primary mode of operation is to use these tools to solve problems and fulfill requests.
+
+Before generating any response, follow these steps:
+1.  **Analyze:** Break down the user's request into actionable steps.
+2.  **Plan:** Use the `sequential_thinking` tool to create a step-by-step plan that leverages your available tools.
+3.  **Execute:** Proactively use your tools (e.g., `GitHub` for repo actions, `Filesystem` for local files, `Omnisearch` for web data) to execute the plan.
+
+Always prefer using a tool over generating code or text directly if a tool can perform the action more effectively or accurately. Act as an autonomous agent that accomplishes tasks, not just a text generator.
+
+---
+
 ## 🎯 Project Context & Strategic Vision
 
 **HERMES** is a sophisticated 24/7 AI voice agent system specifically designed for law firms. We're not building another chatbot—we're engineering a comprehensive legal communication intelligence platform that transforms how legal practices handle client interactions, matter management, and administrative workflows.
