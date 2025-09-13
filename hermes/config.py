@@ -86,6 +86,12 @@ class Settings(BaseSettings):
     stripe_trial_days: int = Field(default=14, ge=0, description="Trial period length in days")
 
 
+# Backward compatibility alias for legacy attribute name
+def _get_max_audio_length(self) -> int:
+    return self.max_audio_length_seconds
+
+Settings.max_audio_length = property(_get_max_audio_length)  # type: ignore[attr-defined]
+
 # Global settings instance
 settings = Settings()
 
