@@ -192,6 +192,8 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
       - name: Checkout repository
@@ -251,7 +253,7 @@ jobs:
         uses: treosh/lighthouse-ci-action@v10
         with:
           urls: |
-            ${{ steps.deployment.outputs.page_url }}
+            ${{ needs.deploy-pages.outputs.page_url }}
           configPath: '.lighthouserc.json'
           uploadArtifacts: true
           temporaryPublicStorage: true
@@ -260,7 +262,7 @@ jobs:
         run: |
           npm install -g @axe-core/cli
           # Use the actual deployed URL from GitHub Pages
-          SITE_URL="${{ steps.deployment.outputs.page_url }}"
+          SITE_URL="${{ needs.deploy-pages.outputs.page_url }}"
           echo "🔍 Testing accessibility for: $SITE_URL"
           npx axe "$SITE_URL" --tags wcag2a,wcag2aa,wcag21aa || echo "⚠️ Accessibility issues found"
 

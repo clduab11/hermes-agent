@@ -1,6 +1,9 @@
 {
   "ci": {
     "collect": {
+      "url": [
+        "https://clduab11.github.io/hermes-agent"
+      ],
       "numberOfRuns": 3,
       "settings": {
         "chromeFlags": "--no-sandbox --disable-dev-shm-usage"
