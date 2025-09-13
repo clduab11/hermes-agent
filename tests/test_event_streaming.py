@@ -234,7 +234,7 @@ class TestPerformanceMonitoringSubscriber:
     @pytest.mark.asyncio
     async def test_performance_tracking(self, performance_subscriber):
         """Test performance metrics tracking."""
-        from datetime import datetime, timezone, timedelta
+        from datetime import datetime, timedelta, timezone
 
         # Start interaction
         start_time = datetime.now(timezone.utc)
