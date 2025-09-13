@@ -47,6 +47,20 @@
 
 ---
 
+## ⚖️ LEGAL DISCLAIMER
+
+**IMPORTANT LEGAL NOTICE**: HERMES is a technology demonstration platform and AI voice agent system designed to assist law firms with client communications and administrative tasks. 
+
+**NOT LEGAL ADVICE**: HERMES does not provide legal advice, legal opinions, or attorney services. All interactions with HERMES are for administrative and informational purposes only. Any information provided by HERMES should not be construed as legal advice or create an attorney-client relationship.
+
+**ATTORNEY-CLIENT PRIVILEGE**: While HERMES is designed with privacy and confidentiality in mind, users should not share privileged or confidential client information through HERMES without appropriate legal safeguards and compliance with applicable professional conduct rules.
+
+**HIPAA/GDPR COMPLIANCE**: HERMES is architected with enterprise-grade security and privacy controls suitable for legal industry requirements, including HIPAA and GDPR compliance measures. However, law firms remain responsible for ensuring their use of HERMES complies with all applicable regulations and professional conduct rules.
+
+**PROFESSIONAL RESPONSIBILITY**: Law firms using HERMES remain fully responsible for all legal services provided to their clients. HERMES is a tool to enhance efficiency, not to replace professional legal judgment or attorney oversight.
+
+---
+
 ## 💼 Value Proposition for Law Firms
 
 ### 📈 Transform Your Practice Operations

@@ -1,4 +1,5 @@
 """Stripe billing API endpoints for subscription management."""
+
 import logging
 from typing import Optional
 
@@ -6,8 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr
 
 from ..auth.middleware import get_current_user, require_permission
-from ..database.tenant_context import get_tenant_context
 from ..billing import StripeBillingService, SubscriptionTier
+from ..database.tenant_context import get_tenant_context
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,7 @@ router = APIRouter(prefix="/api/billing", tags=["billing"])
 
 class SubscriptionRequest(BaseModel):
     """Request body for creating a subscription."""
+
     tier: SubscriptionTier
     email: EmailStr
     trial_period_days: Optional[int] = None
@@ -43,7 +45,9 @@ async def create_subscription(
         return {"subscription_id": subscription.id}
     except Exception as exc:  # pragma: no cover - logged for audit
         logger.error(f"Failed to create subscription: {exc}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Subscription failed")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Subscription failed"
+        )
 
 
 @router.post("/portal")
@@ -64,7 +68,9 @@ async def create_portal_session(
         return {"url": url}
     except Exception as exc:  # pragma: no cover
         logger.error(f"Failed to create portal session: {exc}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Portal session failed")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Portal session failed"
+        )
 
 
 @router.post("/webhook", include_in_schema=False)
@@ -77,5 +83,7 @@ async def stripe_webhook(request: Request):
         service.handle_webhook(payload, signature)
     except Exception as exc:  # pragma: no cover
         logger.error(f"Webhook error: {exc}")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Webhook handling failed")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Webhook handling failed"
+        )
     return {"status": "success"}

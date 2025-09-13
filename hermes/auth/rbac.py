@@ -1,4 +1,5 @@
 """Role-based access control utilities."""
+
 from __future__ import annotations
 
 from typing import Iterable, Sequence

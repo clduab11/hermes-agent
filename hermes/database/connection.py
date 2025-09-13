@@ -1,9 +1,11 @@
 """
 Database connection management for HERMES system.
 """
+
 import logging
 from typing import Optional
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
 from ..config import settings
@@ -20,20 +22,20 @@ _session_factory = None
 
 class DatabaseManager:
     """Manages database connections and sessions."""
-    
+
     def __init__(self):
         self.engine = None
         self.session_factory = None
         self._initialized = False
-    
+
     async def initialize(self) -> bool:
         """Initialize database connection."""
         global _engine, _session_factory
-        
+
         if not settings.database_url:
             logger.warning("No database URL configured - operating in mock mode")
             return False
-        
+
         try:
             db_url = settings.database_url
             # Normalize to asyncpg driver for async engine
@@ -44,38 +46,33 @@ class DatabaseManager:
 
             # Create async engine
             self.engine = create_async_engine(
-                db_url,
-                echo=settings.debug,
-                pool_pre_ping=True,
-                pool_recycle=3600
+                db_url, echo=settings.debug, pool_pre_ping=True, pool_recycle=3600
             )
-            
+
             # Create session factory
             self.session_factory = async_sessionmaker(
-                self.engine,
-                class_=AsyncSession,
-                expire_on_commit=False
+                self.engine, class_=AsyncSession, expire_on_commit=False
             )
-            
+
             # Set global references
             _engine = self.engine
             _session_factory = self.session_factory
-            
+
             self._initialized = True
             logger.info("Database connection initialized")
             return True
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize database: {e}")
             return False
-    
+
     async def get_session(self) -> AsyncSession:
         """Get a database session."""
         if not self._initialized or not self.session_factory:
             raise RuntimeError("Database not initialized")
-        
+
         return self.session_factory()
-    
+
     async def close(self):
         """Close database connection."""
         if self.engine:

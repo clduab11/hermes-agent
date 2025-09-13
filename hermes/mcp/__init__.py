@@ -4,7 +4,7 @@ Copyright (c) 2025 Parallax Analytics LLC. All rights reserved.
 
 This module orchestrates multiple MCP servers for agentic development:
 - Database optimization with Supabase + Redis
-- Knowledge integration with Mem0 + mcp-omnisearch  
+- Knowledge integration with Mem0 + mcp-omnisearch
 - UI/UX validation with Puppeteer
 - Documentation generation with Filesystem + GitHub
 - Search intelligence and reasoning enhancement

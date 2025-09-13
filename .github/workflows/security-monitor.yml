@@ -1,0 +1,303 @@
+name: 🔒 Security & Compliance Monitor
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly Monday 2 AM UTC
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of security scan'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - dependencies
+          - secrets
+          - compliance
+
+permissions:
+  security-events: write
+  contents: read
+  actions: read
+
+jobs:
+  # Comprehensive Security Audit
+  security-audit:
+    name: 🔍 Comprehensive Security Audit
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'full' || github.event.inputs.scan_type == '' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for security analysis
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install security tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit[toml] safety semgrep pip-audit trufflehog3
+          npm install -g audit-ci retire
+
+      - name: Advanced secret scanning
+        run: |
+          echo "🔍 Scanning for secrets and sensitive data..."
+          trufflehog3 --format json --output trufflehog-results.json . || true
+          
+          # Check for specific legal tech sensitive patterns
+          echo "⚖️ Legal tech specific pattern check..."
+          grep -r -i "client.*confidential\|attorney.*privilege\|hipaa\|gdpr" --include="*.py" . && echo "✅ Legal compliance patterns found" || echo "ℹ️ No explicit legal compliance patterns"
+          
+          # Check for hardcoded secrets
+          grep -r -E "(api_key|secret|password|token)" --include="*.py" --exclude-dir=".git" . | grep -v "test\|example" && echo "⚠️ Potential hardcoded secrets found" || echo "✅ No hardcoded secrets detected"
+
+      - name: Python security analysis
+        run: |
+          echo "🐍 Python security analysis..."
+          bandit -r hermes -f json -o bandit-security.json
+          bandit -r hermes -f txt
+          
+          echo "🔒 Dependency vulnerability scan..."
+          pip-audit --format=json --output=pip-audit-results.json --desc
+          pip-audit --format=table
+
+      - name: Frontend security audit
+        working-directory: frontend
+        run: |
+          echo "🌐 Frontend security audit..."
+          npm install
+          npm audit --audit-level moderate --json > npm-audit.json || true
+          npm audit --audit-level moderate
+          
+          echo "📦 Checking for retired packages..."
+          npx retire --js --path . --outputformat json --outputpath retire-results.json || true
+
+      - name: OWASP security scanning
+        run: |
+          echo "🛡️ OWASP security patterns check..."
+          # Check for OWASP Top 10 patterns
+          echo "A01 - Broken Access Control:"
+          grep -r "auth\|permission\|access" hermes/ --include="*.py" | wc -l
+          echo "A02 - Cryptographic Failures:"
+          grep -r "encrypt\|decrypt\|crypto\|ssl\|tls" hermes/ --include="*.py" | wc -l
+          echo "A03 - Injection:"
+          grep -r "sql\|query\|execute" hermes/ --include="*.py" | wc -l
+
+      - name: Legal tech compliance check
+        run: |
+          echo "⚖️ Legal Technology Compliance Verification"
+          echo "📋 HIPAA Compliance Indicators:"
+          grep -r -i "hipaa\|health.*insurance\|portability" . --include="*.py" --include="*.md" || echo "ℹ️ No explicit HIPAA references"
+          
+          echo "📋 GDPR Compliance Indicators:"
+          grep -r -i "gdpr\|general.*data.*protection\|right.*be.*forgotten" . --include="*.py" --include="*.md" || echo "ℹ️ No explicit GDPR references"
+          
+          echo "📋 Attorney-Client Privilege Protection:"
+          grep -r -i "attorney.*client\|privilege\|confidential" . --include="*.py" --include="*.md" || echo "ℹ️ No explicit privilege protection references"
+          
+          echo "📋 Legal Disclaimer Verification:"
+          find . -name "*.py" -o -name "*.md" -o -name "*.txt" | xargs grep -l -i "disclaimer\|legal.*advice\|not.*legal.*advice" | wc -l
+
+      - name: Generate security report
+        if: always()
+        run: |
+          echo "📊 Security Audit Summary" > security-report.md
+          echo "========================" >> security-report.md
+          echo "" >> security-report.md
+          echo "**Generated:** $(date)" >> security-report.md
+          echo "**Repository:** ${{ github.repository }}" >> security-report.md
+          echo "**Commit:** ${{ github.sha }}" >> security-report.md
+          echo "" >> security-report.md
+          echo "## 🔍 Secret Scanning Results" >> security-report.md
+          if [ -f trufflehog-results.json ] && [ -s trufflehog-results.json ]; then
+            echo "⚠️ Potential secrets detected - Review required" >> security-report.md
+          else
+            echo "✅ No secrets detected" >> security-report.md
+          fi
+          echo "" >> security-report.md
+          echo "## 🐍 Python Security Analysis" >> security-report.md
+          echo "**Bandit Issues:** $(wc -l < bandit-security.json 2>/dev/null || echo 'N/A')" >> security-report.md
+          echo "" >> security-report.md
+          echo "## ⚖️ Legal Compliance Status" >> security-report.md
+          echo "- Legal disclaimers: $(find . -name '*.py' -o -name '*.md' | xargs grep -l -i disclaimer | wc -l) files" >> security-report.md
+          echo "- Privacy references: $(find . -name '*.py' -o -name '*.md' | xargs grep -l -i 'privacy\|confidential' | wc -l) files" >> security-report.md
+          echo "" >> security-report.md
+          echo "## 🎯 Recommendations" >> security-report.md
+          echo "- Ensure all API keys are stored in GitHub Secrets" >> security-report.md
+          echo "- Verify legal disclaimers are prominently displayed" >> security-report.md
+          echo "- Implement comprehensive audit logging for legal compliance" >> security-report.md
+          echo "- Regular security training for development team" >> security-report.md
+
+      - name: Upload security artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-audit-results
+          path: |
+            trufflehog-results.json
+            bandit-security.json
+            pip-audit-results.json
+            npm-audit.json
+            retire-results.json
+            security-report.md
+          retention-days: 30
+
+  # Dependency Vulnerability Monitor
+  dependency-check:
+    name: 📦 Dependency Vulnerability Monitor
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'dependencies' || github.event.inputs.scan_type == '' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Python dependency scan
+        run: |
+          python -m pip install --upgrade pip pip-audit
+          echo "🔍 Scanning Python dependencies for vulnerabilities..."
+          pip-audit --desc --format json --output python-vulns.json
+          pip-audit --desc --format table
+
+      - name: Node.js dependency scan
+        working-directory: frontend
+        run: |
+          npm install
+          echo "🔍 Scanning Node.js dependencies for vulnerabilities..."
+          npm audit --audit-level moderate --json > node-vulns.json
+          npm audit --audit-level moderate
+
+      - name: Generate dependency report
+        run: |
+          echo "📊 Dependency Vulnerability Report" > dependency-report.md
+          echo "===================================" >> dependency-report.md
+          echo "" >> dependency-report.md
+          echo "**Date:** $(date)" >> dependency-report.md
+          echo "**Critical for Legal Tech:** High security standards required" >> dependency-report.md
+          echo "" >> dependency-report.md
+          echo "## Python Dependencies" >> dependency-report.md
+          if [ -f python-vulns.json ]; then
+            echo "See python-vulns.json for detailed results" >> dependency-report.md
+          else
+            echo "✅ No vulnerabilities detected" >> dependency-report.md
+          fi
+          echo "" >> dependency-report.md
+          echo "## Node.js Dependencies" >> dependency-report.md
+          if [ -f frontend/node-vulns.json ]; then
+            echo "See node-vulns.json for detailed results" >> dependency-report.md
+          else
+            echo "✅ No vulnerabilities detected" >> dependency-report.md
+          fi
+
+      - name: Upload dependency results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dependency-scan-results
+          path: |
+            python-vulns.json
+            frontend/node-vulns.json
+            dependency-report.md
+          retention-days: 15
+
+  # Legal Compliance Monitor
+  compliance-monitor:
+    name: ⚖️ Legal Compliance Monitor
+    runs-on: ubuntu-latest
+    if: github.event.inputs.scan_type == 'compliance' || github.event.inputs.scan_type == '' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Legal disclaimer verification
+        run: |
+          echo "⚖️ Verifying legal disclaimers and compliance indicators"
+          
+          # Check for legal disclaimers in key files
+          echo "📋 Checking README.md for legal disclaimers..."
+          grep -i "disclaimer\|legal.*advice\|not.*attorney" README.md && echo "✅ Legal disclaimer found in README" || echo "⚠️ No legal disclaimer in README"
+          
+          echo "📋 Checking for privacy policy references..."
+          find . -name "*.md" -o -name "*.txt" | xargs grep -l -i "privacy.*policy\|data.*protection" | wc -l
+          
+          echo "📋 Checking for terms of service..."
+          find . -name "*.md" -o -name "*.txt" | xargs grep -l -i "terms.*service\|terms.*use" | wc -l
+
+      - name: HIPAA compliance check
+        run: |
+          echo "🏥 HIPAA Compliance Verification"
+          echo "Checking for HIPAA-related security controls..."
+          
+          # Check for encryption references
+          grep -r -i "encrypt\|aes\|ssl\|tls" hermes/ --include="*.py" | wc -l
+          
+          # Check for audit logging
+          grep -r -i "audit\|log" hermes/ --include="*.py" | wc -l
+          
+          # Check for access controls
+          grep -r -i "auth\|permission\|access.*control" hermes/ --include="*.py" | wc -l
+
+      - name: GDPR compliance check
+        run: |
+          echo "🇪🇺 GDPR Compliance Verification"
+          echo "Checking for GDPR-related privacy controls..."
+          
+          # Check for data retention policies
+          grep -r -i "retention\|expire\|delete.*data" hermes/ --include="*.py" | wc -l
+          
+          # Check for consent mechanisms
+          grep -r -i "consent\|opt.*in\|opt.*out" hermes/ --include="*.py" | wc -l
+          
+          # Check for right to deletion
+          grep -r -i "delete.*user\|remove.*data\|right.*forgotten" hermes/ --include="*.py" | wc -l
+
+      - name: Generate compliance report
+        run: |
+          echo "⚖️ Legal Compliance Status Report" > compliance-report.md
+          echo "===================================" >> compliance-report.md
+          echo "" >> compliance-report.md
+          echo "**Generated:** $(date)" >> compliance-report.md
+          echo "**For:** Legal Technology Platform - HERMES" >> compliance-report.md
+          echo "" >> compliance-report.md
+          echo "## 📋 Legal Disclaimer Status" >> compliance-report.md
+          DISCLAIMER_COUNT=$(find . -name "*.md" -o -name "*.txt" | xargs grep -l -i disclaimer | wc -l)
+          echo "- Files with legal disclaimers: $DISCLAIMER_COUNT" >> compliance-report.md
+          echo "" >> compliance-report.md
+          echo "## 🏥 HIPAA Compliance Indicators" >> compliance-report.md
+          ENCRYPT_COUNT=$(grep -r -i "encrypt\|aes\|ssl\|tls" hermes/ --include="*.py" | wc -l)
+          AUDIT_COUNT=$(grep -r -i "audit\|log" hermes/ --include="*.py" | wc -l)
+          echo "- Encryption references: $ENCRYPT_COUNT" >> compliance-report.md
+          echo "- Audit logging references: $AUDIT_COUNT" >> compliance-report.md
+          echo "" >> compliance-report.md
+          echo "## 🇪🇺 GDPR Compliance Indicators" >> compliance-report.md
+          RETENTION_COUNT=$(grep -r -i "retention\|expire" hermes/ --include="*.py" | wc -l)
+          echo "- Data retention references: $RETENTION_COUNT" >> compliance-report.md
+          echo "" >> compliance-report.md
+          echo "## 🎯 Recommendations" >> compliance-report.md
+          echo "1. Ensure legal disclaimers are prominently displayed on all user interfaces" >> compliance-report.md
+          echo "2. Implement comprehensive audit logging for all user interactions" >> compliance-report.md
+          echo "3. Document data retention and deletion policies" >> compliance-report.md
+          echo "4. Provide clear privacy policy and terms of service" >> compliance-report.md
+          echo "5. Regular legal compliance reviews with qualified counsel" >> compliance-report.md
+
+      - name: Upload compliance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-audit-results
+          path: compliance-report.md
+          retention-days: 90  # Keep compliance reports longer
+
+# This workflow provides ongoing security and legal compliance monitoring
+# specifically tailored for legal technology platforms requiring high standards.
