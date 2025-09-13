@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Check site availability
         run: |
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           echo "🔍 Checking HERMES demo site availability..."
           echo "📍 URL: $SITE_URL"
           
@@ -87,7 +87,7 @@ jobs:
     steps:
       - name: Performance metrics collection
         run: |
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           echo "⚡ Collecting performance metrics for HERMES demo..."
           
           # Collect detailed timing metrics
@@ -131,7 +131,7 @@ jobs:
     steps:
       - name: Legal compliance validation
         run: |
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           echo "⚖️ Monitoring legal compliance for professional legal tech demo..."
           
           # Fetch site content
@@ -190,7 +190,7 @@ jobs:
     steps:
       - name: Business readiness check
         run: |
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           echo "💼 HERMES Business Readiness Report - $(date '+%A, %B %d, %Y')"
           echo "=========================================================="
           
@@ -237,14 +237,14 @@ jobs:
           echo "📊 HERMES Monitoring Summary - $(date)"
           echo "====================================="
           echo ""
-          echo "🌐 Demo Site: https://clduab11.github.io/Hermes-beta/"
+          echo "🌐 Demo Site: https://clduab11.github.io/hermes-agent/"
           echo "🎯 Purpose: Professional legal tech demonstration"
           echo "💼 Target: Law firm decision-makers and LinkedIn showcase"
           echo ""
           
           # Note: In a real scenario, you'd access the results from previous jobs
           # For now, we'll do a final verification
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" --max-time 10 "$SITE_URL" 2>/dev/null || echo "ERROR")
           
           if [ "$HTTP_STATUS" = "200" ]; then

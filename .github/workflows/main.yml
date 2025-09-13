@@ -251,7 +251,7 @@ jobs:
         uses: treosh/lighthouse-ci-action@v10
         with:
           urls: |
-            https://${{ github.repository_owner }}.github.io/Hermes-beta/
+            ${{ steps.deployment.outputs.page_url }}
           configPath: '.lighthouserc.json'
           uploadArtifacts: true
           temporaryPublicStorage: true
@@ -259,7 +259,10 @@ jobs:
       - name: Accessibility check
         run: |
           npm install -g @axe-core/cli
-          npx axe https://${{ github.repository_owner }}.github.io/Hermes-beta/ --tags wcag2a,wcag2aa,wcag21aa || echo "⚠️ Accessibility issues found"
+          # Use the actual deployed URL from GitHub Pages
+          SITE_URL="${{ steps.deployment.outputs.page_url }}"
+          echo "🔍 Testing accessibility for: $SITE_URL"
+          npx axe "$SITE_URL" --tags wcag2a,wcag2aa,wcag21aa || echo "⚠️ Accessibility issues found"
 
   # E2E & Integration Tests
   e2e-tests:

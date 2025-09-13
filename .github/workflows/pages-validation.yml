@@ -25,7 +25,7 @@ jobs:
 
       - name: Basic connectivity test
         run: |
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           echo "🔍 Testing site connectivity: $SITE_URL"
           
           # Test basic connectivity
@@ -41,7 +41,7 @@ jobs:
 
       - name: Security headers validation
         run: |
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           echo "🔒 Checking security headers..."
           
           HEADERS=$(curl -I -s "$SITE_URL")
@@ -56,7 +56,7 @@ jobs:
 
       - name: Legal compliance validation
         run: |
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           echo "⚖️ Checking legal compliance on deployed site..."
           
           # Check if site contains legal disclaimers
@@ -77,7 +77,7 @@ jobs:
 
       - name: Performance validation
         run: |
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           echo "⚡ Basic performance validation..."
           
           # Measure response time
@@ -112,7 +112,7 @@ jobs:
 
       - name: Accessibility validation
         run: |
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           echo "♿ Running accessibility validation..."
           
           # Run axe-core accessibility check
@@ -125,7 +125,7 @@ jobs:
 
       - name: SEO and meta validation
         run: |
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           echo "📈 SEO and meta tag validation..."
           
           SITE_CONTENT=$(curl -s "$SITE_URL")
@@ -152,7 +152,7 @@ jobs:
 
       - name: Legal industry validation
         run: |
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           echo "⚖️ Legal industry specific validation..."
           
           SITE_CONTENT=$(curl -s "$SITE_URL")
@@ -180,16 +180,16 @@ jobs:
         if: always()
         run: |
           echo "# GitHub Pages Validation Report" > validation-report.md
-          echo "**Site:** https://clduab11.github.io/Hermes-beta/" >> validation-report.md
+          echo "**Site:** https://clduab11.github.io/hermes-agent/" >> validation-report.md
           echo "**Date:** $(date)" >> validation-report.md
           echo "**Purpose:** Legal Technology Demonstration Platform" >> validation-report.md
           echo "" >> validation-report.md
           
           echo "## 🌐 Site Accessibility" >> validation-report.md
-          HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" "https://clduab11.github.io/Hermes-beta/")
+          HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" "https://clduab11.github.io/hermes-agent/")
           echo "- HTTP Status: $HTTP_STATUS" >> validation-report.md
           
-          RESPONSE_TIME=$(curl -o /dev/null -s -w "%{time_total}" "https://clduab11.github.io/Hermes-beta/")
+          RESPONSE_TIME=$(curl -o /dev/null -s -w "%{time_total}" "https://clduab11.github.io/hermes-agent/")
           echo "- Response Time: ${RESPONSE_TIME}s" >> validation-report.md
           
           echo "" >> validation-report.md
@@ -228,7 +228,7 @@ jobs:
         if: always()
         run: |
           echo "🎯 GitHub Pages Validation Complete"
-          echo "📊 Site: https://clduab11.github.io/Hermes-beta/"
+          echo "📊 Site: https://clduab11.github.io/hermes-agent/"
           echo "✅ Ready for legal professional demonstration"
           echo "💼 Optimized for LinkedIn professional showcase"
           echo "⚖️ Legal industry compliance validated"
