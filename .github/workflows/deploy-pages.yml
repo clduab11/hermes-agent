@@ -100,7 +100,7 @@ jobs:
           Allow: /
           
           # Legal Technology Demo Site
-          # Sitemap: https://clduab11.github.io/Hermes-beta/sitemap.xml
+          # Sitemap: https://clduab11.github.io/hermes-agent/sitemap.xml
           EOF
 
       - name: Generate SPA fallback
@@ -182,7 +182,7 @@ jobs:
 
       - name: Verify legal disclaimers
         run: |
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           echo "🔍 Checking for legal compliance on deployed site..."
           
           # Check if privacy notice is accessible
@@ -194,7 +194,7 @@ jobs:
       - name: Accessibility validation
         run: |
           npm install -g @axe-core/cli pa11y
-          SITE_URL="https://clduab11.github.io/Hermes-beta/"
+          SITE_URL="https://clduab11.github.io/hermes-agent/"
           
           echo "♿ Running accessibility checks..."
           pa11y "$SITE_URL" --standard WCAG2AA --reporter cli || echo "⚠️ Accessibility issues detected - review required for legal compliance"
