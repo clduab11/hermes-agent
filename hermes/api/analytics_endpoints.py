@@ -17,6 +17,7 @@ import logging
 from ..auth.middleware import get_current_user, require_permission
 from ..database.tenant_context import get_tenant_context
 from ..analytics.engine import AnalyticsEngine, TimeRange
+from ..config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +87,8 @@ async def get_call_volume_chart(
 ):
     """Get call volume chart data."""
     try:
+        if not (settings.demo_mode or settings.debug):
+            raise HTTPException(status_code=503, detail="Analytics charts unavailable until data is ready")
         # Mock chart data
         chart_data = {
             "labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -119,6 +122,8 @@ async def get_revenue_chart(
 ):
     """Get revenue impact chart data."""
     try:
+        if not (settings.demo_mode or settings.debug):
+            raise HTTPException(status_code=503, detail="Revenue chart unavailable until data is ready")
         # Mock revenue chart data
         chart_data = {
             "labels": ["Week 1", "Week 2", "Week 3", "Week 4"],
@@ -160,6 +165,8 @@ async def get_recent_activity(
 ):
     """Get recent activity feed for dashboard."""
     try:
+        if not (settings.demo_mode or settings.debug):
+            raise HTTPException(status_code=503, detail="Recent activity unavailable until data is ready")
         # Mock recent activity data
         activities = [
             {
@@ -229,6 +236,8 @@ async def get_system_performance(
 ):
     """Get real-time system performance metrics."""
     try:
+        if not (settings.demo_mode or settings.debug):
+            raise HTTPException(status_code=503, detail="System performance data unavailable until data is ready")
         # Mock system performance data
         performance_data = {
             "uptime": "99.9%",
@@ -270,7 +279,18 @@ async def get_voice_system_status(
 ):
     """Get voice system status for dashboard indicator."""
     try:
-        # Mock voice system status
+        # Mock voice system status (demo only)
+        if not (settings.demo_mode or settings.debug):
+            return {
+                "status": "success",
+                "data": {
+                    "status": "degraded",
+                    "indicator_color": "yellow",
+                    "status_text": "Voice Status Disabled",
+                    "health_score": 0.0,
+                    "active_sessions": 0
+                }
+            }
         voice_status = {
             "status": "ready",
             "indicator_color": "green",

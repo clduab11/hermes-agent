@@ -322,7 +322,7 @@ class ClioAuthHandler:
             logger.error(f"Error verifying state: {e}")
             return False
     
-    def _get_basic_auth_header(self) -> str:
+def _get_basic_auth_header(self) -> str:
         """Generate HTTP Basic Auth header for client authentication.
         
         Returns:
@@ -331,3 +331,6 @@ class ClioAuthHandler:
         credentials = f"{self.client_id}:{self.client_secret}"
         encoded_credentials = base64.b64encode(credentials.encode()).decode()
         return f"Basic {encoded_credentials}"
+
+# Backward-compatible alias used by API endpoints
+ClioAuthManager = ClioAuthHandler

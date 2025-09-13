@@ -18,9 +18,12 @@ import logging
 import asyncio
 
 from ..auth.middleware import get_current_user, require_permission
-from ..integrations.clio.client import ClioClient
-from ..integrations.clio.auth import ClioAuthManager
+from ..integrations.clio.client import ClioAPIClient, ClioClient
+from ..integrations.clio.auth import ClioAuthHandler
 from ..database.tenant_context import get_tenant_context
+from ..database import get_database_session
+from ..database.security import SecureAsyncSession
+from ..integrations.clio.token_repository import upsert_clio_tokens, get_clio_tokens, delete_clio_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -123,20 +126,16 @@ async def get_clio_client(
     current_user = Depends(get_current_user),
     tenant_context = Depends(get_tenant_context)
 ) -> ClioClient:
-    """Get authenticated Clio client for current user."""
-    try:
-        auth_manager = ClioAuthManager()
-        client = ClioClient(auth_manager=auth_manager)
-        
-        # Initialize client with user's tenant context
-        await client.initialize_for_tenant(tenant_context.tenant_id)
-        return client
-    except Exception as e:
-        logger.error(f"Failed to initialize Clio client: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Unable to connect to Clio. Please check your integration settings."
-        )
+    """Return an authenticated Clio API client or 401 if not authorized yet."""
+    db_session = await get_database_session()
+    if not db_session:
+        raise HTTPException(status_code=503, detail="Database not configured")
+    async with SecureAsyncSession(db_session) as session:
+        tokens = await get_clio_tokens(session, tenant_context.tenant_id, current_user["id"])
+        if not tokens:
+            raise HTTPException(status_code=401, detail="Clio not authorized for this tenant/user")
+    # Return a lightweight client bound to tokens
+    return ClioClient(auth_handler=ClioAuthHandler(), tokens=tokens)
 
 # OAuth endpoints
 @router.get("/oauth/authorize")
@@ -146,11 +145,8 @@ async def authorize_clio(
 ):
     """Start Clio OAuth authorization flow."""
     try:
-        auth_manager = ClioAuthManager()
-        auth_url = await auth_manager.get_authorization_url(
-            tenant_id=tenant_context.tenant_id,
-            user_id=current_user.id
-        )
+        handler = ClioAuthHandler()
+        auth_url, state = handler.generate_authorization_url(tenant_id=tenant_context.tenant_id)
         return {"authorization_url": auth_url}
     except Exception as e:
         logger.error(f"OAuth authorization error: {e}")
@@ -159,22 +155,27 @@ async def authorize_clio(
             detail="Failed to initiate OAuth authorization"
         )
 
-@router.post("/oauth/callback")
-async def handle_oauth_callback(
+@router.get("/oauth/callback")
+async def handle_oauth_callback_get(
     code: str,
     state: str,
     current_user = Depends(get_current_user),
     tenant_context = Depends(get_tenant_context)
 ):
-    """Handle Clio OAuth callback and exchange code for tokens."""
+    """Handle Clio OAuth callback (GET) and exchange code for tokens."""
     try:
-        auth_manager = ClioAuthManager()
-        tokens = await auth_manager.exchange_code_for_tokens(
+        db_session = await get_database_session()
+        if not db_session:
+            raise HTTPException(status_code=503, detail="Database not configured")
+        handler = ClioAuthHandler()
+        tokens = await handler.exchange_code_for_tokens(
             code=code,
             state=state,
             tenant_id=tenant_context.tenant_id,
-            user_id=current_user.id
         )
+        # Persist tokens for tenant/user
+        async with SecureAsyncSession(db_session) as session:
+            await upsert_clio_tokens(session, tenant_context.tenant_id, current_user["id"], tokens)
         return {"status": "success", "message": "Clio integration activated"}
     except Exception as e:
         logger.error(f"OAuth callback error: {e}")
@@ -182,6 +183,26 @@ async def handle_oauth_callback(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to complete OAuth authorization"
         )
+
+@router.post("/oauth/callback")
+async def handle_oauth_callback_post(
+    code: str,
+    state: str,
+    current_user = Depends(get_current_user),
+    tenant_context = Depends(get_tenant_context)
+):
+    """Handle Clio OAuth callback (POST) for compatibility."""
+    return await handle_oauth_callback_get(code, state, current_user, tenant_context)
+
+# Support trailing slash variant some configurations may require
+@router.get("/oauth/callback/")
+async def handle_oauth_callback_get_slash(
+    code: str,
+    state: str,
+    current_user = Depends(get_current_user),
+    tenant_context = Depends(get_tenant_context)
+):
+    return await handle_oauth_callback_get(code, state, current_user, tenant_context)
 
 # Contact endpoints
 @router.get("/contacts", response_model=List[ContactResponse])
@@ -509,3 +530,32 @@ async def clio_health_check(
             "error": str(e),
             "timestamp": datetime.utcnow().isoformat()
         }
+@router.delete("/admin/tokens")
+async def revoke_clio_tokens(
+    target_user_id: Optional[str] = None,
+    revoke_remote: bool = True,
+    current_user = Depends(get_current_user),
+    tenant_context = Depends(get_tenant_context),
+    _: None = Depends(require_permission("clio:admin")),
+):
+    """Admin: revoke stored Clio tokens for a user (or self if omitted).
+
+    - If revoke_remote is true, attempts to revoke the refresh token with Clio.
+    - Always removes tokens from local storage.
+    """
+    db_session = await get_database_session()
+    if not db_session:
+        raise HTTPException(status_code=503, detail="Database not configured")
+    user_id = target_user_id or current_user["id"]
+    handler = ClioAuthHandler()
+    async with SecureAsyncSession(db_session) as session:
+        tokens = await get_clio_tokens(session, tenant_context.tenant_id, user_id)
+        if not tokens:
+            return {"status": "not_found", "message": "No tokens stored"}
+        if revoke_remote:
+            try:
+                await handler.revoke_token(tokens.refresh_token, token_type="refresh_token")
+            except Exception as e:
+                logger.warning(f"Remote revoke failed: {e}")
+        deleted = await delete_clio_tokens(session, tenant_context.tenant_id, user_id)
+        return {"status": "revoked", "deleted": deleted}

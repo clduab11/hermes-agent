@@ -224,8 +224,10 @@ class SecureAsyncSession:
         # Automatically set tenant context from current request
         current_tenant = tenant_context.get(None)
         if current_tenant:
+            # Support both TenantContext objects and legacy string tenant IDs
+            tenant_id = getattr(current_tenant, "tenant_id", current_tenant)
             await DatabaseSecurityManager.set_tenant_context(
-                self.session, current_tenant
+                self.session, str(tenant_id)
             )
             self._tenant_set = True
         return self.session

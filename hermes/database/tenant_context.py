@@ -1,6 +1,7 @@
 """Tenant context utilities."""
 from contextvars import ContextVar
 from typing import Optional
+from fastapi import HTTPException, status
 from dataclasses import dataclass
 
 
@@ -27,12 +28,14 @@ def get_current_tenant() -> str | None:
 
 
 def get_tenant_context() -> TenantContext:
-    """Get the current tenant context or create a default one."""
+    """Get the current tenant context or raise if unauthenticated."""
     context = tenant_context.get()
     if context is None:
-        # Return default context for demo/testing
-        return TenantContext(tenant_id="default", user_id="demo_user", permissions=["*"])
-    return context
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Tenant context required")
+    if isinstance(context, TenantContext):
+        return context
+    # Backward compatibility: handle legacy string value
+    return TenantContext(tenant_id=str(context), user_id=None, permissions=[])
 
 
 def set_tenant_context(context: TenantContext):

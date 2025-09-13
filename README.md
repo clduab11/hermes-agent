@@ -100,6 +100,14 @@
 
 ---
 
+## 🌐 Live Demo (GitHub Pages)
+
+- Static UI (GitHub Pages): https://clduab11.github.io/Hermes-beta/
+- Configure the frontend to point at your backend by setting `VITE_SOCKET_IO_URL` before build.
+- For local development, start the FastAPI backend and open `http://localhost:8000/`.
+
+---
+
 ## 💰 Investment & Pricing
 
 ### Professional Tier - Starting at $2,497/month
@@ -252,6 +260,16 @@ python -m hermes.main --host 0.0.0.0 --port 8000
 - 🎓 **[Training Portal](training/)** - Staff onboarding and best practices
 - 💬 **[Community Forum](community/)** - Peer support and feature requests
 - 🆘 **[24/7 Support](support/)** - Contact [info@parallax-ai.app](mailto:support@parallax-ai.app)
+
+### Setup Guides
+- 🔐 Clio OAuth Setup: `docs/clio-setup.md`
+- 🗄️ Supabase Integration: `docs/supabase-setup.md`
+
+### Admin & OAuth Endpoints (Backend)
+- Start Clio OAuth: `GET /api/clio/oauth/authorize`
+- OAuth Callback: `GET /api/clio/oauth/callback` (trailing slash variant supported)
+- Revoke Clio Tokens (admin): `DELETE /api/clio/admin/tokens?target_user_id=<id>&revoke_remote=true|false`
+- Clio Health: `GET /api/clio/health`
 
 ---
 

@@ -1,6 +1,6 @@
 """Configuration management for HERMES voice agent system."""
-from typing import Optional
-from pydantic import Field
+from typing import Optional, List
+from pydantic import Field, AliasChoices
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     api_host: str = Field(default="0.0.0.0", description="API host address")
     api_port: int = Field(default=8000, ge=1, le=65535, description="API port number")
     debug: bool = Field(default=False, description="Enable debug mode")
+    demo_mode: bool = Field(default=False, description="Enable demo features and mock data")
+    cors_allow_origins: Optional[str] = Field(
+        default=None,
+        description="Comma-separated list of allowed CORS origins (e.g. https://app.example.com,https://admin.example.com)"
+    )
     
     # OpenAI Configuration
     openai_api_key: str = Field(default="", description="OpenAI API key")
@@ -33,7 +38,13 @@ class Settings(BaseSettings):
     sample_rate: int = Field(default=16000, ge=8000, le=48000, description="Audio sample rate")
     chunk_size: int = Field(default=1024, ge=512, le=8192, description="Audio chunk size")
     max_audio_length_seconds: int = Field(default=30, ge=1, le=300, description="Max audio length")
-    response_timeout: float = Field(default=0.1, ge=0.01, le=5.0, description="Response timeout")
+    response_timeout: float = Field(
+        default=0.1,
+        ge=0.01,
+        le=5.0,
+        description="Response timeout (seconds)",
+        validation_alias=AliasChoices("RESPONSE_TIMEOUT", "RESPONSE_TIMEOUT_SECONDS")
+    )
     
     # Legal Compliance
     confidence_threshold: float = Field(default=0.85, ge=0.1, le=1.0, description="AI confidence threshold")
@@ -55,6 +66,7 @@ class Settings(BaseSettings):
     clio_client_id: Optional[str] = Field(default=None, description="Clio OAuth client ID")
     clio_client_secret: Optional[str] = Field(default=None, description="Clio OAuth client secret") 
     clio_redirect_uri: Optional[str] = Field(default=None, description="Clio OAuth redirect URI")
+    clio_token_encryption_key: Optional[str] = Field(default=None, description="Base64-encoded Fernet key for encrypting Clio tokens")
     
     zapier_api_key: Optional[str] = Field(default=None, description="Zapier API key")
     github_token: Optional[str] = Field(default=None, description="GitHub access token")
@@ -76,3 +88,13 @@ class Settings(BaseSettings):
 
 # Global settings instance
 settings = Settings()
+
+def get_cors_origins_list() -> List[str]:
+    """Parse and return allowed CORS origins as a list.
+
+    Returns ["*"] if not configured to preserve current permissive behavior,
+    but production should set CORS_ALLOW_ORIGINS explicitly.
+    """
+    if not settings.cors_allow_origins:
+        return ["*"]
+    return [o.strip() for o in settings.cors_allow_origins.split(",") if o.strip()]

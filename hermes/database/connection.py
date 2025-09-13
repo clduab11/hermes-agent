@@ -35,9 +35,16 @@ class DatabaseManager:
             return False
         
         try:
+            db_url = settings.database_url
+            # Normalize to asyncpg driver for async engine
+            if db_url.startswith("postgresql://") and "+asyncpg" not in db_url:
+                db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            elif db_url.startswith("postgres://") and "+asyncpg" not in db_url:
+                db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+
             # Create async engine
             self.engine = create_async_engine(
-                settings.database_url,
+                db_url,
                 echo=settings.debug,
                 pool_pre_ping=True,
                 pool_recycle=3600

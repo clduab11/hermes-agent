@@ -109,8 +109,9 @@ class OrchestrationWorkflow:
     results: Dict[str, Any] = field(default_factory=dict)
 
 
+# DEPRECATED: Legacy orchestrator (kept for reference). Use mcp_orchestrator defined below.
 class MCPOrchestrator:
-    """Main orchestrator for managing MCP server interactions."""
+    """[DEPRECATED] Main orchestrator for managing MCP server interactions."""
     
     def __init__(self):
         self.servers: Dict[str, MCPServerConfig] = {}
@@ -365,8 +366,7 @@ class MCPOrchestrator:
         await self.task_queue.join()
 
 
-# Global orchestrator instance
-orchestrator = MCPOrchestrator()
+# (Deprecated) Legacy global was here; removed to avoid confusion with mcp_orchestrator
 
 
 class MCPOrchestrator:
@@ -480,8 +480,11 @@ class MCPOrchestrator:
         """Check if a server has the required configuration."""
         if config.name in ["supabase"]:
             return config.auth_token is not None
-        elif config.name in ["mem0", "github"]:
+        elif config.name in ["github"]:
             return config.auth_token is not None
+        elif config.name in ["mem0"]:
+            # Allow Mem0 without token (local MCP usage); require token only if provided
+            return bool(config.url)
         else:
             # Local services don't require auth tokens
             return True

@@ -121,10 +121,13 @@ class AnalyticsEngine:
         self._metric_cache = {}
         self._cache_ttl = 300  # 5 minutes
         self._initialized = False
-        self._mock_data_enabled = db_session is None
+        # Enable mock data only in demo/debug modes when no DB is configured
+        self._mock_data_enabled = (db_session is None) and (settings.demo_mode or settings.debug)
         
-        if self._mock_data_enabled:
-            logger.warning("Analytics engine initialized without database session - using mock data")
+        if db_session is None and not (settings.demo_mode or settings.debug):
+            logger.warning("Analytics engine initialized without database but demo mode is disabled - analytics will be unavailable")
+        elif self._mock_data_enabled:
+            logger.warning("Analytics engine using mock data (demo/debug mode)")
     
     async def initialize(self):
         """Initialize the analytics engine."""
@@ -202,6 +205,9 @@ class AnalyticsEngine:
             if self._mock_data_enabled:
                 # Return mock data when no database is available
                 return await self._generate_mock_metrics(query)
+            if self.db is None:
+                logger.error("Analytics query requested but no database configured and demo mode is disabled")
+                return []
             
             # Build dynamic query based on parameters
             base_query = """

@@ -17,7 +17,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 
-from .config import settings
+from .config import settings, get_cors_origins_list
 from .voice_pipeline import VoicePipeline
 from .websocket_handler import VoiceWebSocketHandler
 from .auth import JWTAuthMiddleware, JWTHandler, TenantManager
@@ -40,6 +40,8 @@ from .voice.multilang_support import get_multilang_processor
 from .automation.workflows import get_workflow_engine
 from .knowledge.graph_sync import get_knowledge_graph_synchronizer
 from pydantic import BaseModel
+from .middleware import SecurityHeadersMiddleware
+from .utils.rate_limiting import RateLimitMiddleware
 
 # Configure logging
 logging.basicConfig(
@@ -63,6 +65,17 @@ async def lifespan(app: FastAPI):
     logger.info("Starting HERMES AI Voice Agent System with MCP Integration...")
     
     try:
+        # Basic secret validation for production
+        if not (settings.debug or settings.demo_mode):
+            missing = []
+            if not settings.openai_api_key:
+                missing.append("OPENAI_API_KEY")
+            if not settings.jwt_private_key or not settings.jwt_public_key:
+                missing.append("JWT_PRIVATE_KEY/JWT_PUBLIC_KEY")
+            if missing:
+                raise RuntimeError(
+                    f"Missing required environment variables for production: {', '.join(missing)}"
+                )
         # Initialize database connection
         await init_database()
         logger.info("Database initialization completed")
@@ -137,6 +150,10 @@ app = FastAPI(
 # Authentication middleware
 app.add_middleware(JWTAuthMiddleware, jwt_handler=jwt_handler)
 
+# Security hardening
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware)
+
 
 class TokenRequest(BaseModel):
     subject: str
@@ -145,28 +162,35 @@ class TokenRequest(BaseModel):
 
 @app.post("/auth/token", response_model=TokenPair)
 async def auth_token(request: TokenRequest) -> TokenPair:
-    """Generate a token pair for testing purposes."""
+    """Generate a token pair for testing.
+
+    Disabled unless DEBUG or DEMO_MODE is enabled.
+    """
+    if not (settings.debug or settings.demo_mode):
+        raise HTTPException(status_code=403, detail="Token minting disabled in production")
     return jwt_handler.create_token_pair(request.subject, request.tenant_id)
 
 
 @app.get("/api/auth/user")
-async def get_current_user_info():
-    """Get current user information for dashboard."""
-    # Mock user data for demo
+async def get_current_user_info(request: Request):
+    """Get current user information for dashboard without demo defaults."""
+    if not getattr(request.state, "user_id", None):
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    roles = [r.value if hasattr(r, "value") else r for r in getattr(request.state, "roles", [])]
     return {
-        "id": "demo_user",
-        "name": "Demo Attorney",
-        "email": "demo@hermes-ai.com",
-        "role": "Senior Attorney",
-        "avatar_url": "/static/assets/default-avatar.png",
-        "tenant_id": "demo_tenant",
-        "permissions": ["dashboard:read", "analytics:read", "clio:read", "audit:read"]
+        "id": request.state.user_id,
+        "name": request.state.user_id,
+        "email": request.state.user_id if "@" in request.state.user_id else f"{request.state.user_id}@local",
+        "role": ",".join(roles) or "user",
+        "avatar_url": None,
+        "tenant_id": getattr(request.state, "tenant_id", None),
+        "permissions": roles,
     }
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=get_cors_origins_list(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -191,7 +215,9 @@ async def demo_page():
 # Dashboard endpoint  
 @app.get("/dashboard")
 async def dashboard():
-    """Serve the professional dashboard."""
+    """Serve the professional dashboard when demo mode is enabled."""
+    if not (settings.demo_mode or settings.debug):
+        raise HTTPException(status_code=404, detail="Dashboard disabled")
     return FileResponse("static/dashboard/index.html")
 
 
@@ -560,8 +586,9 @@ async def search_knowledge_graph_endpoint(
 async def get_realtime_analytics() -> Dict[str, Any]:
     """Get real-time analytics data"""
     try:
-        # This would integrate with actual analytics engine
-        # For now, return mock real-time data
+        # Only return mock data in demo/debug mode
+        if not (settings.demo_mode or settings.debug):
+            raise HTTPException(status_code=503, detail="Analytics unavailable until data is ready")
         return {
             "timestamp": datetime.utcnow().isoformat(),
             "active_sessions": 5,

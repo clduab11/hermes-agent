@@ -557,6 +557,84 @@ class ClioAPIClient:
             json_data={"activity": activity_data}
         )
         return ClioActivity(**response["activity"])
+
+
+class ClioClient:
+    """Thin adapter that binds tokens and exposes simplified methods for endpoints."""
+
+    def __init__(self, auth_handler: ClioAuthHandler, tokens: ClioTokens) -> None:
+        self._auth = auth_handler
+        self._api = ClioAPIClient(auth_handler)
+        self._tokens = tokens
+
+    # Contacts
+    async def list_contacts(self, limit: int = 50, offset: int = 0, contact_type: str | None = None, search: str | None = None):
+        return await self._api.get_contacts(self._tokens, limit=limit, offset=offset, contact_type=contact_type, query=search)
+
+    async def create_contact(self, contact_data: Dict[str, Any]):
+        return await self._api.create_contact(self._tokens, contact_data)
+
+    async def get_contact(self, contact_id: str):
+        return await self._api.get_contact(self._tokens, int(contact_id))
+
+    async def update_contact(self, contact_id: str, contact_data: Dict[str, Any]):
+        return await self._api.update_contact(self._tokens, int(contact_id), contact_data)
+
+    # Matters
+    async def list_matters(self, limit: int = 50, offset: int = 0, client_id: str | None = None, status: str | None = None):
+        cid = int(client_id) if client_id else None
+        return await self._api.get_matters(self._tokens, limit=limit, offset=offset, client_id=cid, status=status)
+
+    async def create_matter(self, matter_data: Dict[str, Any]):
+        return await self._api.create_matter(self._tokens, matter_data)
+
+    async def get_matter(self, matter_id: str):
+        return await self._api.get_matter(self._tokens, int(matter_id))
+
+    async def update_matter(self, matter_id: str, matter_data: Dict[str, Any]):
+        return await self._api.update_matter(self._tokens, int(matter_id), matter_data)
+
+    # Activities
+    async def list_activities(self, limit: int = 50, offset: int = 0, contact_id: str | None = None, matter_id: str | None = None, activity_type: str | None = None):
+        mid = int(matter_id) if matter_id else None
+        cid = int(contact_id) if contact_id else None
+        # activity_type not yet used in API client; filter client-side if needed
+        activities = await self._api.get_activities(self._tokens, limit=limit, offset=offset, matter_id=mid, contact_id=cid)
+        if activity_type:
+            return [a for a in activities if a.type == activity_type]
+        return activities
+
+    async def create_activity(self, activity_data: Dict[str, Any]):
+        return await self._api.create_activity(self._tokens, activity_data)
+
+    # Documents
+    async def list_documents(self, limit: int = 50, offset: int = 0, matter_id: str | None = None, contact_id: str | None = None):
+        mid = int(matter_id) if matter_id else None
+        # contact_id may require different endpoint; omitted here
+        return await self._api.get_documents(self._tokens, limit=limit, offset=offset, matter_id=mid)
+
+    async def create_document(self, document_data: Dict[str, Any]):
+        # Only metadata creation supported here; upload flow TBD
+        return await self._api.upload_document(self._tokens, b"", document_data.get("name", "document"), document_data.get("matter_id"))
+
+    # Bulk
+    async def bulk_import_contacts(self, contacts: list[Dict[str, Any]]):
+        results = []
+        for c in contacts:
+            results.append(await self._api.create_contact(self._tokens, c))
+        return results
+
+    # Health / status
+    async def health_check(self) -> bool:
+        try:
+            await self._api.get_contacts(self._tokens, limit=1)
+            return True
+        except Exception:
+            return False
+
+    async def get_sync_status(self) -> Dict[str, Any]:
+        return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
+
     
     # User Information
     
