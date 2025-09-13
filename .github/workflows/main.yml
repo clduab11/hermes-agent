@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
 
 jobs:
   test-backend:
@@ -29,13 +32,13 @@ jobs:
           black --version
           black --check .
 
-      - name: Run tests
+      - name: Run tests (skip E2E)
         env:
           # Provide minimal env to satisfy config where needed
           OPENAI_API_KEY: test-key
           DEBUG: 'true'
         run: |
-          pytest -q
+          pytest -q -k "not e2e"
 
   deploy-frontend:
     name: Frontend CD (GitHub Pages)
@@ -66,9 +69,60 @@ jobs:
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_PAT }}
           publish_dir: ./frontend/dist
           publish_branch: gh-pages
+
+  e2e-backend:
+    name: Backend E2E (scheduled)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Wait for Postgres
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h 127.0.0.1 -p 5432 -U postgres; then
+              echo "Postgres is ready"; break; fi; sleep 2; done
+
+      - name: Run E2E test suite
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
+          REDIS_URL: redis://127.0.0.1:6379
+          DEBUG: 'true'
+        run: |
+          pytest -q
 
 # ---------------------------------------------
 # Notes
@@ -81,4 +135,3 @@ jobs:
 #   2) Actions permissions allow workflows to create and approve pull requests (optional) and, importantly, 'Read and write permissions' for GITHUB_TOKEN so the workflow can push to gh-pages.
 #   3) If using organization-level policies, ensure workflows can use third-party actions like 'peaceiris/actions-gh-pages'.
 # ---------------------------------------------
-
