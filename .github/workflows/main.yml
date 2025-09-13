@@ -132,14 +132,23 @@ jobs:
             if pg_isready -h 127.0.0.1 -p 5432 -U postgres; then
               echo "Postgres is ready"; break; fi; sleep 2; done
 
+      - name: Select DATABASE_URL (secret or local fallback)
+        run: |
+          if [ -n "${{ secrets.DATABASE_URL }}" ]; then
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+          else
+            echo "DATABASE_URL=postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres" >> $GITHUB_ENV
+          fi
+
       - name: Run E2E test suite
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/postgres
+          DATABASE_URL: ${{ env.DATABASE_URL }}
           REDIS_URL: redis://127.0.0.1:6379
+          ZAPIER_API_KEY: ${{ secrets.ZAPIER_API_KEY }}
           DEBUG: 'true'
         run: |
           pytest -q
