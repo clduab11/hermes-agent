@@ -1,0 +1,35 @@
+# GitHub Actions CI/CD Configuration
+# Security scanning exclusions for false positives
+exclude_dirs:
+  - tests
+  - .venv
+  - venv
+  - node_modules
+  - dist
+  - frontend/dist
+  - .git
+
+# Skip specific bandit checks that are false positives in legal tech context
+skips:
+  - B101  # Skip assert_used in test files
+  - B603  # Skip subprocess without shell=True checks for controlled environments
+  - B607  # Skip partial path checks for internal tools
+
+# Legal tech specific security patterns to validate
+legal_patterns:
+  - "attorney.*client.*privilege"
+  - "confidential"
+  - "hipaa"
+  - "gdpr"
+  - "legal.*disclaimer"
+  - "encryption"
+  - "audit.*log"
+
+# Required environment variables for production deployment
+required_secrets:
+  - OPENAI_API_KEY
+  - SUPABASE_URL
+  - SUPABASE_ANON_KEY
+  - SUPABASE_SERVICE_ROLE_KEY
+  - STRIPE_SECRET_KEY
+  - STRIPE_WEBHOOK_SECRET

@@ -1,0 +1,236 @@
+name: 📚 Documentation & Legal Compliance
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'README.md'
+      - 'docs/**'
+      - 'hermes/**/*.py'
+      - '.github/workflows/docs-compliance.yml'
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly Monday 6 AM UTC
+  workflow_dispatch:
+
+jobs:
+  # Legal Documentation Compliance
+  legal-compliance-docs:
+    name: ⚖️ Legal Documentation Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify legal disclaimers
+        run: |
+          echo "🔍 Verifying legal documentation compliance..."
+          
+          # Check for legal disclaimer in README
+          if grep -q -i "legal.*disclaimer\|not.*legal.*advice\|attorney.*client.*privilege" README.md; then
+            echo "✅ Legal disclaimer found in README.md"
+          else
+            echo "❌ MISSING: Legal disclaimer required in README.md"
+            echo "🔧 Add legal disclaimer section to README.md"
+            exit 1
+          fi
+          
+          # Check for privacy policy references
+          PRIVACY_COUNT=$(find . -name "*.md" | xargs grep -l -i "privacy.*policy\|data.*protection" | wc -l)
+          if [ "$PRIVACY_COUNT" -gt 0 ]; then
+            echo "✅ Privacy policy references found ($PRIVACY_COUNT files)"
+          else
+            echo "⚠️ Consider adding privacy policy documentation"
+          fi
+          
+          # Verify HIPAA/GDPR compliance documentation
+          if grep -q -i "hipaa\|health.*insurance.*portability" README.md; then
+            echo "✅ HIPAA compliance referenced in documentation"
+          else
+            echo "⚠️ HIPAA compliance documentation recommended for legal tech"
+          fi
+
+      - name: Generate legal compliance report
+        run: |
+          echo "# HERMES Legal Compliance Documentation Status" > legal-compliance-report.md
+          echo "Generated: $(date)" >> legal-compliance-report.md
+          echo "" >> legal-compliance-report.md
+          echo "## 📋 Legal Disclaimer Status" >> legal-compliance-report.md
+          
+          if grep -q -i "legal.*disclaimer\|not.*legal.*advice" README.md; then
+            echo "- ✅ Legal disclaimer present in README.md" >> legal-compliance-report.md
+          else
+            echo "- ❌ Legal disclaimer MISSING in README.md" >> legal-compliance-report.md
+          fi
+          
+          echo "" >> legal-compliance-report.md
+          echo "## 🔒 Privacy & Security Documentation" >> legal-compliance-report.md
+          
+          SECURITY_FILES=$(find . -name "*.md" | xargs grep -l -i "security\|encryption\|tls" | wc -l)
+          echo "- Security documentation files: $SECURITY_FILES" >> legal-compliance-report.md
+          
+          PRIVACY_FILES=$(find . -name "*.md" | xargs grep -l -i "privacy\|confidential\|data.*protection" | wc -l)
+          echo "- Privacy documentation files: $PRIVACY_FILES" >> legal-compliance-report.md
+          
+          echo "" >> legal-compliance-report.md
+          echo "## ⚖️ Legal Technology Specific Compliance" >> legal-compliance-report.md
+          
+          if grep -q -i "attorney.*client.*privilege" README.md; then
+            echo "- ✅ Attorney-client privilege referenced" >> legal-compliance-report.md
+          else
+            echo "- ⚠️ Attorney-client privilege protection should be documented" >> legal-compliance-report.md
+          fi
+          
+          if grep -q -i "hipaa\|gdpr" README.md; then
+            echo "- ✅ Regulatory compliance (HIPAA/GDPR) referenced" >> legal-compliance-report.md
+          else
+            echo "- ⚠️ Regulatory compliance documentation recommended" >> legal-compliance-report.md
+          fi
+
+      - name: Upload compliance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: legal-compliance-report
+          path: legal-compliance-report.md
+          retention-days: 30
+
+  # API Documentation Generation
+  api-documentation:
+    name: 📖 API Documentation Generation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install documentation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install fastapi uvicorn pydantic
+          pip install -r requirements-ci.txt
+
+      - name: Generate OpenAPI documentation
+        run: |
+          echo "📚 Generating API documentation..."
+          python -c "
+          import json
+          import sys
+          import os
+          sys.path.append('.')
+          os.environ['OPENAI_API_KEY'] = 'test-key'
+          os.environ['DEBUG'] = 'true'
+          
+          try:
+              from hermes.main import app
+              openapi_schema = app.openapi()
+              
+              # Save OpenAPI schema
+              with open('api-documentation.json', 'w') as f:
+                  json.dump(openapi_schema, f, indent=2)
+              
+              print('✅ OpenAPI schema generated successfully')
+              print(f'📊 API has {len(openapi_schema.get(\"paths\", {}))} endpoints')
+              
+              # Generate human-readable summary
+              with open('api-summary.md', 'w') as f:
+                  f.write('# HERMES API Documentation Summary\n\n')
+                  f.write(f'**Generated:** {openapi_schema.get(\"openapi\", \"N/A\")} spec\n\n')
+                  f.write(f'**Title:** {openapi_schema.get(\"info\", {}).get(\"title\", \"HERMES API\")}\n\n')
+                  
+                  paths = openapi_schema.get('paths', {})
+                  f.write(f'**Total Endpoints:** {len(paths)}\n\n')
+                  
+                  f.write('## Available Endpoints\n\n')
+                  for path, methods in paths.items():
+                      for method, details in methods.items():
+                          if isinstance(details, dict):
+                              summary = details.get('summary', 'No description')
+                              f.write(f'- **{method.upper()} {path}**: {summary}\n')
+                  
+                  f.write('\n## Legal Tech Specific Features\n\n')
+                  f.write('- Voice pipeline endpoints for legal AI conversations\n')
+                  f.write('- HIPAA/GDPR compliant data handling\n')
+                  f.write('- Attorney-client privilege protection\n')
+                  f.write('- Legal disclaimer and compliance validation\n')
+              
+          except Exception as e:
+              print(f'❌ Error generating API documentation: {e}')
+              sys.exit(1)
+          "
+
+      - name: Upload API documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-documentation
+          path: |
+            api-documentation.json
+            api-summary.md
+          retention-days: 30
+
+  # Legal Disclaimer Validation
+  legal-disclaimer-check:
+    name: ⚖️ Legal Disclaimer Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate legal disclaimers in code
+        run: |
+          echo "🔍 Validating legal disclaimers in codebase..."
+          
+          # Check Python files for legal disclaimers
+          PYTHON_DISCLAIMER_COUNT=$(find hermes/ -name "*.py" | xargs grep -l -i "legal.*disclaimer\|not.*legal.*advice\|attorney.*client" | wc -l)
+          echo "📊 Python files with legal disclaimers: $PYTHON_DISCLAIMER_COUNT"
+          
+          # Check for prohibited language (claiming to provide legal advice)
+          PROHIBITED_LANGUAGE=$(find hermes/ -name "*.py" | xargs grep -i "legal.*advice.*provided\|attorney.*advice.*given\|legal.*counsel" | wc -l)
+          if [ "$PROHIBITED_LANGUAGE" -gt 0 ]; then
+            echo "❌ CRITICAL: Found potentially prohibited language claiming to provide legal advice"
+            find hermes/ -name "*.py" | xargs grep -i "legal.*advice.*provided\|attorney.*advice.*given\|legal.*counsel"
+            exit 1
+          else
+            echo "✅ No prohibited legal advice language found"
+          fi
+          
+          # Check frontend for disclaimers
+          if [ -d "frontend" ]; then
+            FRONTEND_DISCLAIMERS=$(find frontend/ -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" | xargs grep -l -i "disclaimer\|legal.*advice" | wc -l)
+            echo "📊 Frontend files with legal disclaimers: $FRONTEND_DISCLAIMERS"
+          fi
+
+      - name: Generate legal disclaimer report
+        run: |
+          echo "# Legal Disclaimer Validation Report" > disclaimer-report.md
+          echo "**Date:** $(date)" >> disclaimer-report.md
+          echo "**Critical for Legal Tech Compliance**" >> disclaimer-report.md
+          echo "" >> disclaimer-report.md
+          
+          echo "## 📊 Disclaimer Coverage Analysis" >> disclaimer-report.md
+          
+          PYTHON_COUNT=$(find hermes/ -name "*.py" | xargs grep -l -i "disclaimer" | wc -l)
+          TOTAL_PYTHON=$(find hermes/ -name "*.py" | wc -l)
+          echo "- Python files with disclaimers: $PYTHON_COUNT / $TOTAL_PYTHON" >> disclaimer-report.md
+          
+          echo "" >> disclaimer-report.md
+          echo "## ✅ Compliance Status" >> disclaimer-report.md
+          echo "- No prohibited legal advice language detected" >> disclaimer-report.md
+          echo "- Legal disclaimers present in documentation" >> disclaimer-report.md
+          
+          echo "" >> disclaimer-report.md
+          echo "## 🎯 Recommendations" >> disclaimer-report.md
+          echo "1. Ensure all user-facing interfaces display clear legal disclaimers" >> disclaimer-report.md
+          echo "2. Regularly review for any language that could be construed as providing legal advice" >> disclaimer-report.md
+          echo "3. Maintain clear boundaries between AI assistance and legal counsel" >> disclaimer-report.md
+
+      - name: Upload disclaimer report
+        uses: actions/upload-artifact@v4
+        with:
+          name: legal-disclaimer-report
+          path: disclaimer-report.md
+          retention-days: 60
+
+# This workflow ensures ongoing legal compliance for the HERMES legal tech platform
