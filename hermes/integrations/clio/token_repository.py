@@ -1,16 +1,17 @@
 """Persistence for Clio OAuth tokens (tenant/user scoped)."""
+
 from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
 from typing import Optional
 
+from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-from cryptography.fernet import Fernet, InvalidToken
 
-from .auth import ClioTokens
 from ...config import settings
+from .auth import ClioTokens
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,9 @@ class TokenCipher:
             try:
                 self._fernet = Fernet(key_b64)
             except Exception:
-                logger.error("Invalid CLIO_TOKEN_ENCRYPTION_KEY; falling back to plaintext storage")
+                logger.error(
+                    "Invalid CLIO_TOKEN_ENCRYPTION_KEY; falling back to plaintext storage"
+                )
                 self._fernet = None
 
     def encrypt(self, value: str) -> str:
@@ -107,10 +110,14 @@ async def get_clio_tokens(
     row = result.one_or_none()
     if not row:
         return None
-    access_token = _cipher.decrypt(row[0] if hasattr(row, '__iter__') else row.access_token)
-    refresh_token = _cipher.decrypt(row[1] if hasattr(row, '__iter__') else row.refresh_token)
-    expires_at = row[2] if hasattr(row, '__iter__') else row.expires_at
-    token_type = row[3] if hasattr(row, '__iter__') else row.token_type
+    access_token = _cipher.decrypt(
+        row[0] if hasattr(row, "__iter__") else row.access_token
+    )
+    refresh_token = _cipher.decrypt(
+        row[1] if hasattr(row, "__iter__") else row.refresh_token
+    )
+    expires_at = row[2] if hasattr(row, "__iter__") else row.expires_at
+    token_type = row[3] if hasattr(row, "__iter__") else row.token_type
     return ClioTokens(
         access_token=access_token,
         refresh_token=refresh_token,
@@ -119,13 +126,17 @@ async def get_clio_tokens(
     )
 
 
-async def delete_clio_tokens(session: AsyncSession, tenant_id: str, user_id: Optional[str]) -> int:
+async def delete_clio_tokens(
+    session: AsyncSession, tenant_id: str, user_id: Optional[str]
+) -> int:
     """Delete stored tokens; returns number of rows deleted."""
     query = text(
         """
         DELETE FROM clio_tokens WHERE tenant_id = :tenant_id AND user_id = :user_id
         """
     )
-    result = await session.execute(query, {"tenant_id": tenant_id, "user_id": user_id or "anonymous"})
+    result = await session.execute(
+        query, {"tenant_id": tenant_id, "user_id": user_id or "anonymous"}
+    )
     await session.commit()
     return result.rowcount or 0

@@ -52,7 +52,7 @@ class User(BaseModel):
 
 class UserCreate(BaseModel):
     """Data for creating a new user."""
-    
+
     email: str
     full_name: str
     password_hash: str
@@ -61,7 +61,7 @@ class UserCreate(BaseModel):
 
 class UserUpdate(BaseModel):
     """Data for updating a user."""
-    
+
     email: str | None = None
     full_name: str | None = None
     password_hash: str | None = None

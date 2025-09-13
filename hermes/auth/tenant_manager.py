@@ -1,5 +1,7 @@
 """Simple in-memory tenant management."""
+
 from __future__ import annotations
+
 import uuid
 from typing import Dict, Optional
 

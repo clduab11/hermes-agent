@@ -1,12 +1,14 @@
 """JWT token generation and validation."""
+
 from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
 from typing import Iterable
 
 import jwt
 
-from .models import Role, TokenPayload, TokenPair
 from ..config import settings
+from .models import Role, TokenPair, TokenPayload
 
 
 class JWTHandler:
@@ -23,8 +25,12 @@ class JWTHandler:
         self.private_key = private_key or settings.jwt_private_key
         self.public_key = public_key or settings.jwt_public_key
         self.algorithm = algorithm or settings.jwt_algorithm
-        self.access_expire_minutes = access_expire_minutes or settings.access_token_expire_minutes
-        self.refresh_expire_days = refresh_expire_days or settings.refresh_token_expire_days
+        self.access_expire_minutes = (
+            access_expire_minutes or settings.access_token_expire_minutes
+        )
+        self.refresh_expire_days = (
+            refresh_expire_days or settings.refresh_token_expire_days
+        )
 
     def create_token_pair(
         self, subject: str, tenant_id: str, roles: Iterable[Role] | None = None
@@ -39,7 +45,9 @@ class JWTHandler:
             "tenant_id": tenant_id,
             "roles": roles_list,
             "type": "access",
-            "exp": int((now + timedelta(minutes=self.access_expire_minutes)).timestamp()),
+            "exp": int(
+                (now + timedelta(minutes=self.access_expire_minutes)).timestamp()
+            ),
             "iat": iat,
         }
         refresh_payload = {
@@ -50,8 +58,12 @@ class JWTHandler:
             "exp": int((now + timedelta(days=self.refresh_expire_days)).timestamp()),
             "iat": iat,
         }
-        access_token = jwt.encode(access_payload, self.private_key, algorithm=self.algorithm)
-        refresh_token = jwt.encode(refresh_payload, self.private_key, algorithm=self.algorithm)
+        access_token = jwt.encode(
+            access_payload, self.private_key, algorithm=self.algorithm
+        )
+        refresh_token = jwt.encode(
+            refresh_payload, self.private_key, algorithm=self.algorithm
+        )
         return TokenPair(access_token=access_token, refresh_token=refresh_token)
 
     def refresh(self, refresh_token: str) -> TokenPair:

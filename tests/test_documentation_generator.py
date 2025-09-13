@@ -3,11 +3,12 @@ import os
 # Ensure OpenAI key is set before importing settings
 os.environ["OPENAI_API_KEY"] = "test-key"
 
-import pytest
 from unittest.mock import AsyncMock, Mock
 
-from hermes.mcp.documentation_generator import DocumentationGenerator
+import pytest
+
 from hermes.config import settings
+from hermes.mcp.documentation_generator import DocumentationGenerator
 
 
 @pytest.mark.asyncio

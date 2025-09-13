@@ -3,16 +3,18 @@
 Also provides lightweight dependencies for `get_current_user` and
 `require_permission` to support API modules without a full user DB.
 """
+
 from __future__ import annotations
+
 from typing import Callable, Optional
 
-from fastapi import Request, HTTPException, status
+from fastapi import HTTPException, Request, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, Response
 
+from ..database.tenant_context import TenantContext, tenant_context
 from .jwt_handler import JWTHandler
-from .models import TokenPayload, Role
-from ..database.tenant_context import tenant_context, TenantContext
+from .models import Role, TokenPayload
 
 
 class JWTAuthMiddleware(BaseHTTPMiddleware):
@@ -22,13 +24,19 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.jwt_handler = jwt_handler or JWTHandler()
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Response]) -> Response:
-        if request.url.path.startswith("/health") or request.url.path.startswith("/auth/"):
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Response]
+    ) -> Response:
+        if request.url.path.startswith("/health") or request.url.path.startswith(
+            "/auth/"
+        ):
             return await call_next(request)
 
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.lower().startswith("bearer "):
-            return JSONResponse(status_code=401, content={"detail": "Missing credentials"})
+            return JSONResponse(
+                status_code=401, content={"detail": "Missing credentials"}
+            )
         try:
             token = auth_header.split()[1]
         except IndexError:
@@ -64,7 +72,9 @@ async def get_current_user(request: Request) -> dict:
     """
     user_id: Optional[str] = getattr(request.state, "user_id", None)
     if not user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
 
     # Best-effort email inference for display purposes
     email = user_id if "@" in user_id else f"{user_id}@local"
@@ -72,7 +82,10 @@ async def get_current_user(request: Request) -> dict:
         "id": user_id,
         "email": email,
         "tenant_id": getattr(request.state, "tenant_id", None),
-        "roles": [r.value if isinstance(r, Role) else r for r in getattr(request.state, "roles", [])],
+        "roles": [
+            r.value if isinstance(r, Role) else r
+            for r in getattr(request.state, "roles", [])
+        ],
     }
 
 
@@ -108,6 +121,8 @@ def require_permission(permission: str):
                 except Exception:
                     continue
         if normalized.isdisjoint(required_roles):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions"
+            )
 
     return _dependency

@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 class SubscriptionTier(str, Enum):
     """Subscription tiers available for HERMES."""
+
     PROFESSIONAL = "professional"
     ENTERPRISE = "enterprise"
 
@@ -57,7 +58,11 @@ class StripeBillingService:
         price_id = self.price_map.get(tier)
         if not price_id:
             raise ValueError(f"Price ID not configured for tier {tier}")
-        trial_days = trial_period_days if trial_period_days is not None else settings.stripe_trial_days
+        trial_days = (
+            trial_period_days
+            if trial_period_days is not None
+            else settings.stripe_trial_days
+        )
         logger.info(
             "Creating Stripe subscription",
             extra={"customer_id": customer_id, "tier": tier.value},
@@ -131,15 +136,11 @@ class StripeBillingService:
         data = event.get("data", {}).get("object", {})
         logger.info("Stripe webhook received", extra={"event_type": event_type})
         if event_type == "invoice.payment_failed":
-            logger.warning(
-                "Payment failed", extra={"customer": data.get("customer")}
-            )
+            logger.warning("Payment failed", extra={"customer": data.get("customer")})
         elif event_type == "customer.subscription.deleted":
             logger.info(
                 "Subscription cancelled", extra={"customer": data.get("customer")}
             )
         elif event_type == "invoice.paid":
-            logger.info(
-                "Invoice paid", extra={"customer": data.get("customer")}
-            )
+            logger.info("Invoice paid", extra={"customer": data.get("customer")})
         # Additional event types can be handled here

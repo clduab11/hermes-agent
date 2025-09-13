@@ -1,4 +1,5 @@
 """Clio API client for data operations."""
+
 from __future__ import annotations
 
 import logging
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class ClioContact(BaseModel):
     """Clio contact model."""
+
     id: int
     type: str  # Person or Company
     name: str
@@ -31,6 +33,7 @@ class ClioContact(BaseModel):
 
 class ClioMatter(BaseModel):
     """Clio matter model."""
+
     id: int
     display_number: str
     description: str
@@ -41,10 +44,11 @@ class ClioMatter(BaseModel):
     created_at: datetime
     updated_at: datetime
     billable: bool = True
-    
+
 
 class ClioTimeEntry(BaseModel):
     """Clio time entry model."""
+
     id: int
     date: datetime
     quantity: float  # Hours
@@ -59,6 +63,7 @@ class ClioTimeEntry(BaseModel):
 
 class ClioDocument(BaseModel):
     """Clio document model."""
+
     id: int
     name: str
     description: Optional[str] = None
@@ -72,6 +77,7 @@ class ClioDocument(BaseModel):
 
 class ClioActivity(BaseModel):
     """Clio activity model."""
+
     id: int
     type: str
     description: str
@@ -84,30 +90,30 @@ class ClioActivity(BaseModel):
 
 class ClioAPIClient:
     """Clio API client for data operations."""
-    
+
     BASE_URL = "https://app.clio.com/api/v4"
-    
+
     def __init__(self, auth_handler: ClioAuthHandler):
         self.auth_handler = auth_handler
         self.client = httpx.AsyncClient(timeout=30.0)
-    
+
     async def __aenter__(self):
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         await self.client.aclose()
-    
+
     async def _make_request(
-        self, 
-        method: str, 
-        endpoint: str, 
+        self,
+        method: str,
+        endpoint: str,
         tokens: ClioTokens,
         params: Optional[Dict[str, Any]] = None,
         data: Optional[Dict[str, Any]] = None,
-        json_data: Optional[Dict[str, Any]] = None
+        json_data: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Make authenticated API request to Clio.
-        
+
         Args:
             method: HTTP method
             endpoint: API endpoint (without base URL)
@@ -115,28 +121,28 @@ class ClioAPIClient:
             params: URL parameters
             data: Form data
             json_data: JSON payload
-            
+
         Returns:
             Response data as dictionary
-            
+
         Raises:
             httpx.HTTPError: If request fails
         """
         # Check if token is expired and refresh if needed
         if self.auth_handler.is_token_expired(tokens):
             tokens = await self.auth_handler.refresh_access_token(tokens.refresh_token)
-        
+
         headers = {
             "Authorization": f"{tokens.token_type} {tokens.access_token}",
             "User-Agent": "HERMES-Legal-AI/1.0",
             "Accept": "application/json",
         }
-        
+
         if json_data:
             headers["Content-Type"] = "application/json"
-        
+
         url = f"{self.BASE_URL}{endpoint}"
-        
+
         try:
             response = await self.client.request(
                 method=method,
@@ -144,38 +150,38 @@ class ClioAPIClient:
                 params=params,
                 data=data,
                 json=json_data,
-                headers=headers
+                headers=headers,
             )
             response.raise_for_status()
-            
+
             if response.headers.get("content-type", "").startswith("application/json"):
                 return response.json()
             else:
                 return {"content": response.content, "headers": dict(response.headers)}
-                
+
         except httpx.HTTPError as e:
             logger.error(f"Clio API request failed: {method} {url} - {e}")
             raise
-    
+
     # Contact Operations
-    
+
     async def get_contacts(
-        self, 
+        self,
         tokens: ClioTokens,
         limit: int = 50,
         offset: int = 0,
         contact_type: Optional[str] = None,
-        query: Optional[str] = None
+        query: Optional[str] = None,
     ) -> List[ClioContact]:
         """Get list of contacts from Clio.
-        
+
         Args:
             tokens: Clio authentication tokens
             limit: Number of contacts to return (max 200)
             offset: Offset for pagination
             contact_type: Filter by contact type ("Person" or "Company")
             query: Search query
-            
+
         Returns:
             List of ClioContact objects
         """
@@ -183,104 +189,100 @@ class ClioAPIClient:
             "limit": min(limit, 200),
             "offset": offset,
         }
-        
+
         if contact_type:
             params["type"] = contact_type
-        
+
         if query:
             params["query"] = query
-        
+
         response = await self._make_request("GET", "/contacts", tokens, params=params)
-        
+
         contacts = []
         for contact_data in response.get("contacts", []):
             contacts.append(ClioContact(**contact_data))
-        
+
         return contacts
-    
-    async def get_contact(self, tokens: ClioTokens, contact_id: int) -> Optional[ClioContact]:
+
+    async def get_contact(
+        self, tokens: ClioTokens, contact_id: int
+    ) -> Optional[ClioContact]:
         """Get specific contact by ID.
-        
+
         Args:
             tokens: Clio authentication tokens
             contact_id: Contact ID
-            
+
         Returns:
             ClioContact object or None if not found
         """
         try:
-            response = await self._make_request("GET", f"/contacts/{contact_id}", tokens)
+            response = await self._make_request(
+                "GET", f"/contacts/{contact_id}", tokens
+            )
             return ClioContact(**response["contact"])
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
             raise
-    
+
     async def create_contact(
-        self, 
-        tokens: ClioTokens, 
-        contact_data: Dict[str, Any]
+        self, tokens: ClioTokens, contact_data: Dict[str, Any]
     ) -> ClioContact:
         """Create new contact in Clio.
-        
+
         Args:
             tokens: Clio authentication tokens
             contact_data: Contact information
-            
+
         Returns:
             Created ClioContact object
         """
         response = await self._make_request(
-            "POST", 
-            "/contacts", 
-            tokens,
-            json_data={"contact": contact_data}
+            "POST", "/contacts", tokens, json_data={"contact": contact_data}
         )
         return ClioContact(**response["contact"])
-    
+
     async def update_contact(
-        self, 
-        tokens: ClioTokens, 
-        contact_id: int,
-        contact_data: Dict[str, Any]
+        self, tokens: ClioTokens, contact_id: int, contact_data: Dict[str, Any]
     ) -> ClioContact:
         """Update existing contact.
-        
+
         Args:
             tokens: Clio authentication tokens
             contact_id: Contact ID
             contact_data: Updated contact information
-            
+
         Returns:
             Updated ClioContact object
         """
         response = await self._make_request(
-            "PATCH", 
-            f"/contacts/{contact_id}", 
+            "PATCH",
+            f"/contacts/{contact_id}",
             tokens,
-            json_data={"contact": contact_data}
+            json_data={"contact": contact_data},
         )
         return ClioContact(**response["contact"])
-    
+
     # Matter Operations
-    
+
     async def get_matters(
-        self, 
+        self,
         tokens: ClioTokens,
         limit: int = 50,
         offset: int = 0,
         client_id: Optional[int] = None,
-        status: Optional[str] = None
+        status: Optional[str] = None,
     ) -> List[ClioMatter]:
         """Get list of matters from Clio.
-        
+
         Args:
             tokens: Clio authentication tokens
             limit: Number of matters to return (max 200)
             offset: Offset for pagination
             client_id: Filter by client ID
             status: Filter by status
-            
+
         Returns:
             List of ClioMatter objects
         """
@@ -288,28 +290,30 @@ class ClioAPIClient:
             "limit": min(limit, 200),
             "offset": offset,
         }
-        
+
         if client_id:
             params["client_id"] = client_id
-        
+
         if status:
             params["status"] = status
-        
+
         response = await self._make_request("GET", "/matters", tokens, params=params)
-        
+
         matters = []
         for matter_data in response.get("matters", []):
             matters.append(ClioMatter(**matter_data))
-        
+
         return matters
-    
-    async def get_matter(self, tokens: ClioTokens, matter_id: int) -> Optional[ClioMatter]:
+
+    async def get_matter(
+        self, tokens: ClioTokens, matter_id: int
+    ) -> Optional[ClioMatter]:
         """Get specific matter by ID.
-        
+
         Args:
             tokens: Clio authentication tokens
             matter_id: Matter ID
-            
+
         Returns:
             ClioMatter object or None if not found
         """
@@ -320,52 +324,47 @@ class ClioAPIClient:
             if e.response.status_code == 404:
                 return None
             raise
-    
+
     async def create_matter(
-        self, 
-        tokens: ClioTokens, 
-        matter_data: Dict[str, Any]
+        self, tokens: ClioTokens, matter_data: Dict[str, Any]
     ) -> ClioMatter:
         """Create new matter in Clio.
-        
+
         Args:
             tokens: Clio authentication tokens
             matter_data: Matter information
-            
+
         Returns:
             Created ClioMatter object
         """
         response = await self._make_request(
-            "POST", 
-            "/matters", 
-            tokens,
-            json_data={"matter": matter_data}
+            "POST", "/matters", tokens, json_data={"matter": matter_data}
         )
         return ClioMatter(**response["matter"])
-    
+
     # Time Entry Operations
-    
+
     async def get_time_entries(
-        self, 
+        self,
         tokens: ClioTokens,
         limit: int = 50,
         offset: int = 0,
         matter_id: Optional[int] = None,
         user_id: Optional[int] = None,
         start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None
+        end_date: Optional[datetime] = None,
     ) -> List[ClioTimeEntry]:
         """Get list of time entries from Clio.
-        
+
         Args:
             tokens: Clio authentication tokens
             limit: Number of entries to return (max 200)
             offset: Offset for pagination
             matter_id: Filter by matter ID
-            user_id: Filter by user ID  
+            user_id: Filter by user ID
             start_date: Filter by start date
             end_date: Filter by end date
-            
+
         Returns:
             List of ClioTimeEntry objects
         """
@@ -373,66 +372,63 @@ class ClioAPIClient:
             "limit": min(limit, 200),
             "offset": offset,
         }
-        
+
         if matter_id:
             params["matter_id"] = matter_id
-        
+
         if user_id:
             params["user_id"] = user_id
-        
+
         if start_date:
             params["date_since"] = start_date.isoformat()
-        
+
         if end_date:
             params["date_until"] = end_date.isoformat()
-        
-        response = await self._make_request("GET", "/time_entries", tokens, params=params)
-        
+
+        response = await self._make_request(
+            "GET", "/time_entries", tokens, params=params
+        )
+
         time_entries = []
         for entry_data in response.get("time_entries", []):
             time_entries.append(ClioTimeEntry(**entry_data))
-        
+
         return time_entries
-    
+
     async def create_time_entry(
-        self, 
-        tokens: ClioTokens, 
-        time_entry_data: Dict[str, Any]
+        self, tokens: ClioTokens, time_entry_data: Dict[str, Any]
     ) -> ClioTimeEntry:
         """Create new time entry in Clio.
-        
+
         Args:
             tokens: Clio authentication tokens
             time_entry_data: Time entry information
-            
+
         Returns:
             Created ClioTimeEntry object
         """
         response = await self._make_request(
-            "POST", 
-            "/time_entries", 
-            tokens,
-            json_data={"time_entry": time_entry_data}
+            "POST", "/time_entries", tokens, json_data={"time_entry": time_entry_data}
         )
         return ClioTimeEntry(**response["time_entry"])
-    
+
     # Document Operations
-    
+
     async def get_documents(
-        self, 
+        self,
         tokens: ClioTokens,
         limit: int = 50,
         offset: int = 0,
-        matter_id: Optional[int] = None
+        matter_id: Optional[int] = None,
     ) -> List[ClioDocument]:
         """Get list of documents from Clio.
-        
+
         Args:
             tokens: Clio authentication tokens
             limit: Number of documents to return (max 200)
             offset: Offset for pagination
             matter_id: Filter by matter ID
-            
+
         Returns:
             List of ClioDocument objects
         """
@@ -440,35 +436,35 @@ class ClioAPIClient:
             "limit": min(limit, 200),
             "offset": offset,
         }
-        
+
         if matter_id:
             params["matter_id"] = matter_id
-        
+
         response = await self._make_request("GET", "/documents", tokens, params=params)
-        
+
         documents = []
         for doc_data in response.get("documents", []):
             documents.append(ClioDocument(**doc_data))
-        
+
         return documents
-    
+
     async def upload_document(
-        self, 
-        tokens: ClioTokens, 
+        self,
+        tokens: ClioTokens,
         file_data: bytes,
         filename: str,
         matter_id: Optional[int] = None,
-        description: Optional[str] = None
+        description: Optional[str] = None,
     ) -> ClioDocument:
         """Upload document to Clio.
-        
+
         Args:
             tokens: Clio authentication tokens
             file_data: File content as bytes
             filename: Name of the file
             matter_id: Matter to associate with
             description: Document description
-            
+
         Returns:
             Created ClioDocument object
         """
@@ -477,43 +473,40 @@ class ClioAPIClient:
             "name": filename,
             "description": description or "",
         }
-        
+
         if matter_id:
             document_data["matter"] = {"id": matter_id}
-        
+
         response = await self._make_request(
-            "POST", 
-            "/documents", 
-            tokens,
-            json_data={"document": document_data}
+            "POST", "/documents", tokens, json_data={"document": document_data}
         )
-        
+
         document = ClioDocument(**response["document"])
-        
+
         # Then upload the file content (this would require additional API calls)
         # Implementation details depend on Clio's file upload process
-        
+
         return document
-    
+
     # Activity Operations
-    
+
     async def get_activities(
-        self, 
+        self,
         tokens: ClioTokens,
         limit: int = 50,
         offset: int = 0,
         matter_id: Optional[int] = None,
-        contact_id: Optional[int] = None
+        contact_id: Optional[int] = None,
     ) -> List[ClioActivity]:
         """Get list of activities from Clio.
-        
+
         Args:
             tokens: Clio authentication tokens
             limit: Number of activities to return (max 200)
             offset: Offset for pagination
             matter_id: Filter by matter ID
             contact_id: Filter by contact ID
-            
+
         Returns:
             List of ClioActivity objects
         """
@@ -521,40 +514,35 @@ class ClioAPIClient:
             "limit": min(limit, 200),
             "offset": offset,
         }
-        
+
         if matter_id:
             params["matter_id"] = matter_id
-        
+
         if contact_id:
             params["contact_id"] = contact_id
-        
+
         response = await self._make_request("GET", "/activities", tokens, params=params)
-        
+
         activities = []
         for activity_data in response.get("activities", []):
             activities.append(ClioActivity(**activity_data))
-        
+
         return activities
-    
+
     async def create_activity(
-        self, 
-        tokens: ClioTokens, 
-        activity_data: Dict[str, Any]
+        self, tokens: ClioTokens, activity_data: Dict[str, Any]
     ) -> ClioActivity:
         """Create new activity in Clio.
-        
+
         Args:
             tokens: Clio authentication tokens
             activity_data: Activity information
-            
+
         Returns:
             Created ClioActivity object
         """
         response = await self._make_request(
-            "POST", 
-            "/activities", 
-            tokens,
-            json_data={"activity": activity_data}
+            "POST", "/activities", tokens, json_data={"activity": activity_data}
         )
         return ClioActivity(**response["activity"])
 
@@ -568,8 +556,20 @@ class ClioClient:
         self._tokens = tokens
 
     # Contacts
-    async def list_contacts(self, limit: int = 50, offset: int = 0, contact_type: str | None = None, search: str | None = None):
-        return await self._api.get_contacts(self._tokens, limit=limit, offset=offset, contact_type=contact_type, query=search)
+    async def list_contacts(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        contact_type: str | None = None,
+        search: str | None = None,
+    ):
+        return await self._api.get_contacts(
+            self._tokens,
+            limit=limit,
+            offset=offset,
+            contact_type=contact_type,
+            query=search,
+        )
 
     async def create_contact(self, contact_data: Dict[str, Any]):
         return await self._api.create_contact(self._tokens, contact_data)
@@ -578,12 +578,22 @@ class ClioClient:
         return await self._api.get_contact(self._tokens, int(contact_id))
 
     async def update_contact(self, contact_id: str, contact_data: Dict[str, Any]):
-        return await self._api.update_contact(self._tokens, int(contact_id), contact_data)
+        return await self._api.update_contact(
+            self._tokens, int(contact_id), contact_data
+        )
 
     # Matters
-    async def list_matters(self, limit: int = 50, offset: int = 0, client_id: str | None = None, status: str | None = None):
+    async def list_matters(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        client_id: str | None = None,
+        status: str | None = None,
+    ):
         cid = int(client_id) if client_id else None
-        return await self._api.get_matters(self._tokens, limit=limit, offset=offset, client_id=cid, status=status)
+        return await self._api.get_matters(
+            self._tokens, limit=limit, offset=offset, client_id=cid, status=status
+        )
 
     async def create_matter(self, matter_data: Dict[str, Any]):
         return await self._api.create_matter(self._tokens, matter_data)
@@ -595,11 +605,20 @@ class ClioClient:
         return await self._api.update_matter(self._tokens, int(matter_id), matter_data)
 
     # Activities
-    async def list_activities(self, limit: int = 50, offset: int = 0, contact_id: str | None = None, matter_id: str | None = None, activity_type: str | None = None):
+    async def list_activities(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        contact_id: str | None = None,
+        matter_id: str | None = None,
+        activity_type: str | None = None,
+    ):
         mid = int(matter_id) if matter_id else None
         cid = int(contact_id) if contact_id else None
         # activity_type not yet used in API client; filter client-side if needed
-        activities = await self._api.get_activities(self._tokens, limit=limit, offset=offset, matter_id=mid, contact_id=cid)
+        activities = await self._api.get_activities(
+            self._tokens, limit=limit, offset=offset, matter_id=mid, contact_id=cid
+        )
         if activity_type:
             return [a for a in activities if a.type == activity_type]
         return activities
@@ -608,14 +627,27 @@ class ClioClient:
         return await self._api.create_activity(self._tokens, activity_data)
 
     # Documents
-    async def list_documents(self, limit: int = 50, offset: int = 0, matter_id: str | None = None, contact_id: str | None = None):
+    async def list_documents(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        matter_id: str | None = None,
+        contact_id: str | None = None,
+    ):
         mid = int(matter_id) if matter_id else None
         # contact_id may require different endpoint; omitted here
-        return await self._api.get_documents(self._tokens, limit=limit, offset=offset, matter_id=mid)
+        return await self._api.get_documents(
+            self._tokens, limit=limit, offset=offset, matter_id=mid
+        )
 
     async def create_document(self, document_data: Dict[str, Any]):
         # Only metadata creation supported here; upload flow TBD
-        return await self._api.upload_document(self._tokens, b"", document_data.get("name", "document"), document_data.get("matter_id"))
+        return await self._api.upload_document(
+            self._tokens,
+            b"",
+            document_data.get("name", "document"),
+            document_data.get("matter_id"),
+        )
 
     # Bulk
     async def bulk_import_contacts(self, contacts: list[Dict[str, Any]]):
@@ -635,15 +667,14 @@ class ClioClient:
     async def get_sync_status(self) -> Dict[str, Any]:
         return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
 
-    
     # User Information
-    
+
     async def get_current_user(self, tokens: ClioTokens) -> Dict[str, Any]:
         """Get current user information.
-        
+
         Args:
             tokens: Clio authentication tokens
-            
+
         Returns:
             User information dictionary
         """

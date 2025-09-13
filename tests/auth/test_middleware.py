@@ -1,5 +1,6 @@
 import os
 import sys
+
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from fastapi import FastAPI, Request
@@ -7,8 +8,8 @@ from fastapi.testclient import TestClient
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
-from hermes.auth.middleware import JWTAuthMiddleware
 from hermes.auth.jwt_handler import JWTHandler
+from hermes.auth.middleware import JWTAuthMiddleware
 
 
 def setup_app():
@@ -45,6 +46,8 @@ def test_allows_authenticated_request():
     app, handler = setup_app()
     client = TestClient(app)
     pair = handler.create_token_pair("user1", "tenant1")
-    resp = client.get("/protected", headers={"Authorization": f"Bearer {pair.access_token}"})
+    resp = client.get(
+        "/protected", headers={"Authorization": f"Bearer {pair.access_token}"}
+    )
     assert resp.status_code == 200
     assert resp.json()["tenant"] == "tenant1"

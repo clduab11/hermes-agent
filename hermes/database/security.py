@@ -1,4 +1,5 @@
 """Database security utilities for multi-tenant RLS and protection."""
+
 from __future__ import annotations
 
 import logging
@@ -20,7 +21,9 @@ class DatabaseSecurityManager:
     async def enable_rls_for_table(session: AsyncSession, table_name: str) -> None:
         """Enable Row Level Security for a table."""
         try:
-            await session.execute(text(f"ALTER TABLE {table_name} ENABLE ROW LEVEL SECURITY"))
+            await session.execute(
+                text(f"ALTER TABLE {table_name} ENABLE ROW LEVEL SECURITY")
+            )
             await session.commit()
             logger.info(f"RLS enabled for table: {table_name}")
         except Exception as e:
@@ -30,19 +33,17 @@ class DatabaseSecurityManager:
 
     @staticmethod
     async def create_tenant_policy(
-        session: AsyncSession, 
-        table_name: str, 
-        policy_name: Optional[str] = None
+        session: AsyncSession, table_name: str, policy_name: Optional[str] = None
     ) -> None:
         """Create RLS policy for tenant isolation."""
         if not policy_name:
             policy_name = f"tenant_isolation_{table_name}"
-        
+
         try:
             # Drop existing policy if it exists
             drop_sql = f"DROP POLICY IF EXISTS {policy_name} ON {table_name}"
             await session.execute(text(drop_sql))
-            
+
             # Create new tenant isolation policy
             policy_sql = f"""
             CREATE POLICY {policy_name} ON {table_name}
@@ -69,19 +70,17 @@ class DatabaseSecurityManager:
 
     @staticmethod
     async def create_user_policy(
-        session: AsyncSession,
-        table_name: str,
-        policy_name: Optional[str] = None
+        session: AsyncSession, table_name: str, policy_name: Optional[str] = None
     ) -> None:
         """Create RLS policy for user-level access control."""
         if not policy_name:
             policy_name = f"user_access_{table_name}"
-            
+
         try:
             # Drop existing policy if it exists
             drop_sql = f"DROP POLICY IF EXISTS {policy_name} ON {table_name}"
             await session.execute(text(drop_sql))
-            
+
             # Create user access policy
             policy_sql = f"""
             CREATE POLICY {policy_name} ON {table_name}
@@ -107,22 +106,24 @@ class DatabaseSecurityManager:
         session: AsyncSession,
         table_name: str,
         allowed_roles: list[str],
-        policy_name: Optional[str] = None
+        policy_name: Optional[str] = None,
     ) -> None:
         """Create RLS policy based on user roles."""
         if not policy_name:
             policy_name = f"role_access_{table_name}"
-            
-        roles_condition = " OR ".join([
-            f"current_setting('app.user_role', true) = '{role}'"
-            for role in allowed_roles
-        ])
-        
+
+        roles_condition = " OR ".join(
+            [
+                f"current_setting('app.user_role', true) = '{role}'"
+                for role in allowed_roles
+            ]
+        )
+
         try:
             # Drop existing policy if it exists
             drop_sql = f"DROP POLICY IF EXISTS {policy_name} ON {table_name}"
             await session.execute(text(drop_sql))
-            
+
             # Create role-based policy
             policy_sql = f"""
             CREATE POLICY {policy_name} ON {table_name}
@@ -156,7 +157,7 @@ class DatabaseSecurityManager:
             )
             """
             await session.execute(text(create_audit_sql))
-            
+
             # Create audit trigger function
             trigger_function = f"""
             CREATE OR REPLACE FUNCTION audit_{table_name}() RETURNS TRIGGER AS $$
@@ -177,7 +178,7 @@ class DatabaseSecurityManager:
             $$ LANGUAGE plpgsql;
             """
             await session.execute(text(trigger_function))
-            
+
             # Create trigger
             trigger_sql = f"""
             CREATE TRIGGER audit_{table_name}_trigger
@@ -185,7 +186,7 @@ class DatabaseSecurityManager:
                 FOR EACH ROW EXECUTE FUNCTION audit_{table_name}()
             """
             await session.execute(text(trigger_sql))
-            
+
             await session.commit()
             logger.info(f"Audit triggers created for table: {table_name}")
         except Exception as e:
@@ -202,10 +203,12 @@ async def setup_connection_security(connection: asyncpg.Connection) -> None:
         await connection.execute("SET statement_timeout = '30s'")
         await connection.execute("SET idle_in_transaction_session_timeout = '60s'")
         await connection.execute("SET lock_timeout = '10s'")
-        
+
         # Prevent potential attacks
-        await connection.execute("SET log_statement = 'none'")  # Disable statement logging
-        
+        await connection.execute(
+            "SET log_statement = 'none'"
+        )  # Disable statement logging
+
         logger.debug("Connection security settings applied")
     except Exception as e:
         logger.error(f"Failed to apply connection security: {e}")
@@ -214,12 +217,12 @@ async def setup_connection_security(connection: asyncpg.Connection) -> None:
 
 class SecureAsyncSession:
     """Async database session with automatic tenant context management."""
-    
+
     def __init__(self, session: AsyncSession):
         self.session = session
         self._tenant_set = False
         self._user_set = False
-    
+
     async def __aenter__(self):
         # Automatically set tenant context from current request
         current_tenant = tenant_context.get(None)
@@ -231,7 +234,7 @@ class SecureAsyncSession:
             )
             self._tenant_set = True
         return self.session
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         # Clean up context settings
         try:
@@ -242,7 +245,7 @@ class SecureAsyncSession:
                 await self.session.execute(text("RESET app.user_role"))
         except Exception as e:
             logger.error(f"Failed to reset database context: {e}")
-        
+
         await self.session.close()
 
     async def set_user_context(self, user_id: str, role: str) -> None:
