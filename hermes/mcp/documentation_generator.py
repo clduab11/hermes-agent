@@ -88,16 +88,16 @@ class DocumentationGenerator:
         try:
             # Generate different types of documentation
             results["api_documentation"] = await self._generate_api_documentation()
-            results["mcp_integration_guide"] = (
-                await self._generate_mcp_integration_guide()
-            )
+            results[
+                "mcp_integration_guide"
+            ] = await self._generate_mcp_integration_guide()
             results["deployment_guide"] = await self._generate_deployment_guide()
-            results["architecture_documentation"] = (
-                await self._generate_architecture_documentation()
-            )
-            results["legal_compliance_guide"] = (
-                await self._generate_legal_compliance_guide()
-            )
+            results[
+                "architecture_documentation"
+            ] = await self._generate_architecture_documentation()
+            results[
+                "legal_compliance_guide"
+            ] = await self._generate_legal_compliance_guide()
             results["user_manual"] = await self._generate_user_manual()
 
             # Generate index file

@@ -596,13 +596,16 @@ class AnalyticsEngine:
         """Generate comprehensive analytics report."""
         try:
             # Gather all metrics in parallel
-            call_stats, voice_metrics, revenue_metrics, system_performance = (
-                await asyncio.gather(
-                    self.get_call_statistics(tenant_id, time_range),
-                    self.get_voice_metrics(tenant_id, time_range),
-                    self.get_revenue_metrics(tenant_id, time_range),
-                    self.get_system_performance(time_range),
-                )
+            (
+                call_stats,
+                voice_metrics,
+                revenue_metrics,
+                system_performance,
+            ) = await asyncio.gather(
+                self.get_call_statistics(tenant_id, time_range),
+                self.get_voice_metrics(tenant_id, time_range),
+                self.get_revenue_metrics(tenant_id, time_range),
+                self.get_system_performance(time_range),
             )
 
             # Calculate trends and insights

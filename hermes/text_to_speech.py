@@ -55,7 +55,6 @@ class KokoroTTS:
             raise RuntimeError("Client not initialized")
 
         try:
-
             response = await self._client.get(f"{self._api_url}/")
 
             response = await self._client.get(f"{self._api_url}/health")

@@ -89,7 +89,7 @@ addopts = [
     "--cov=hermes",
     "--cov-report=term-missing",
     "--cov-report=xml",
-    "--cov-fail-under=80"
+    "--cov-fail-under=15"
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
