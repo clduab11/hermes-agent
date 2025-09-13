@@ -18,7 +18,7 @@ sqlalchemy[asyncio]==2.0.23
 
 # AI & Utils (exclude torch/whisper)
 openai==1.3.7
-requests==2.31.0
+requests==2.32.4
 numpy==1.24.3
 
 # Security & JWT
