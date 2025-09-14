@@ -171,7 +171,7 @@
 ### Microservices Design
 ```
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Voice Pipeline │────│   AI Engine    │────│  CRM Adapters   │
+│  Voice Pipeline │────│   AI Engine     │────│  CRM Adapters   │
 │   (Whisper)     │    │  (OpenRouter)   │    │     (Clio)      │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
          │                       │                       │
