@@ -116,7 +116,7 @@
 
 ## 🌐 Live Demo (GitHub Pages)
 
-- Static UI (GitHub Pages): https://clduab11.github.io/Hermes-beta/
+- Static UI (GitHub Pages): https://clduab11.github.io/hermes-agent/
 - Configure the frontend to point at your backend by setting `VITE_SOCKET_IO_URL` before build.
 - For local development, start the FastAPI backend and open `http://localhost:8000/`.
 

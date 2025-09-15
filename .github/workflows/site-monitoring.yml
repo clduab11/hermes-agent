@@ -34,6 +34,7 @@ jobs:
           # Multi-point availability check
           ATTEMPTS=3
           SUCCESS_COUNT=0
+          CONTENT_CHECK=0
           
           for i in $(seq 1 $ATTEMPTS); do
             echo "🔄 Attempt $i/$ATTEMPTS"
@@ -46,6 +47,15 @@ jobs:
             if [ "$HTTP_STATUS" -eq 200 ]; then
               ((SUCCESS_COUNT++))
               echo "  ✅ Success"
+              
+              # Check if the page contains expected content (React app loaded)
+              CONTENT=$(curl -s --max-time 10 "$SITE_URL")
+              if echo "$CONTENT" | grep -q "HERMES.*AI.*Voice.*Agent" && echo "$CONTENT" | grep -q "id=\"root\""; then
+                echo "  📋 Content verified: React app structure present"
+                ((CONTENT_CHECK++))
+              else
+                echo "  ⚠️ Content issue: Expected HERMES content not found"
+              fi
             else
               echo "  ❌ Failed (Status: $HTTP_STATUS)"
             fi
@@ -55,15 +65,16 @@ jobs:
           
           echo ""
           echo "📊 Results: $SUCCESS_COUNT/$ATTEMPTS successful"
+          echo "📋 Content checks: $CONTENT_CHECK/$ATTEMPTS passed"
           
-          if [ $SUCCESS_COUNT -eq $ATTEMPTS ]; then
-            echo "🎉 Site is fully operational"
+          if [ $SUCCESS_COUNT -eq $ATTEMPTS ] && [ $CONTENT_CHECK -eq $ATTEMPTS ]; then
+            echo "🎉 Site is fully operational with proper content"
             echo "uptime_status=UP" >> $GITHUB_ENV
           elif [ $SUCCESS_COUNT -gt 0 ]; then
-            echo "⚠️ Site has intermittent issues"
+            echo "⚠️ Site has intermittent issues or content problems"
             echo "uptime_status=DEGRADED" >> $GITHUB_ENV
           else
-            echo "🚨 Site is DOWN"
+            echo "🚨 Site is DOWN or content is missing"
             echo "uptime_status=DOWN" >> $GITHUB_ENV
             exit 1
           fi

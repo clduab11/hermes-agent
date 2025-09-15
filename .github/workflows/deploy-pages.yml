@@ -160,11 +160,44 @@ jobs:
           echo "📱 Demo accessible for legal professionals at: ${{ steps.deployment.outputs.page_url }}"
           
           # Wait for deployment to propagate
-          sleep 15
+          sleep 30
           
-          # Basic health check
-          echo "🔍 Running health check..."
-          curl -I "${{ steps.deployment.outputs.page_url }}" && echo "✅ Site is accessible" || echo "⚠️ Site may still be propagating"
+          # Comprehensive health check
+          echo "🔍 Running comprehensive health check..."
+          SITE_URL="${{ steps.deployment.outputs.page_url }}"
+          
+          # Check if site responds with 200
+          HTTP_STATUS=$(curl -o /dev/null -s -w "%{http_code}" --max-time 15 "$SITE_URL" || echo "TIMEOUT")
+          echo "📊 HTTP Status: $HTTP_STATUS"
+          
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ Site is accessible"
+            
+            # Check if page contains expected content
+            CONTENT=$(curl -s --max-time 15 "$SITE_URL" 2>/dev/null || echo "FAILED")
+            if echo "$CONTENT" | grep -q "HERMES.*AI.*Voice.*Agent" && echo "$CONTENT" | grep -q "id=\"root\""; then
+              echo "✅ Content verification passed: HERMES app structure detected"
+            else
+              echo "⚠️ Content verification failed: Expected content not found"
+              echo "📄 Page content preview:"
+              echo "$CONTENT" | head -10
+            fi
+            
+            # Check if JavaScript assets are accessible
+            JS_ASSET=$(echo "$CONTENT" | grep -o '/hermes-agent/assets/[^"]*\.js' | head -1)
+            if [ -n "$JS_ASSET" ]; then
+              JS_STATUS=$(curl -o /dev/null -s -w "%{http_code}" --max-time 10 "${{ steps.deployment.outputs.page_url }}${JS_ASSET}" || echo "TIMEOUT")
+              echo "📦 JavaScript asset status: $JS_STATUS"
+              if [ "$JS_STATUS" = "200" ]; then
+                echo "✅ JavaScript assets are accessible"
+              else
+                echo "⚠️ JavaScript assets may have issues"
+              fi
+            fi
+          else
+            echo "❌ Site accessibility issue detected (Status: $HTTP_STATUS)"
+            echo "🔧 This may be temporary while GitHub Pages propagates the deployment"
+          fi
 
   # Legal & Compliance Verification
   compliance-check:
