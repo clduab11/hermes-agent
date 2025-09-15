@@ -119,26 +119,52 @@
 
 **Interactive Demo**: https://clduab11.github.io/hermes-agent/
 
-### Demo Functionality
-- **✅ Voice Interface**: Professional React-based interface with microphone access
-- **✅ Demo Mode**: Intelligent detection of GitHub Pages environment with appropriate messaging  
+### Current Demo Status
+- **✅ Frontend Interface**: Professional React-based interface with microphone access and voice visualization
+- **✅ Demo Mode**: Intelligent detection of GitHub Pages environment with educational messaging  
 - **✅ Visual Feedback**: Real-time audio level visualization and connection status indicators
 - **✅ Educational Experience**: Clear explanation of HERMES capabilities and technology
 
+### Full Voice Processing Setup
+
+**Current Status**: The live demo runs in "demo mode" - it shows the complete user interface and captures audio, but voice transcription and AI responses require a backend server.
+
+**To Enable Complete Functionality:**
+
+1. **Deploy the Backend** (5 minutes):
+   - [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/clduab11/hermes-agent)
+   - Set your OpenAI API key in the deployment environment
+   - Copy your deployed backend URL
+
+2. **Connect Frontend to Backend**:
+   - Fork this repository
+   - In your fork, go to Settings → Secrets and variables → Actions
+   - Add these repository secrets:
+     ```
+     VITE_BACKEND_URL: https://your-hermes-app.onrender.com
+     VITE_BACKEND_WS_URL: wss://your-hermes-app.onrender.com
+     VITE_ENVIRONMENT: production
+     ```
+   - Push any change to trigger GitHub Pages rebuild
+   - Your demo will now have full voice processing capabilities!
+
+3. **Alternative: Run Locally**:
+   ```bash
+   git clone https://github.com/clduab11/hermes-agent.git
+   cd hermes-agent
+   cp .env.example .env  # Add your OpenAI API key
+   docker-compose up     # Starts both frontend and backend
+   open http://localhost:5173  # Full functionality available
+   ```
+
 ### Technical Implementation
 - **Frontend**: React app built with Vite, deployed via GitHub Actions to GitHub Pages
-- **WebSocket Ready**: Configured to connect to HERMES backend when available
+- **Backend**: FastAPI server with WebSocket support for real-time voice processing
 - **Environment Aware**: Automatically detects deployment environment and adjusts functionality
+- **Graceful Degradation**: Falls back to demo mode when backend is unavailable
 - **Professional UI**: Legal-industry focused design with compliance messaging
 
-### Full Functionality Setup
-For complete voice processing capabilities, deploy with HERMES backend:
-1. Deploy FastAPI backend server (see deployment instructions below)
-2. Set `VITE_SOCKET_IO_URL` environment variable to backend WebSocket URL
-3. Configure CORS origins to include your frontend domain
-4. Enable authentication for production use (disable `DEMO_MODE`)
-
-The GitHub Pages demo provides an educational interface showcasing the technology. For law firms interested in deployment, contact our team for production setup assistance.
+**For law firms interested in deployment**: See our comprehensive [deployment guide](docs/deployment.md) or contact our team for production setup assistance.
 
 ---
 

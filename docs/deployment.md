@@ -1,7 +1,120 @@
 
-# HERMES Deployment Guide
+# HERMES Backend Deployment Guide
 
-## Google Cloud Platform Deployment
+This guide explains how to deploy the HERMES backend to make the GitHub Pages demo fully functional with voice transcription and TTS capabilities.
+
+## Current Status
+
+The HERMES demo at https://clduab11.github.io/hermes-agent/ currently runs in "demo mode" because it only serves static files through GitHub Pages. To enable full functionality, you need to deploy the Python FastAPI backend to a cloud service.
+
+## Quick Deploy Options
+
+### Option 1: Render.com (Recommended for Demo)
+
+Render offers a generous free tier perfect for demonstrations:
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/clduab11/hermes-agent)
+
+**Steps:**
+1. Click the "Deploy to Render" button above
+2. Connect your GitHub account and fork the repository  
+3. Set your OpenAI API key in the environment variables
+4. Deploy (takes ~5-10 minutes)
+5. Copy the deployed URL and update the frontend configuration
+
+**Free Tier Limits:**
+- 512MB RAM, shared CPU
+- Sleeps after 15 minutes of inactivity  
+- 750 build hours/month
+- Perfect for demonstrations and testing
+
+### Option 2: Railway.app 
+
+Railway offers $5/month credit and excellent developer experience:
+
+1. Install Railway CLI: `npm install -g @railway/cli`
+2. Clone and navigate to this repository
+3. Run `railway login` and `railway up`
+4. Set environment variables: `railway variables set OPENAI_API_KEY=your_key_here`
+5. Your app will be deployed automatically
+
+### Option 3: Local Development with Docker
+
+For local development and testing:
+
+1. Clone the repository
+2. Copy `.env.example` to `.env` and set your API keys
+3. Run `docker-compose up` to start frontend and backend services
+4. Access the demo at http://localhost:5173
+5. Backend API available at http://localhost:8000
+
+## Required Environment Variables
+
+For any deployment, you'll need:
+
+```bash
+# Required
+OPENAI_API_KEY=sk-...  # Get from https://platform.openai.com/
+
+# Recommended for production
+CORS_ALLOW_ORIGINS=https://clduab11.github.io  # Allow GitHub Pages
+DEMO_MODE=true  # Enable demo features
+WHISPER_MODEL=tiny  # Use smallest model for better performance
+CONFIDENCE_THRESHOLD=0.7  # Lower threshold for demo
+```
+
+## Connecting Frontend to Deployed Backend
+
+After deploying your backend, you need to update the frontend to connect to it:
+
+### Method 1: Update GitHub Pages Deployment
+
+1. Fork this repository
+2. Go to your repository settings → Secrets and variables → Actions  
+3. Add repository secrets:
+   ```
+   VITE_BACKEND_WS_URL: wss://your-hermes-app.onrender.com
+   VITE_BACKEND_URL: https://your-hermes-app.onrender.com
+   VITE_ENVIRONMENT: production
+   ```
+4. Push a change to trigger GitHub Pages rebuild
+5. Your demo will now connect to the backend!
+
+## Deployment Architecture
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  GitHub Pages   │────▶│  Cloud Backend   │────▶│  External APIs  │
+│  (Static Site)  │     │  (Render/Railway)│     │                 │
+│                 │     │                 │     │  - OpenAI API   │
+│  - React App    │     │  - FastAPI      │     │  - Whisper STT  │
+│  - WebSocket    │     │  - WebSocket    │     │  - GPT-4 LLM    │
+│    Client       │     │  - Voice Pipeline│     │  - TTS Service  │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+```
+
+## Testing Your Deployment
+
+1. Visit your deployed backend URL + `/health` (e.g., `https://your-app.onrender.com/health`)
+2. You should see: `{"status": "healthy", "timestamp": "..."}`
+3. Visit the GitHub Pages demo: https://clduab11.github.io/hermes-agent/
+4. Click "Try Voice Demo" and "Start Voice Input"
+5. You should see "✅ Connected to HERMES voice processing backend"
+
+## Integration Documentation
+
+- Clio OAuth Setup: `docs/clio-setup.md`
+- Supabase Integration: `docs/supabase-setup.md`
+
+## Production Notes
+
+- Set `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` for database-backed features
+- Set `CLIO_CLIENT_ID`, `CLIO_CLIENT_SECRET`, `CLIO_REDIRECT_URI` for Clio integration
+- Restrict CORS via `CORS_ALLOW_ORIGINS` and disable demo mode in production
+- Monitor API usage costs (OpenAI, TTS services)
+- Consider rate limiting for public deployments
+
+## Google Cloud Platform Deployment (Advanced)
 
 ### Prerequisites
 
@@ -43,151 +156,5 @@ gcloud run deploy hermes-voice-agent \
   --concurrency 80 \
   --max-instances 10 \
   --set-env-vars "OPENAI_API_KEY=your-key,SUPABASE_URL=your-url"
-```
-
-### Step 4: Configure Custom Domain
-
-```bash
-gcloud run domain-mappings create \
-  --service hermes-voice-agent \
-  --domain your-domain.com \
-  --region us-central1
-```
-
-## Environment Configuration
-
-### Production Environment Variables
-
-```bash
-# Core Configuration
-API_HOST=0.0.0.0
-API_PORT=8080
-DEBUG=false
-
-# AI Services
-OPENAI_API_KEY=your-openai-key
-WHISPER_MODEL=base
-KOKORO_API_URL=your-tts-service-url
-
-# MCP Integration
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-MEM0_API_KEY=your-mem0-key
-GITHUB_TOKEN=your-github-token
-
-# Security
-JWT_PRIVATE_KEY=your-private-key
-JWT_PUBLIC_KEY=your-public-key
-CONFIDENCE_THRESHOLD=0.90
-
-# Performance
-MAX_AUDIO_LENGTH_SECONDS=30
-RESPONSE_TIMEOUT_SECONDS=0.1
-```
-
-## Monitoring and Observability
-
-### Health Checks
-
-Cloud Run automatically monitors:
-- `/health` endpoint for container health
-- Response time and error rates
-- Memory and CPU usage
-
-### Logging
-
-```bash
-# View application logs
-gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=hermes-voice-agent"
-```
-
-### Metrics
-
-Key metrics to monitor:
-- Voice processing latency (<100ms target)
-- Total response time (<500ms target)
-- Concurrent connections
-- Error rates
-- Cache hit ratios
-
-## Scaling Configuration
-
-### Automatic Scaling
-
-```yaml
-# cloud-run-config.yaml
-apiVersion: serving.knative.dev/v1
-kind: Service
-metadata:
-  annotations:
-    run.googleapis.com/execution-environment: gen2
-spec:
-  template:
-    metadata:
-      annotations:
-        autoscaling.knative.dev/minScale: "1"
-        autoscaling.knative.dev/maxScale: "100"
-        run.googleapis.com/cpu: "2"
-        run.googleapis.com/memory: "2Gi"
-```
-
-### Load Testing
-
-```bash
-# Install Apache Bench
-sudo apt-get install apache2-utils
-
-# Test voice synthesis endpoint
-ab -n 1000 -c 10 -H "Content-Type: application/json" \
-  -p test-payload.json \
-  https://your-domain.com/test/synthesize
-```
-
-## Security Considerations
-
-### TLS Configuration
-
-Cloud Run provides automatic TLS termination with managed certificates.
-
-### Authentication
-
-- JWT tokens with RS256 signing
-- Tenant isolation at database level
-- API rate limiting (100 requests/minute per IP)
-
-### Compliance
-
-- All communications encrypted with TLS 1.3
-- Audit logging enabled for all API calls
-- 90-day data retention policy
-- HIPAA and GDPR compliance measures
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Cold Start Latency**
-   - Ensure minimum instances set to 1
-   - Pre-warm connections in startup
-
-2. **Memory Issues**
-   - Monitor Whisper model memory usage
-   - Increase Cloud Run memory allocation
-
-3. **Timeout Errors**
-   - Increase Cloud Run timeout to 300 seconds
-   - Optimize AI service response times
-
-### Debug Commands
-
-```bash
-# Check service status
-gcloud run services describe hermes-voice-agent --region us-central1
-
-# View recent logs  
-gcloud logging read --limit 50 "resource.type=cloud_run_revision"
-
-# Connect to service for debugging
-gcloud run services proxy hermes-voice-agent --port 8080
 ```
         

@@ -9,6 +9,8 @@ export default defineConfig({
   base,
   define: {
     // Expose environment variables to the client
-    'import.meta.env.VITE_SOCKET_IO_URL': JSON.stringify(process.env.VITE_SOCKET_IO_URL || ''),
+    'import.meta.env.VITE_BACKEND_URL': JSON.stringify(process.env.VITE_BACKEND_URL || ''),
+    'import.meta.env.VITE_BACKEND_WS_URL': JSON.stringify(process.env.VITE_BACKEND_WS_URL || ''),
+    'import.meta.env.VITE_ENVIRONMENT': JSON.stringify(process.env.VITE_ENVIRONMENT || 'development'),
   },
 });

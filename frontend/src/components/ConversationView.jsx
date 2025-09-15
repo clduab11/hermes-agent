@@ -78,28 +78,37 @@ export default function ConversationView({ scenario }) {
         
         {isDemoMode && (
           <div style={{
-            background: '#fff3cd',
-            border: '1px solid #ffeaa7',
-            borderRadius: '4px',
-            padding: '0.75rem',
+            background: '#e3f2fd',
+            border: '1px solid #2196f3',
+            borderRadius: '8px',
+            padding: '1rem',
             margin: '0.5rem 0',
-            fontSize: '0.85rem'
+            fontSize: '0.9rem'
           }}>
-            <strong>⚡ Demo Mode:</strong> This is a frontend-only demonstration. 
-            For full voice processing, deploy with a HERMES backend server.
+            <strong>🎭 Demo Mode Active</strong>
+            <p style={{ margin: '0.5rem 0 0 0', lineHeight: '1.4' }}>
+              This demonstrates the HERMES frontend interface. The microphone works and audio levels are visualized, 
+              but voice transcription requires a backend server.
+            </p>
+            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', opacity: 0.8 }}>
+              💡 <strong>Want full functionality?</strong> See the deployment guide in the README to connect a backend server.
+            </p>
           </div>
         )}
         
         {isConnected && (
           <div style={{
-            background: '#d4edda',
-            border: '1px solid #c3e6cb',
-            borderRadius: '4px',
-            padding: '0.75rem',
+            background: '#e8f5e8',
+            border: '1px solid #4caf50',
+            borderRadius: '8px',
+            padding: '1rem',
             margin: '0.5rem 0',
-            fontSize: '0.85rem'
+            fontSize: '0.9rem'
           }}>
-            <strong>✅ Connected:</strong> Voice processing pipeline active.
+            <strong>✅ Backend Connected</strong>
+            <p style={{ margin: '0.5rem 0 0 0', lineHeight: '1.4' }}>
+              Voice processing pipeline active. Speech will be transcribed and processed by AI for intelligent responses.
+            </p>
           </div>
         )}
       </div>

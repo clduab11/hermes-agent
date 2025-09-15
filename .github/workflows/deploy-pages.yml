@@ -58,9 +58,16 @@ jobs:
         working-directory: frontend
         env:
           NODE_ENV: production
+          # Backend connection configuration
+          # These can be set as repository secrets for production deployment
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL || '' }}
+          VITE_BACKEND_WS_URL: ${{ secrets.VITE_BACKEND_WS_URL || '' }}
+          VITE_ENVIRONMENT: ${{ secrets.VITE_ENVIRONMENT || 'github-pages' }}
         run: |
           npm run build
           echo "📦 Build completed successfully"
+          echo "🔧 Backend URL: ${VITE_BACKEND_URL:-'Not configured (demo mode)'}"
+          echo "🔧 WebSocket URL: ${VITE_BACKEND_WS_URL:-'Not configured (demo mode)'}"
 
       - name: Add legal compliance files
         run: |
@@ -80,6 +87,25 @@ jobs:
           Contact: For inquiries about legal compliance and security certifications,
           please contact the HERMES development team.
           EOF
+
+      - name: Add deployment configuration status
+        run: |
+          # Create deployment info file
+          cat > frontend/dist/deployment-info.json << EOF
+          {
+            "deployment_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "environment": "${VITE_ENVIRONMENT:-github-pages}",
+            "backend_configured": "${{ secrets.VITE_BACKEND_URL != '' }}",
+            "backend_url": "${VITE_BACKEND_URL:-null}",
+            "websocket_url": "${VITE_BACKEND_WS_URL:-null}",
+            "demo_mode": "${{ secrets.VITE_BACKEND_URL == '' }}",
+            "repository": "https://github.com/clduab11/hermes-agent",
+            "deployment_guide": "https://github.com/clduab11/hermes-agent/blob/main/docs/deployment.md"
+          }
+          EOF
+          
+          echo "📋 Deployment configuration:"
+          cat frontend/dist/deployment-info.json
 
       - name: Add security headers and meta files
         run: |
