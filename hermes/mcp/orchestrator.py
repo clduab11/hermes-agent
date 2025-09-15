@@ -147,52 +147,70 @@ class MCPOrchestrator:
 
     def _load_server_configs(self):
         """Load MCP server configurations from config file."""
+        config_path = os.getenv("MCP_CONFIG_PATH", "mcp-config.json")
+        self.servers.clear()
+
         try:
-            with open("mcp-config.json", "r", encoding="utf-8") as f:
+            with open(config_path, "r", encoding="utf-8") as f:
                 config = json.load(f)
+        except FileNotFoundError:
+            logger.warning("MCP config file not found at %s", config_path)
+            return
+        except json.JSONDecodeError as exc:
+            logger.error("Failed to parse MCP config %s: %s", config_path, exc)
+            return
+        except Exception as exc:
+            logger.error("Failed to load MCP server configs from %s: %s", config_path, exc)
+            return
 
-            raw_servers = config.get("mcpServers", {})
+        raw_servers = config.get("mcpServers", {})
+        if not isinstance(raw_servers, dict):
+            logger.error("Invalid mcpServers structure in %s", config_path)
+            return
 
-            for name, server_config in raw_servers.items():
-                url = server_config.get("url")
-                if not url:
-                    logger.warning("Skipping MCP server %s: missing URL", name)
-                    continue
+        for name, server_config in raw_servers.items():
+            if not isinstance(server_config, dict):
+                logger.warning("Skipping MCP server %s: invalid configuration format", name)
+                continue
 
-                server_type = server_config.get("type", name)
-                capabilities = server_config.get("capabilities", [])
-                timeout = server_config.get("timeout", 30)
-                priority = server_config.get("priority", 1)
-                auth_token = self._resolve_auth_token(server_config)
+            url = server_config.get("url")
+            if not url:
+                logger.warning("Skipping MCP server %s: missing URL", name)
+                continue
 
-                server_type_enum = self._coerce_server_type(server_type)
-                if not server_type_enum:
-                    logger.warning(
-                        "Skipping MCP server %s: unsupported server type '%s'",
-                        name,
-                        server_type,
-                    )
-                    continue
+            server_type = server_config.get("type", name)
+            capabilities = server_config.get("capabilities", [])
+            timeout = server_config.get("timeout", 30)
+            priority = server_config.get("priority", 1)
+            auth_token = self._resolve_auth_token(server_config)
 
-                mcps_config = MCPServerConfig(
-                    name=name,
-                    server_type=server_type_enum,
-                    url=url,
-                    auth_token=auth_token,
-                    timeout=timeout,
-                    capabilities=capabilities,
-                    priority=priority,
-                    load_balancing=server_config.get("loadBalanced", False),
+            server_type_enum = self._coerce_server_type(server_type)
+            if not server_type_enum:
+                logger.warning(
+                    "Skipping MCP server %s: unsupported server type '%s'",
+                    name,
+                    server_type,
                 )
+                continue
 
-                if self._is_server_configured(mcps_config, server_config):
-                    self.servers[name] = mcps_config
-                    logger.info("Configured MCP server: %s", name)
-                else:
-                    logger.warning("Skipping MCP server %s: missing authentication", name)
+            mcps_config = MCPServerConfig(
+                name=name,
+                server_type=server_type_enum,
+                url=url,
+                auth_token=auth_token,
+                timeout=timeout,
+                capabilities=capabilities,
+                priority=priority,
+                load_balancing=server_config.get("loadBalanced", False),
+            )
 
-        except Exception as e:
-            logger.error(f"Failed to load MCP server configs: {e}")
+            if self._is_server_configured(mcps_config, server_config):
+                self.servers[name] = mcps_config
+                logger.info("Configured MCP server: %s", name)
+            else:
+                logger.warning("Skipping MCP server %s: missing authentication", name)
+
+        logger.info("Loaded %d MCP server configurations from %s", len(self.servers), config_path)
 
     def _coerce_server_type(self, server_type: str) -> Optional[MCPServerType]:
         """Convert a raw server type string into an enum member."""

@@ -190,13 +190,17 @@ async def metrics_middleware(request: Request, call_next):
     if not path.startswith("/static") and path != "/metrics":
         record_request_metrics(request.method, path, response.status_code, elapsed)
 
-        stats = getattr(request.app.state, "request_metrics", {"count": 0, "total": 0.0})
-        stats["count"] += 1
-        stats["total"] += elapsed
-        request.app.state.request_metrics = stats
+        import threading
+        if not hasattr(request.app.state, "request_metrics"):
+            request.app.state.request_metrics = {"count": 0, "total": 0.0}
+        if not hasattr(request.app.state, "metrics_lock"):
+            request.app.state.metrics_lock = threading.Lock()
+        
+        with request.app.state.metrics_lock:
+            request.app.state.request_metrics["count"] += 1
+            request.app.state.request_metrics["total"] += elapsed
 
     return response
-
 
 class TokenRequest(BaseModel):
     subject: str

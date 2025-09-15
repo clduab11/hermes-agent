@@ -308,14 +308,6 @@ class VoicePipeline:
             logger.error(f"[{session_id}] Voice processing failed: {str(e)}")
             raise
 
-        except Exception as e:
-            interaction.total_processing_time = time.time() - start_time
-            VOICE_PROCESSING_LATENCY.observe(interaction.total_processing_time)
-            self._latency_stats["total"] += interaction.total_processing_time
-            self._latency_stats["count"] += 1
-            logger.error(f"[{session_id}] Voice processing failed: {str(e)}")
-            raise
-
     async def _process_with_llm(self, text: str, session_id: str) -> str:
         """
         Process user input with LLM to generate response.

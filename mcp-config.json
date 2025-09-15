@@ -4,6 +4,7 @@
       "type": "supabase",
       "url": "https://api.supabase.io",
       "authTokenEnv": "SUPABASE_SERVICE_ROLE_KEY",
+      "requiresAuth": true,
       "capabilities": [
         "database_operations",
         "tenant_isolation",
@@ -17,6 +18,7 @@
       "type": "mem0",
       "url": "https://api.mem0.ai",
       "authTokenEnv": "MEM0_API_KEY",
+      "requiresAuth": true,
       "capabilities": [
         "knowledge_graph",
         "entity_management",
@@ -30,6 +32,7 @@
       "type": "github",
       "url": "https://api.github.com",
       "authTokenEnv": "GITHUB_TOKEN",
+      "requiresAuth": true,
       "capabilities": [
         "repository_management",
         "documentation_generation",

@@ -50,9 +50,18 @@ SLA_UPTIME_TARGET.set(99.9)
 def record_request_metrics(method: str, endpoint: str, status_code: int, elapsed: float) -> None:
     """Record basic HTTP request metrics."""
 
-    REQUEST_LATENCY.labels(method=method, endpoint=endpoint).observe(elapsed)
+    if not method or not isinstance(method, str):
+        raise ValueError("HTTP method must be a non-empty string")
+    if not isinstance(endpoint, str):
+        raise ValueError("Endpoint must be provided as a string")
+    if elapsed < 0:
+        raise ValueError("Elapsed time cannot be negative")
+    if not isinstance(status_code, int) or not (100 <= status_code <= 599):
+        raise ValueError("Status code must be an integer HTTP status")
+
+    REQUEST_LATENCY.labels(method=method.upper(), endpoint=endpoint).observe(elapsed)
     REQUEST_COUNT.labels(
-        method=method,
+        method=method.upper(),
         endpoint=endpoint,
         status=str(status_code),
     ).inc()
@@ -67,11 +76,17 @@ def export_metrics() -> bytes:
 def update_uptime_metrics(uptime_ratio: float) -> None:
     """Update uptime gauges with new ratio (0.0 - 1.0)."""
 
+    if not 0.0 <= uptime_ratio <= 1.0:
+        raise ValueError("Uptime ratio must be between 0.0 and 1.0")
+
     SLA_UPTIME_ACTUAL.set(round(uptime_ratio * 100, 3))
 
 
 def update_active_connections(count: int) -> None:
     """Update the active connection gauge."""
+
+    if not isinstance(count, int) or count < 0:
+        raise ValueError("Active connection count must be a non-negative integer")
 
     ACTIVE_CONNECTIONS.set(count)
 
