@@ -8,6 +8,7 @@ FastAPI application with WebSocket support for real-time voice processing.
 import asyncio
 import logging
 import time
+from collections import deque
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Any, Dict
@@ -22,7 +23,7 @@ from fastapi import (
     WebSocketDisconnect,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -46,6 +47,13 @@ from .mcp.database_optimizer import db_optimizer
 from .mcp.knowledge_integrator import knowledge_integrator
 from .mcp.orchestrator import mcp_orchestrator
 from .middleware import SecurityHeadersMiddleware
+from .monitoring.metrics import (
+    calculate_uptime_metrics,
+    export_metrics,
+    record_request_metrics,
+    update_active_connections,
+    update_uptime_metrics,
+)
 from .utils.rate_limiting import RateLimitMiddleware
 from .voice.context_manager import get_context_manager
 from .voice.multilang_support import get_multilang_processor
@@ -63,6 +71,7 @@ jwt_handler: JWTHandler = JWTHandler()
 tenant_manager: TenantManager = TenantManager()
 voice_pipeline: VoicePipeline = None
 websocket_handler: VoiceWebSocketHandler = None
+health_history = deque(maxlen=100)
 
 
 @asynccontextmanager
@@ -84,6 +93,8 @@ async def lifespan(app: FastAPI):
                 raise RuntimeError(
                     f"Missing required environment variables for production: {', '.join(missing)}"
                 )
+        app.state.start_time = time.time()
+
         # Initialize database connection
         await init_database()
         logger.info("Database initialization completed")
@@ -167,6 +178,26 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitMiddleware)
 
 
+@app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    """Record request metrics for Prometheus exporter."""
+
+    start_time = time.perf_counter()
+    response = await call_next(request)
+    elapsed = time.perf_counter() - start_time
+
+    path = request.url.path
+    if not path.startswith("/static") and path != "/metrics":
+        record_request_metrics(request.method, path, response.status_code, elapsed)
+
+        stats = getattr(request.app.state, "request_metrics", {"count": 0, "total": 0.0})
+        stats["count"] += 1
+        stats["total"] += elapsed
+        request.app.state.request_metrics = stats
+
+    return response
+
+
 class TokenRequest(BaseModel):
     subject: str
     tenant_id: str
@@ -248,14 +279,24 @@ async def dashboard():
 @app.get("/health")
 async def health_check() -> Dict[str, Any]:
     """Health check endpoint."""
+    healthy = voice_pipeline is not None
+    health_history.append(healthy)
+
+    uptime_ratio = calculate_uptime_metrics(health_history)
+    update_uptime_metrics(uptime_ratio)
+
+    active_connections = (
+        websocket_handler.get_connection_count() if websocket_handler else 0
+    )
+    update_active_connections(active_connections)
+
     return {
-        "status": "healthy",
+        "status": "healthy" if healthy else "degraded",
         "service": "HERMES AI Voice Agent",
         "version": "1.0.0",
         "timestamp": time.time(),
-        "active_connections": (
-            websocket_handler.get_connection_count() if websocket_handler else 0
-        ),
+        "active_connections": active_connections,
+        "uptime_ratio": uptime_ratio,
     }
 
 
@@ -294,6 +335,7 @@ async def system_status() -> Dict[str, Any]:
                 if hasattr(app.state, "start_time")
                 else 0
             ),
+            "uptime_ratio": calculate_uptime_metrics(health_history),
         },
         "configuration": {
             "whisper_model": settings.whisper_model,
@@ -356,6 +398,7 @@ async def voice_websocket(websocket: WebSocket):
 
     try:
         session_id = await websocket_handler.connect(websocket, client_ip)
+        update_active_connections(websocket_handler.get_connection_count())
         await websocket_handler.handle_client(session_id)
     except WebSocketDisconnect:
         logger.info(f"Voice WebSocket client disconnected")
@@ -365,6 +408,9 @@ async def voice_websocket(websocket: WebSocket):
             await websocket.close(code=1011, reason="Internal server error")
         except:
             pass
+    finally:
+        if websocket_handler:
+            update_active_connections(websocket_handler.get_connection_count())
 
 
 # WebSocket endpoint for real-time dashboard updates
@@ -425,6 +471,48 @@ async def dashboard_websocket(websocket: WebSocket):
         logger.error(f"Dashboard WebSocket error: {str(e)}")
     finally:
         logger.info(f"Dashboard WebSocket disconnected: {client_id}")
+
+
+@app.get("/metrics")
+async def metrics_endpoint() -> Response:
+    """Expose Prometheus metrics for SLA dashboards and exporters."""
+
+    return Response(content=export_metrics(), media_type="text/plain; version=0.0.4")
+
+
+@app.get("/sla")
+async def sla_overview() -> Dict[str, Any]:
+    """Structured SLA payload for marketing dashboards."""
+
+    request_metrics = getattr(app.state, "request_metrics", {"count": 0, "total": 0.0})
+    avg_latency_ms = (
+        (request_metrics["total"] / request_metrics["count"]) * 1000
+        if request_metrics["count"]
+        else 0.0
+    )
+
+    uptime_ratio = calculate_uptime_metrics(health_history)
+
+    voice_metrics: Dict[str, Any] = {}
+    if voice_pipeline:
+        voice_metrics = voice_pipeline.get_performance_metrics()
+
+    return {
+        "uptime": {
+            "target_percent": 99.9,
+            "current_percent": round(uptime_ratio * 100, 3),
+        },
+        "latency": {
+            "request_average_ms": round(avg_latency_ms, 2),
+            "voice_pipeline_average_ms": round(
+                (voice_metrics.get("average_latency_seconds", 0.0) * 1000), 2
+            ),
+        },
+        "voice_pipeline": voice_metrics,
+        "active_connections": (
+            websocket_handler.get_connection_count() if websocket_handler else 0
+        ),
+    }
 
 
 # Enhanced voice processing with context and multilang support

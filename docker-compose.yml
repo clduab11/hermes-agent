@@ -1,20 +1,67 @@
-version: '3.8'
+version: '3.9'
+
 services:
-  frontend:
-    build: ./frontend
+  hermes-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: hermes-backend:latest
+    container_name: hermes-backend
+    env_file:
+      - .env.example
+    environment:
+      UVICORN_HOST: 0.0.0.0
+      UVICORN_PORT: 8000
+      MCP_CONFIG_PATH: /app/mcp-config.json
     ports:
-      - "5173:5173"
-    command: npm run dev
+      - "8000:8000"
+      - "9090:9090"
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./:/app:delegated
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: hermes-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  sla-dashboard:
+    build:
+      context: ./frontend
+    container_name: hermes-sla-dashboard
+    environment:
+      - VITE_SOCKET_IO_URL=http://localhost:8000
+      - VITE_METRICS_URL=http://localhost:8000/metrics
+      - VITE_SLA_URL=http://localhost:8000/sla
+    command: npm run dev -- --host 0.0.0.0 --port 5173
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    environment:
-      - VITE_SOCKET_IO_URL=http://localhost:3001
-  backend:
-    build: ./backend
     ports:
-      - "3001:3001"
-    command: npm start
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+      - "5173:5173"
+    depends_on:
+      hermes-backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local

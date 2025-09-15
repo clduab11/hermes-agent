@@ -15,6 +15,7 @@ from pydantic import BaseModel
 
 from .config import settings
 from .event_streaming import EventStreamingService, EventType, VoiceEvent
+from .monitoring.metrics import VOICE_PROCESSING_LATENCY
 from .speech_to_text import TranscriptionResult, WhisperSTT
 from .text_to_speech import KokoroTTS, SynthesisResult
 
@@ -67,13 +68,18 @@ class VoicePipeline:
         self._conversations: Dict[str, List[ChatMessage]] = {}
         # Event streaming for auxiliary services
         self.event_streaming = event_streaming
+        self._latency_stats: Dict[str, float] = {"total": 0.0, "count": 0}
 
     async def initialize(self) -> None:
         """Initialize all pipeline components."""
         logger.info("Initializing HERMES voice pipeline...")
 
-        # Initialize OpenAI client
-        self._openai_client = openai.AsyncOpenAI(api_key=settings.openai_api_key)
+        # Initialize OpenAI client unless running in debug/demo mode where mocks are used
+        if settings.demo_mode or settings.debug:
+            logger.info("Skipping OpenAI client initialization (demo/debug mode)")
+            self._openai_client = None
+        else:
+            self._openai_client = openai.AsyncOpenAI(api_key=settings.openai_api_key)
 
         # Initialize STT and TTS components
         await asyncio.gather(self.stt.initialize(), self.tts.initialize())
@@ -230,6 +236,9 @@ class VoicePipeline:
                     )
 
             interaction.total_processing_time = time.time() - start_time
+            VOICE_PROCESSING_LATENCY.observe(interaction.total_processing_time)
+            self._latency_stats["total"] += interaction.total_processing_time
+            self._latency_stats["count"] += 1
 
             # Publish interaction completion event
             if self.event_streaming:
@@ -273,6 +282,9 @@ class VoicePipeline:
 
         except Exception as e:
             interaction.total_processing_time = time.time() - start_time
+            VOICE_PROCESSING_LATENCY.observe(interaction.total_processing_time)
+            self._latency_stats["total"] += interaction.total_processing_time
+            self._latency_stats["count"] += 1
 
             # Publish error event
             if self.event_streaming:
@@ -298,6 +310,9 @@ class VoicePipeline:
 
         except Exception as e:
             interaction.total_processing_time = time.time() - start_time
+            VOICE_PROCESSING_LATENCY.observe(interaction.total_processing_time)
+            self._latency_stats["total"] += interaction.total_processing_time
+            self._latency_stats["count"] += 1
             logger.error(f"[{session_id}] Voice processing failed: {str(e)}")
             raise
 
@@ -583,6 +598,19 @@ Respond naturally and conversationally, as if speaking to someone on the phone."
                 except Exception as e:
                     logger.error(f"[{session_id}] Streaming processing error: {str(e)}")
                     # Continue processing subsequent chunks
+
+    def get_performance_metrics(self) -> Dict[str, float]:
+        """Return aggregate metrics for SLA reporting."""
+
+        processed = self._latency_stats["count"]
+        average_latency = (
+            self._latency_stats["total"] / processed if processed else 0.0
+        )
+
+        return {
+            "average_latency_seconds": average_latency,
+            "interactions_processed": processed,
+        }
 
     async def cleanup(self) -> None:
         """Clean up pipeline resources."""

@@ -35,6 +35,8 @@ def test_create_subscription(service):
 def test_record_interaction(service):
     mock_subscription = MagicMock()
     mock_subscription.data = [MagicMock(items=MagicMock(data=[MagicMock(id="si_123")]))]
+    if not hasattr(stripe, "UsageRecord"):
+        stripe.UsageRecord = MagicMock()
     with (
         patch.object(
             stripe.Subscription, "list", return_value=mock_subscription

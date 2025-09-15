@@ -111,4 +111,4 @@ docker-compose.override.yml
 # MCP Server specific
 mcp_servers/*/logs/
 mcp_servers/*/cache/
-*.mcp.log
+*.mcp.logAGENTS.md

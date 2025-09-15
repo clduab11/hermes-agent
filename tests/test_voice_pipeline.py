@@ -18,6 +18,8 @@ from hermes.speech_to_text import TranscriptionResult, WhisperSTT
 from hermes.text_to_speech import KokoroTTS, SynthesisResult
 from hermes.voice_pipeline import VoicePipeline
 
+settings.debug = True
+
 
 class TestVoicePipelineComponents:
     """Test individual voice pipeline components."""
@@ -25,6 +27,7 @@ class TestVoicePipelineComponents:
     @pytest.mark.asyncio
     async def test_voice_pipeline_initialization(self):
         """Test voice pipeline can be initialized."""
+        settings.debug = True
         pipeline = VoicePipeline()
 
         # Mock the component initialization
@@ -45,6 +48,7 @@ class TestVoicePipelineComponents:
     @pytest.mark.asyncio
     async def test_llm_processing(self):
         """Test LLM processing without actual API calls."""
+        settings.debug = True
         pipeline = VoicePipeline()
 
         # Mock OpenAI client
@@ -69,6 +73,7 @@ class TestVoicePipelineComponents:
     @pytest.mark.asyncio
     async def test_conversation_history_passed_and_truncated(self):
         """Conversation history is stored, passed to LLM, and truncated."""
+        settings.debug = True
         pipeline = VoicePipeline()
 
         mock_response = Mock()

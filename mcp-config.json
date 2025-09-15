@@ -1,34 +1,101 @@
 {
-  "mcpServers": {},
-  "serverConfiguration": {
-    "timeout": 30000,
-    "retryAttempts": 3,
-    "logLevel": "INFO"
-  },
-  "security": {
-    "tlsVersion": "1.3",
-    "encryptionRequired": true,
-    "auditLogging": true,
-    "dataRetentionDays": 90,
-    "certificateValidation": {
-      "enabled": true,
-      "trustedCAs": ["ca-certificates.crt"]
+  "mcpServers": {
+    "supabase": {
+      "type": "supabase",
+      "url": "https://api.supabase.io",
+      "authTokenEnv": "SUPABASE_SERVICE_ROLE_KEY",
+      "capabilities": [
+        "database_operations",
+        "tenant_isolation",
+        "conversation_caching",
+        "performance_analytics"
+      ],
+      "timeout": 30,
+      "priority": 10
     },
-    "cipherSuites": [
-      "TLS_AES_256_GCM_SHA384",
-      "TLS_CHACHA20_POLY1305_SHA256",
-      "TLS_AES_128_GCM_SHA256"
-    ],
-    "keyRotation": {
-      "enabled": true,
-      "rotationIntervalDays": 90,
-      "automatic": true
+    "mem0": {
+      "type": "mem0",
+      "url": "https://api.mem0.ai",
+      "authTokenEnv": "MEM0_API_KEY",
+      "capabilities": [
+        "knowledge_graph",
+        "entity_management",
+        "relationship_tracking",
+        "learning_from_interactions"
+      ],
+      "timeout": 30,
+      "priority": 8
+    },
+    "github": {
+      "type": "github",
+      "url": "https://api.github.com",
+      "authTokenEnv": "GITHUB_TOKEN",
+      "capabilities": [
+        "repository_management",
+        "documentation_generation",
+        "version_control",
+        "automated_workflows"
+      ],
+      "timeout": 30,
+      "priority": 8
+    },
+    "puppeteer": {
+      "type": "puppeteer",
+      "url": "http://localhost:9222",
+      "capabilities": [
+        "browser_automation",
+        "accessibility_testing",
+        "ui_validation",
+        "form_processing"
+      ],
+      "timeout": 60,
+      "priority": 6
+    },
+    "mcp-omnisearch": {
+      "type": "omnisearch",
+      "url": "http://localhost:8080",
+      "capabilities": [
+        "multi_provider_search",
+        "legal_research",
+        "precedent_lookup",
+        "search_aggregation"
+      ],
+      "timeout": 60,
+      "priority": 6
+    },
+    "sequential-thinking": {
+      "type": "sequential_thinking",
+      "url": "http://localhost:9000",
+      "capabilities": [
+        "complex_decision_trees",
+        "legal_compliance_reasoning",
+        "multi_step_analysis",
+        "workflow_orchestration"
+      ],
+      "timeout": 90,
+      "priority": 5
+    },
+    "redis": {
+      "type": "redis",
+      "url": "redis://redis:6379/0",
+      "capabilities": [
+        "pubsub",
+        "caching",
+        "rate_limiting"
+      ],
+      "timeout": 15,
+      "priority": 9
     }
+  },
+  "health": {
+    "checkIntervalSeconds": 30,
+    "unhealthyThreshold": 3,
+    "metricsEndpoint": "/metrics"
   },
   "compliance": {
     "hipaaCompliant": true,
     "gdprCompliant": true,
-    "legalDisclaimer": "This system is designed to assist with administrative tasks only and does not provide legal advice.",
-    "confidentialityNotice": "All communications are confidential and protected by attorney-client privilege where applicable."
+    "dataRetentionDays": 90,
+    "auditLogEnabled": true
   }
 }

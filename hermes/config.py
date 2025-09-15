@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     api_port: int = Field(default=8000, ge=1, le=65535, description="API port number")
     debug: bool = Field(default=False, description="Enable debug mode")
     demo_mode: bool = Field(
-        default=True, description="Enable demo features and mock data"
+        default=False, description="Enable demo features and mock data"
     )
     cors_allow_origins: Optional[str] = Field(
         default=None,

@@ -9,6 +9,7 @@ agentic orchestration patterns across the Hermes ecosystem.
 import asyncio
 import json
 import logging
+import os
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -147,99 +148,118 @@ class MCPOrchestrator:
     def _load_server_configs(self):
         """Load MCP server configurations from config file."""
         try:
-            with open("mcp-config.json", "r") as f:
+            with open("mcp-config.json", "r", encoding="utf-8") as f:
                 config = json.load(f)
 
-            # Define available MCP servers based on strategic objectives
-            server_configs = {
-                "supabase": MCPServerConfig(
-                    name="supabase",
-                    url=settings.supabase_url or "https://api.supabase.io",
-                    auth_token=settings.supabase_service_role_key,
-                    capabilities=[
-                        "database_operations",
-                        "tenant_isolation",
-                        "conversation_caching",
-                        "performance_analytics",
-                    ],
-                ),
-                "mem0": MCPServerConfig(
-                    name="mem0",
-                    url="https://api.mem0.ai",
-                    auth_token=settings.mem0_api_key,
-                    capabilities=[
-                        "knowledge_graph",
-                        "entity_management",
-                        "relationship_tracking",
-                        "learning_from_interactions",
-                    ],
-                ),
-                "github": MCPServerConfig(
-                    name="github",
-                    url="https://api.github.com",
-                    auth_token=settings.github_token,
-                    capabilities=[
-                        "repository_management",
-                        "documentation_generation",
-                        "version_control",
-                        "automated_workflows",
-                    ],
-                ),
-                "puppeteer": MCPServerConfig(
-                    name="puppeteer",
-                    url="http://localhost:3000",  # Local Puppeteer service
-                    capabilities=[
-                        "browser_automation",
-                        "accessibility_testing",
-                        "ui_validation",
-                        "form_processing",
-                    ],
-                ),
-                "mcp_omnisearch": MCPServerConfig(
-                    name="mcp-omnisearch",
-                    url="http://localhost:8080",  # Local omnisearch service
-                    capabilities=[
-                        "multi_provider_search",
-                        "legal_research",
-                        "precedent_lookup",
-                        "search_aggregation",
-                    ],
-                ),
-                "sequential_thinking": MCPServerConfig(
-                    name="sequential-thinking",
-                    url="http://localhost:9000",  # Local reasoning service
-                    capabilities=[
-                        "complex_decision_trees",
-                        "legal_compliance_reasoning",
-                        "multi_step_analysis",
-                        "workflow_orchestration",
-                    ],
-                ),
-            }
+            raw_servers = config.get("mcpServers", {})
 
-            # Only add servers that have proper authentication configured
-            for name, config in server_configs.items():
-                if self._is_server_configured(config):
-                    self.servers[name] = config
-                    logger.info(f"Configured MCP server: {name}")
+            for name, server_config in raw_servers.items():
+                url = server_config.get("url")
+                if not url:
+                    logger.warning("Skipping MCP server %s: missing URL", name)
+                    continue
+
+                server_type = server_config.get("type", name)
+                capabilities = server_config.get("capabilities", [])
+                timeout = server_config.get("timeout", 30)
+                priority = server_config.get("priority", 1)
+                auth_token = self._resolve_auth_token(server_config)
+
+                server_type_enum = self._coerce_server_type(server_type)
+                if not server_type_enum:
+                    logger.warning(
+                        "Skipping MCP server %s: unsupported server type '%s'",
+                        name,
+                        server_type,
+                    )
+                    continue
+
+                mcps_config = MCPServerConfig(
+                    name=name,
+                    server_type=server_type_enum,
+                    url=url,
+                    auth_token=auth_token,
+                    timeout=timeout,
+                    capabilities=capabilities,
+                    priority=priority,
+                    load_balancing=server_config.get("loadBalanced", False),
+                )
+
+                if self._is_server_configured(mcps_config, server_config):
+                    self.servers[name] = mcps_config
+                    logger.info("Configured MCP server: %s", name)
                 else:
-                    logger.warning(f"Skipping unconfigured MCP server: {name}")
+                    logger.warning("Skipping MCP server %s: missing authentication", name)
 
         except Exception as e:
             logger.error(f"Failed to load MCP server configs: {e}")
 
-    def _is_server_configured(self, config: MCPServerConfig) -> bool:
+    def _coerce_server_type(self, server_type: str) -> Optional[MCPServerType]:
+        """Convert a raw server type string into an enum member."""
+
+        if not server_type:
+            return None
+
+        # Direct value match
+        try:
+            return MCPServerType(server_type)
+        except ValueError:
+            pass
+
+        normalized = server_type.replace("-", "_").upper()
+        if normalized in MCPServerType.__members__:
+            return MCPServerType[normalized]
+
+        lower_value_map = {m.value: m for m in MCPServerType}
+        if server_type.lower() in lower_value_map:
+            return lower_value_map[server_type.lower()]
+
+        return None
+
+    def _resolve_auth_token(self, server_config: Dict[str, Any]) -> Optional[str]:
+        """Resolve authentication token using settings or environment."""
+
+        explicit_token = server_config.get("authToken")
+        if explicit_token:
+            return explicit_token
+
+        env_var = server_config.get("authTokenEnv")
+        if env_var:
+            # Prefer environment variable, fall back to settings attribute names
+            token = os.getenv(env_var)
+            if token:
+                return token
+
+            # Map env var to settings attribute (case insensitive)
+            attr_name = env_var.lower()
+            if hasattr(settings, attr_name):
+                return getattr(settings, attr_name)
+
+        # Attempt to map known server names
+        name = server_config.get("type", "")
+        if name == "supabase":
+            return settings.supabase_service_role_key
+        if name == "github":
+            return settings.github_token
+        if name == "mem0":
+            return settings.mem0_api_key
+
+        return None
+
+    def _is_server_configured(
+        self, config: MCPServerConfig, raw_config: Optional[Dict[str, Any]] = None
+    ) -> bool:
         """Check if a server has the required configuration."""
-        if config.name in ["supabase"]:
-            return config.auth_token is not None
-        elif config.name in ["github"]:
-            return config.auth_token is not None
-        elif config.name in ["mem0"]:
-            # Allow Mem0 without token (local MCP usage); require token only if provided
-            return bool(config.url)
-        else:
-            # Local services don't require auth tokens
-            return True
+        raw_config = raw_config or {}
+        requires_auth = raw_config.get("requiresAuth", False)
+
+        if config.name in {"supabase", "github"}:
+            requires_auth = True
+
+        if requires_auth:
+            return bool(config.auth_token)
+
+        return bool(config.url)
 
     async def initialize(self):
         """Initialize the MCP orchestrator."""

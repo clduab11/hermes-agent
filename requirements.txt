@@ -1,83 +1,69 @@
-# HERMES AI Voice Agent System - Python Dependencies
-# Copyright (c) 2025 Parallax Analytics LLC. All rights reserved.
+# HERMES AI Voice Agent System - Consolidated Python Dependencies
+# Review Date: 2025-09-14
+# This version deduplicates previous requirements files and aligns with CI/dev tooling.
 
-# Core Framework
+# --- Core API & Async Stack ---
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
 python-multipart==0.0.6
-
-# MCP Server Dependencies
-mcp>=1.0.0
 httpx==0.25.2
 websockets==12.0
-asyncio-mqtt==0.11.1
+mcp>=1.0.0
 
-# Database & Caching
+# --- Data & Caching Layer ---
+sqlalchemy[asyncio]==2.0.23
 asyncpg==0.29.0
 redis[hiredis]==5.0.1
-sqlalchemy[asyncio]==2.0.23
 
-# AI & Voice Processing
+# --- AI, Voice, and Core Utilities ---
 openai==1.3.7
 openai-whisper==20231117
-requests==2.32.4
-numpy==1.24.3
 torch==2.1.1
 torchaudio==2.1.1
+numpy==1.26.4
+requests==2.32.4
 
-# FastAPI WebSocket Support
-python-json-logger==2.0.7
-
-# Clio CRM Integration
+# --- Integrations & External Services ---
 requests-oauthlib==1.3.1
-cryptography==43.0.1
-
-# Zapier Integration
-zapier-platform-cli==15.0.0
-
-# Supabase Integration
 supabase==2.0.2
 postgrest==0.13.0
-
-# GitHub Integration
 PyGithub==1.59.1
 pygit2==1.13.3
-
-# Mem0 Knowledge Graph
 mem0ai==0.0.7
-
-# Browser Automation
+stripe==11.2.0
+zapier-platform-cli==15.0.0
 playwright==1.40.0
 
-# Security & Compliance
+# --- Security, Auth, and Compliance ---
+cryptography==43.0.1
 python-jose[cryptography]==3.3.0
+pyjwt[crypto]==2.8.0
 passlib[bcrypt]==1.7.4
 python-dotenv==1.0.0
-pyjwt[crypto]==2.8.0
-
-# Monitoring & Logging
 prometheus-client==0.19.0
 structlog==23.2.0
 python-json-logger==2.0.7
 
-# Development & Testing
-pytest==7.4.3
-pytest-asyncio==0.21.1
-pytest-cov==4.1.0
-black==23.11.0
-flake8==6.1.0
-mypy==1.7.1
-stripe==5.5.0
-
-# Production
+# --- Observability & Deployment ---
 gunicorn==21.2.0
 docker==6.1.3
 google-cloud-run==0.10.0
 google-cloud-logging==3.8.0
 
-# Legal Compliance
+# --- Document Generation ---
 reportlab==4.0.7
 python-docx==1.1.0
 pdfplumber==0.9.0
+
+# --- Quality & Testing Tooling ---
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+coverage[toml]==7.4.4
+black==23.11.0
+flake8==6.1.0
+mypy==1.7.1
+isort==5.12.0
+
