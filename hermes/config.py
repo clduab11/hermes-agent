@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     api_port: int = Field(default=8000, ge=1, le=65535, description="API port number")
     debug: bool = Field(default=False, description="Enable debug mode")
     demo_mode: bool = Field(
-        default=False, description="Enable demo features and mock data"
+        default=True, description="Enable demo features and mock data"
     )
     cors_allow_origins: Optional[str] = Field(
         default=None,
@@ -147,9 +147,38 @@ settings = Settings()
 def get_cors_origins_list() -> List[str]:
     """Parse and return allowed CORS origins as a list.
 
-    Returns ["*"] if not configured to preserve current permissive behavior,
-    but production should set CORS_ALLOW_ORIGINS explicitly.
+    Always includes GitHub Pages for demo, plus configured origins.
+    Returns ["*"] only in debug mode with no specific configuration.
     """
-    if not settings.cors_allow_origins:
+    # Always include GitHub Pages URL for the demo
+    github_pages_origin = "https://clduab11.github.io"
+    origins = [github_pages_origin]
+    
+    if settings.cors_allow_origins:
+        configured_origins = [o.strip() for o in settings.cors_allow_origins.split(",") if o.strip()]
+        origins.extend(configured_origins)
+    elif settings.debug:
+        # In debug mode without specific config, allow all
         return ["*"]
-    return [o.strip() for o in settings.cors_allow_origins.split(",") if o.strip()]
+    
+    # Add development origins if in debug or demo mode
+    if settings.debug or settings.demo_mode:
+        dev_origins = [
+            "http://localhost:3000",
+            "http://localhost:5173",  # Vite default
+            "http://localhost:8000",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:8000",
+        ]
+        origins.extend(dev_origins)
+    
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_origins = []
+    for origin in origins:
+        if origin not in seen:
+            seen.add(origin)
+            unique_origins.append(origin)
+    
+    return unique_origins

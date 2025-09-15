@@ -64,9 +64,48 @@ class VoiceWebSocketHandler:
         )
         if token and token.lower().startswith("bearer "):
             token = token.split()[1]
+        
+        # Import settings here to avoid circular import
+        from .config import settings
+        
+        # Allow demo mode connections without authentication
+        if settings.demo_mode or settings.debug:
+            if not token:
+                logger.info("Demo mode: Accepting unauthenticated WebSocket connection")
+                await websocket.accept()
+                
+                session_id = str(uuid.uuid4())
+                connection_info = ConnectionInfo(
+                    session_id=session_id,
+                    websocket=websocket,
+                    client_ip=client_ip,
+                    user_agent=websocket.headers.get("user-agent"),
+                    connected_at=asyncio.get_event_loop().time(),
+                    tenant_id="demo",  # Use demo tenant
+                )
+                
+                self.active_connections[session_id] = connection_info
+                
+                logger.info(f"Demo WebSocket connection: {session_id} from {client_ip}")
+                
+                # Send welcome message for demo
+                await self._send_message(
+                    session_id,
+                    {
+                        "type": "connection_established",
+                        "session_id": session_id,
+                        "message": "HERMES demo mode - voice assistant ready",
+                        "demo_mode": True,
+                    },
+                )
+                
+                return session_id
+        
+        # Production authentication required
         if not token:
             await websocket.close(code=4401)
             raise WebSocketDisconnect(code=4401)
+            
         try:
             payload: TokenPayload = self.jwt_handler.decode(token)
         except Exception:
