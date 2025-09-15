@@ -28,10 +28,10 @@
 - Automatic human transfer for complex matters
 
 **🎯 Complete Voice Pipeline Implementation**
-- Full STT → LLM → TTS processing pipeline
-- Real-time WebSocket communication
+- Full STT → LLM → TTS processing pipeline with hardened error handling
+- Real-time WebSocket communication with production-grade thread safety
 - Browser-based voice interface demo
-- Production-ready FastAPI backend
+- Production-ready FastAPI backend with resilient MCP orchestration
 
 **⚖️ Legal Compliance First**
 - Strict safety constraints and prohibited phrase filtering
@@ -86,9 +86,10 @@
 ### 🛡️ Enterprise Security & Compliance
 
 - **Bank-level encryption** with TLS 1.3
-- **JWT-based authentication** with tenant isolation
+- **JWT-based authentication** with tenant isolation and hardened middleware
 - **SOC 2 Type II compliance** (certification pending)
 - **Attorney-client privilege protection** built-in
+- **Production-grade monitoring** with comprehensive Prometheus metrics
 
 ---
 
@@ -169,7 +170,7 @@ The GitHub Pages demo provides an educational interface showcasing the technolog
 
 - ✅ Multi-location deployment
 - ✅ Custom API development
-- ✅ Advanced analytics and reportingwzsqq q
+- ✅ Advanced analytics and reporting
 - ✅ On-premise deployment options
 - ✅ Custom SLA agreements
 - ✅ Dedicated technical team
@@ -182,6 +183,24 @@ The GitHub Pages demo provides an educational interface showcasing the technolog
 - Enhanced attorney productivity (20-35% more billable hours)
 
 *Contact our legal technology specialists for a customized ROI analysis*
+
+---
+
+## 🔧 Recent Technical Improvements
+
+### Production Hardening (September 2025)
+- **Enhanced Thread Safety**: Request metrics middleware now uses lock-protected state updates to prevent contention in high-traffic production environments
+- **Resilient MCP Configuration**: Overhauled configuration loading with strict validation, stale entry cleanup, and comprehensive error logging
+- **Prometheus Metrics Validation**: Added strict input validation for HTTP metrics, uptime ratios, and connection counts to ensure data integrity
+- **Streamlined Error Handling**: Simplified voice pipeline error handling while preserving detailed error publication and monitoring
+
+### Security & Compliance Updates
+- **MCP Security Defaults**: All hosted MCP services now require authentication by default for enhanced security posture
+- **GitIgnore Optimization**: Corrected MCP log filtering rules to prevent filename collisions while maintaining clean repositories
+
+### Testing & Quality Assurance
+- **Isolated Test Suites**: Refreshed monitoring test suite with isolated registry fixtures and comprehensive negative-case validation
+- **Deterministic Assertions**: Enhanced test reliability with improved metrics-state isolation and validation
 
 ---
 
@@ -201,10 +220,10 @@ The GitHub Pages demo provides an educational interface showcasing the technolog
 ```
 
 ### Performance Benchmarks
-- **Voice Response**: <100ms average latency
-- **Total Processing**: <500ms end-to-end
+- **Voice Response**: <100ms average latency with optimized error handling
+- **Total Processing**: <500ms end-to-end with production thread safety
 - **Concurrent Users**: 1,000+ simultaneous conversations
-- **Uptime**: 99.9% SLA with automatic failover
+- **Uptime**: 99.9% SLA with automatic failover and comprehensive monitoring
 
 ---
 
@@ -213,8 +232,8 @@ The GitHub Pages demo provides an educational interface showcasing the technolog
 ### 1. Voice Pipeline Setup (10 minutes)
 ```bash
 # Clone and install HERMES
-git clone https://github.com/clduab11/Hermes-beta.git
-cd Hermes-beta
+git clone https://github.com/clduab11/hermes-agent.git
+cd hermes-agent
 pip install -r requirements.txt
 
 # Configure environment
