@@ -116,9 +116,28 @@
 
 ## 🌐 Live Demo (GitHub Pages)
 
-- Static UI (GitHub Pages): https://clduab11.github.io/hermes-agent/
-- Configure the frontend to point at your backend by setting `VITE_SOCKET_IO_URL` before build.
-- For local development, start the FastAPI backend and open `http://localhost:8000/`.
+**Interactive Demo**: https://clduab11.github.io/hermes-agent/
+
+### Demo Functionality
+- **✅ Voice Interface**: Professional React-based interface with microphone access
+- **✅ Demo Mode**: Intelligent detection of GitHub Pages environment with appropriate messaging  
+- **✅ Visual Feedback**: Real-time audio level visualization and connection status indicators
+- **✅ Educational Experience**: Clear explanation of HERMES capabilities and technology
+
+### Technical Implementation
+- **Frontend**: React app built with Vite, deployed via GitHub Actions to GitHub Pages
+- **WebSocket Ready**: Configured to connect to HERMES backend when available
+- **Environment Aware**: Automatically detects deployment environment and adjusts functionality
+- **Professional UI**: Legal-industry focused design with compliance messaging
+
+### Full Functionality Setup
+For complete voice processing capabilities, deploy with HERMES backend:
+1. Deploy FastAPI backend server (see deployment instructions below)
+2. Set `VITE_SOCKET_IO_URL` environment variable to backend WebSocket URL
+3. Configure CORS origins to include your frontend domain
+4. Enable authentication for production use (disable `DEMO_MODE`)
+
+The GitHub Pages demo provides an educational interface showcasing the technology. For law firms interested in deployment, contact our team for production setup assistance.
 
 ---
 
