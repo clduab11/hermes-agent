@@ -5,11 +5,14 @@
 services:
   - type: web
     name: hermes-backend
-    runtime: docker
+    env: python
     plan: free  # Can be upgraded to starter ($7/month) or standard ($25/month)
-    dockerfilePath: ./Dockerfile
-    dockerContext: ./
-    env: 
+    rootDir: .  # Explicitly sets the root to the repository's base directory
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn hermes.main:app --host 0.0.0.0 --port 10000"
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11" 
       - key: OPENAI_API_KEY
         fromValue: "YOUR_OPENAI_API_KEY_HERE"  # User must set this
       - key: OPENAI_MODEL  
