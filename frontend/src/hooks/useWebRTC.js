@@ -10,32 +10,51 @@ export default function useWebRTC() {
   const [volume, setVolume] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
 
-  // Get WebSocket URL from environment or default to localhost
+  // Get WebSocket URL from environment or default to appropriate backend
   const getWebSocketUrl = () => {
-    // Try to get from environment variable (for different deployment environments)
-    const envUrl = import.meta.env.VITE_SOCKET_IO_URL;
-    if (envUrl) {
-      return envUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    // First priority: explicit WebSocket URL from environment
+    const wsUrl = import.meta.env.VITE_BACKEND_WS_URL;
+    if (wsUrl) {
+      return wsUrl.replace(/^wss?:\/\//, '').replace(/\/$/, '');
+    }
+
+    // Second priority: HTTP backend URL from environment (convert to WebSocket)
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    if (backendUrl) {
+      return backendUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
     }
     
-    // Default fallback for different environments
-    if (window.location.hostname === 'clduab11.github.io') {
-      // For GitHub Pages, we'll need to connect to a deployed backend
-      // For now, show a demo mode message
-      return null;
-    } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    // Environment-specific defaults
+    const hostname = window.location.hostname;
+    const environment = import.meta.env.VITE_ENVIRONMENT;
+    
+    if (hostname === 'clduab11.github.io') {
+      // For GitHub Pages deployment, try to connect to a deployed backend
+      // This will be set via environment variables during build
+      console.log('GitHub Pages detected, checking for production backend configuration...');
+      return null; // No backend configured yet
+    } else if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      // Local development
       return 'localhost:8000';
     }
     
+    // Fallback: use current host (assumes backend on same host)
     return window.location.host;
   };
 
   const connectWebSocket = () => {
     const wsHost = getWebSocketUrl();
     if (!wsHost) {
-      console.log('Running in demo mode - no backend connection available');
+      const hostname = window.location.hostname;
+      let demoMessage = 'Demo mode: This is a frontend-only demonstration.';
+      
+      if (hostname === 'clduab11.github.io') {
+        demoMessage = 'GitHub Pages Demo: This demonstrates the HERMES frontend interface. For full voice processing functionality, the backend server would need to be deployed to a cloud service like Render, Railway, or Heroku and connected via environment variables.';
+      }
+      
+      console.log('No backend configured, running in demo mode');
       setPhase('demo_mode');
-      setTranscript('Demo mode: This is a frontend-only demonstration. For full functionality, connect to a HERMES backend server.');
+      setTranscript(demoMessage);
       return false;
     }
 
@@ -47,9 +66,9 @@ export default function useWebRTC() {
       websocket.current = new WebSocket(wsUrl);
 
       websocket.current.onopen = () => {
-        console.log('WebSocket connected');
+        console.log('WebSocket connected successfully');
         setIsConnected(true);
-        setTranscript('Connected to HERMES voice assistant. Ready to process voice input.');
+        setTranscript('✅ Connected to HERMES voice processing backend. Ready to process voice input with speech-to-text and AI response generation.');
       };
 
       websocket.current.onmessage = (event) => {
@@ -61,25 +80,29 @@ export default function useWebRTC() {
         }
       };
 
-      websocket.current.onclose = () => {
-        console.log('WebSocket disconnected');
+      websocket.current.onclose = (event) => {
+        console.log('WebSocket disconnected', event);
         setIsConnected(false);
         setPhase('idle');
-        setTranscript('Disconnected from server. Click start to reconnect.');
+        if (event.code === 1006) {
+          setTranscript('❌ Connection failed: Backend server unavailable. Running in demo mode.');
+        } else {
+          setTranscript('Connection closed. Click start to reconnect.');
+        }
       };
 
       websocket.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error('WebSocket connection error:', error);
         setIsConnected(false);
-        setPhase('error');
-        setTranscript('Connection error. Running in demo mode. For full functionality, ensure HERMES backend is running.');
+        setPhase('demo_mode');
+        setTranscript('⚠️ Backend connection failed. Running in demo mode. The frontend interface is fully functional - for complete voice processing, ensure the HERMES FastAPI backend is deployed and accessible.');
       };
 
       return true;
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error);
       setPhase('demo_mode');
-      setTranscript('Demo mode: Backend connection not available. This demonstrates the frontend interface.');
+      setTranscript('Demo mode: Backend connection not available. This demonstrates the frontend interface and user experience.');
       return false;
     }
   };

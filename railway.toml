@@ -1,0 +1,67 @@
+# Railway.app Deployment Configuration
+# Deploy with: railway deploy or connect your GitHub repo
+# Visit: https://railway.app/new
+
+# Railway automatically detects Docker and uses the Dockerfile
+# This file configures environment variables and services
+
+version: 2
+
+services:
+  hermes-backend:
+    source: .
+    variables:
+      # Core settings
+      API_HOST: "0.0.0.0"
+      API_PORT: "$PORT"  # Railway sets this automatically
+      OPENAI_MODEL: "gpt-4o-mini"
+      DEBUG: "false" 
+      DEMO_MODE: "true"
+      
+      # CORS - allow GitHub Pages
+      CORS_ALLOW_ORIGINS: "https://clduab11.github.io"
+      
+      # Audio processing - optimized for cloud deployment
+      WHISPER_MODEL: "tiny"
+      WHISPER_DEVICE: "cpu"
+      SAMPLE_RATE: "16000"
+      CHUNK_SIZE: "1024" 
+      MAX_AUDIO_LENGTH_SECONDS: "15"
+      RESPONSE_TIMEOUT: "2.0"
+      CONFIDENCE_THRESHOLD: "0.7"
+      
+      # Compliance
+      ENABLE_DISCLAIMERS: "true"
+      AUDIT_LOGGING: "false"
+      
+      # Redis connection (Railway auto-manages service linking)
+      REDIS_URL: "${{Redis.REDIS_URL}}"
+    
+    healthCheckPath: "/health"
+    healthCheckTimeout: 30
+    
+    # Resource limits for Railway's free tier
+    # Upgrade to Pro for production use
+    resources:
+      limits:
+        memory: 512Mi
+        cpu: 0.5
+
+  redis:
+    image: "redis:7-alpine"
+    variables:
+      REDIS_ARGS: "--maxmemory 64mb --maxmemory-policy allkeys-lru"
+
+# Environment variables that must be set manually:
+# - OPENAI_API_KEY: Get from https://platform.openai.com/
+# 
+# Optional for enhanced functionality:  
+# - GITHUB_TOKEN: For repository integration
+# - CLIO_CLIENT_ID/CLIO_CLIENT_SECRET: For legal CRM integration
+#
+# Deploy steps:
+# 1. Install Railway CLI: `npm install -g @railway/cli`
+# 2. Login: `railway login` 
+# 3. Deploy: `railway up`
+# 4. Set OPENAI_API_KEY: `railway variables set OPENAI_API_KEY=sk-...`
+# 5. Get the deployed URL and update frontend environment variables
