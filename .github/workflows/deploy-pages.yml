@@ -186,7 +186,7 @@ jobs:
             # Check if JavaScript assets are accessible
             JS_ASSET=$(echo "$CONTENT" | grep -o '/hermes-agent/assets/[^"]*\.js' | head -1)
             if [ -n "$JS_ASSET" ]; then
-              JS_STATUS=$(curl -o /dev/null -s -w "%{http_code}" --max-time 10 "${{ steps.deployment.outputs.page_url }}${JS_ASSET}" || echo "TIMEOUT")
+              JS_STATUS=$(curl -o /dev/null -s -w "%{http_code}" --max-time 10 "https://clduab11.github.io${JS_ASSET}" || echo "TIMEOUT")
               echo "📦 JavaScript asset status: $JS_STATUS"
               if [ "$JS_STATUS" = "200" ]; then
                 echo "✅ JavaScript assets are accessible"
