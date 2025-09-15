@@ -203,7 +203,7 @@
             async connect() {
                 try {
                     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                    const wsUrl = `${protocol}//${window.location.host}/voice`;
+                    const wsUrl = `${protocol}//${window.location.host}/ws/voice`;
                     
                     this.ws = new WebSocket(wsUrl);
                     
