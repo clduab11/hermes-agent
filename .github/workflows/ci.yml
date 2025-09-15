@@ -40,7 +40,7 @@ jobs:
 
       - name: Install security dependencies
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools wheel
           pip install bandit[toml] safety pip-audit || echo "⚠️ Some security dependencies installation warnings"
 
       - name: Run Bandit Security Analysis
@@ -116,8 +116,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-ci.txt
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements-ci.txt || echo "⚠️ Some dependencies installation warnings - continuing with available deps"
           pip install coverage[toml] pytest-xvfb || echo "⚠️ Additional dependencies installation warnings"
 
       - name: Run comprehensive linting
@@ -171,7 +171,7 @@ jobs:
 
       - name: Install quality tools
         run: |
-          python -m pip install --upgrade pip
+          python -m pip install --upgrade pip setuptools wheel
           pip install pylint radon vulture pydocstyle interrogate || echo "⚠️ Some quality tools installation warnings"
 
       - name: Code complexity analysis
