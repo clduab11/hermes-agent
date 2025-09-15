@@ -1,0 +1,27 @@
+# CI-specific requirements for testing, linting, security, and documentation workflows
+# This file includes dependencies needed for CI/CD operations including security scanning and linting
+
+# Core dependencies that workflows expect to be available
+# (fastapi, uvicorn, pydantic are installed manually in docs-compliance workflow)
+
+# Testing and development tools
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+coverage[toml]>=7.4.0
+
+# Code quality and linting tools
+black>=23.11.0
+flake8>=6.1.0
+isort>=5.12.0
+mypy>=1.7.0
+
+# Security scanning requirements
+# pip-audit uses this file for vulnerability scanning
+
+# Essential utilities for CI operations
+requests>=2.32.0
+python-dotenv>=1.0.0
+
+# Type checking support
+types-requests>=2.31.0
