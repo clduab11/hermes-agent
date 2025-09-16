@@ -10,11 +10,16 @@ services:
     rootDir: .  # Explicitly sets the root to the repository's base directory
     buildCommand: "pip install -r requirements.txt"
     startCommand: "uvicorn hermes.main:app --host 0.0.0.0 --port 10000"
+    healthCheckPath: "/health"  # Health check endpoint for monitoring
     envVars:
       - key: PYTHON_VERSION
         value: "3.11" 
+      - key: ENVIRONMENT
+        value: "production"
+      - key: LOG_LEVEL
+        value: "INFO"
       - key: OPENAI_API_KEY
-        fromValue: "YOUR_OPENAI_API_KEY_HERE"  # User must set this
+        sync: false  # Treat as secret - user must set this in Render UI
       - key: OPENAI_MODEL  
         value: "gpt-4o-mini"  # Using more cost-effective model for demo
       - key: API_HOST
@@ -32,7 +37,7 @@ services:
       - key: WHISPER_DEVICE
         value: "cpu"
       - key: KOKORO_API_URL
-        value: "http://localhost:8001"  # Will need TTS service
+        value: ""  # TTS service disabled for cloud deployment (localhost won't work)
       - key: SAMPLE_RATE
         value: "16000"
       - key: CHUNK_SIZE
@@ -65,3 +70,11 @@ databases: []  # Using Redis only for demo, no main database needed
 # 2. Get an OpenAI API key from https://platform.openai.com/
 # 3. Click "Deploy to Render" and set your OPENAI_API_KEY
 # 4. Once deployed, update the frontend VITE_BACKEND_WS_URL to point to your Render service
+
+# For production scaling considerations:
+# - Upgrade from 'free' to 'starter' plan for better performance
+# - Consider separate Redis instance for session management  
+# - Enable audit logging and monitoring
+# - Set up proper TTS service if text-to-speech functionality is needed
+# - Make CORS origins configurable for multiple frontend domains
+# - Free tier Redis (25MB) may be limiting for production use
