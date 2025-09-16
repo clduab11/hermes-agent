@@ -111,43 +111,17 @@ class ClioAuthHandler:
             raise ValueError("Invalid state parameter - possible CSRF attack")
 
         # Prepare token request
-        auth_header = self._get_basic_auth_header()
-
         data = {
             "grant_type": "authorization_code",
             "code": code,
             "redirect_uri": self.redirect_uri,
         }
 
-        headers = {
-            "Authorization": auth_header,
-            "Content-Type": "application/x-www-form-urlencoded",
-            "User-Agent": "HERMES-Legal-AI/1.0",
-        }
-
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    self.TOKEN_URL, data=data, headers=headers, timeout=30.0
-                )
-                response.raise_for_status()
-
-                token_data = response.json()
-
-                # Calculate token expiry
-                expires_in = token_data.get("expires_in", 3600)  # Default 1 hour
-                expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
-
-                tokens = ClioTokens(
-                    access_token=token_data["access_token"],
-                    refresh_token=token_data["refresh_token"],
-                    expires_at=expires_at,
-                    token_type=token_data.get("token_type", "Bearer"),
-                )
-
-                logger.info(f"Successfully obtained Clio tokens for tenant {tenant_id}")
-                return tokens
-
+            return await self._request_tokens(
+                data,
+                log_message=f"Successfully obtained Clio tokens for tenant {tenant_id}"
+            )
         except httpx.HTTPError as e:
             logger.error(f"Failed to exchange code for tokens: {e}")
             raise
@@ -164,42 +138,17 @@ class ClioAuthHandler:
         Raises:
             httpx.HTTPError: If refresh fails
         """
-        auth_header = self._get_basic_auth_header()
-
         data = {
             "grant_type": "refresh_token",
             "refresh_token": refresh_token,
         }
 
-        headers = {
-            "Authorization": auth_header,
-            "Content-Type": "application/x-www-form-urlencoded",
-            "User-Agent": "HERMES-Legal-AI/1.0",
-        }
-
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    self.TOKEN_URL, data=data, headers=headers, timeout=30.0
-                )
-                response.raise_for_status()
-
-                token_data = response.json()
-
-                # Calculate token expiry
-                expires_in = token_data.get("expires_in", 3600)
-                expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
-
-                tokens = ClioTokens(
-                    access_token=token_data["access_token"],
-                    refresh_token=token_data.get("refresh_token", refresh_token),
-                    expires_at=expires_at,
-                    token_type=token_data.get("token_type", "Bearer"),
-                )
-
-                logger.info("Successfully refreshed Clio access token")
-                return tokens
-
+            return await self._request_tokens(
+                data,
+                fallback_refresh_token=refresh_token,
+                log_message="Successfully refreshed Clio access token"
+            )
         except httpx.HTTPError as e:
             logger.error(f"Failed to refresh access token: {e}")
             raise
@@ -317,16 +266,65 @@ class ClioAuthHandler:
             logger.error(f"Error verifying state: {e}")
             return False
 
+    async def _request_tokens(
+        self, 
+        data: dict, 
+        fallback_refresh_token: Optional[str] = None,
+        log_message: str = "Successfully obtained tokens"
+    ) -> ClioTokens:
+        """Common method to request tokens from Clio OAuth endpoint.
+        
+        Args:
+            data: Form data to send in the request
+            fallback_refresh_token: Fallback refresh token if not provided in response
+            log_message: Log message for successful token retrieval
+            
+        Returns:
+            ClioTokens object
+            
+        Raises:
+            httpx.HTTPError: If token request fails
+        """
+        auth_header = self._get_basic_auth_header()
+        
+        headers = {
+            "Authorization": auth_header,
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "HERMES-Legal-AI/1.0",
+        }
 
-def _get_basic_auth_header(self) -> str:
-    """Generate HTTP Basic Auth header for client authentication.
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                self.TOKEN_URL, data=data, headers=headers, timeout=30.0
+            )
+            response.raise_for_status()
 
-    Returns:
-        Basic auth header value
-    """
-    credentials = f"{self.client_id}:{self.client_secret}"
-    encoded_credentials = base64.b64encode(credentials.encode()).decode()
-    return f"Basic {encoded_credentials}"
+            token_data = response.json()
+
+            # Calculate token expiry
+            expires_in = token_data.get("expires_in", 3600)
+            expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+
+            tokens = ClioTokens(
+                access_token=token_data["access_token"],
+                refresh_token=token_data.get("refresh_token", fallback_refresh_token),
+                expires_at=expires_at,
+                token_type=token_data.get("token_type", "Bearer"),
+            )
+
+            logger.info(log_message)
+            return tokens
+
+
+    def _get_basic_auth_header(self) -> str:
+        """Generate HTTP Basic Auth header for client authentication.
+
+        Returns:
+            Basic auth header value
+        """
+        credentials = f"{self.client_id}:{self.client_secret}"
+        encoded_credentials = base64.b64encode(credentials.encode()).decode()
+        return f"Basic {encoded_credentials}"
 
 
 # Backward-compatible alias used by API endpoints
