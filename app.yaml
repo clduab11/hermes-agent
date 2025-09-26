@@ -54,14 +54,14 @@ env_variables:
 
 # Health check configuration
 readiness_check:
-  path: "/health"
+  path: "/ready"
   check_interval_sec: 5
   timeout_sec: 4
   failure_threshold: 2
   success_threshold: 2
 
 liveness_check:
-  path: "/health"
+  path: "/live"
   check_interval_sec: 30
   timeout_sec: 4
   failure_threshold: 4
@@ -73,7 +73,7 @@ network:
 
 # VPC connector for private Supabase access (enterprise security)
 vpc_access_connector:
-  name: "projects/PROJECT_ID/locations/REGION/connectors/hermes-connector"
+  name: "projects/${GCP_PROJECT_ID}/locations/${GCP_REGION}/connectors/hermes-connector"
 
 handlers:
 # Static files for dashboard (enterprise clients only)
