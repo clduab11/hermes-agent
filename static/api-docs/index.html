@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HERMES API Documentation - Developer Portal</title>
+    <meta name="description" content="Complete API documentation for HERMES Enterprise Legal AI Voice Reception System">
+
+    <!-- CSS Framework -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --navy-primary: #1a365d;
+            --navy-secondary: #2c5282;
+            --gold-accent: #d69e2e;
+        }
+
+        .api-section {
+            scroll-margin-top: 80px;
+        }
+
+        .code-block {
+            background: #1e1e1e;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .endpoint-card {
+            transition: all 0.2s ease;
+        }
+
+        .endpoint-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .method-get { color: #10b981; }
+        .method-post { color: #3b82f6; }
+        .method-put { color: #f59e0b; }
+        .method-delete { color: #ef4444; }
+
+        .sidebar {
+            height: calc(100vh - 4rem);
+            overflow-y: auto;
+            position: sticky;
+            top: 4rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center mr-8">
+                        <i class="fas fa-balance-scale text-2xl text-blue-900 mr-3"></i>
+                        <span class="text-xl font-bold text-gray-900">HERMES</span>
+                        <span class="text-sm text-gray-600 ml-2">API Docs</span>
+                    </a>
+
+                    <div class="hidden md:flex space-x-4">
+                        <a href="#getting-started" class="text-gray-600 hover:text-blue-900">Getting Started</a>
+                        <a href="#authentication" class="text-gray-600 hover:text-blue-900">Authentication</a>
+                        <a href="#endpoints" class="text-gray-600 hover:text-blue-900">API Endpoints</a>
+                        <a href="#webhooks" class="text-gray-600 hover:text-blue-900">Webhooks</a>
+                        <a href="#sdks" class="text-gray-600 hover:text-blue-900">SDKs</a>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard" class="text-gray-600 hover:text-blue-900">Dashboard</a>
+                    <button id="themeToggle" class="text-gray-600 hover:text-blue-900">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex pt-16">
+        <!-- Sidebar -->
+        <div class="w-80 bg-white shadow-sm sidebar">
+            <div class="p-6">
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Documentation</h3>
+                    <nav class="space-y-1">
+                        <a href="#overview" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-900 hover:bg-blue-50 rounded">Overview</a>
+                        <a href="#getting-started" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-900 hover:bg-blue-50 rounded">Getting Started</a>
+                        <a href="#authentication" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-900 hover:bg-blue-50 rounded">Authentication</a>
+                        <a href="#rate-limiting" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-900 hover:bg-blue-50 rounded">Rate Limiting</a>
+                    </nav>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">API Endpoints</h3>
+                    <nav class="space-y-1">
+                        <a href="#voice-processing" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-900 hover:bg-blue-50 rounded">Voice Processing</a>
+                        <a href="#client-management" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-900 hover:bg-blue-50 rounded">Client Management</a>
+                        <a href="#analytics" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-900 hover:bg-blue-50 rounded">Analytics</a>
+                        <a href="#integrations" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-900 hover:bg-blue-50 rounded">Integrations</a>
+                        <a href="#billing" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-900 hover:bg-blue-50 rounded">Billing</a>
+                    </nav>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Resources</h3>
+                    <nav class="space-y-1">
+                        <a href="#webhooks" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-900 hover:bg-blue-50 rounded">Webhooks</a>
+                        <a href="#sdks" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-900 hover:bg-blue-50 rounded">SDKs & Libraries</a>
+                        <a href="#postman" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-900 hover:bg-blue-50 rounded">Postman Collection</a>
+                        <a href="#support" class="block px-3 py-2 text-sm text-gray-600 hover:text-blue-900 hover:bg-blue-50 rounded">Support</a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 max-w-4xl mx-auto p-6">
+            <!-- Overview -->
+            <section id="overview" class="api-section mb-12">
+                <div class="bg-gradient-to-r from-blue-900 to-blue-800 rounded-lg p-8 text-white mb-8">
+                    <h1 class="text-4xl font-bold mb-4">HERMES API Documentation</h1>
+                    <p class="text-xl text-blue-100 mb-6">
+                        Enterprise-grade API for integrating legal AI voice reception into your applications
+                    </p>
+                    <div class="flex space-x-4">
+                        <span class="bg-blue-700 px-3 py-1 rounded-full text-sm">REST API</span>
+                        <span class="bg-blue-700 px-3 py-1 rounded-full text-sm">WebSocket Support</span>
+                        <span class="bg-blue-700 px-3 py-1 rounded-full text-sm">99.9% Uptime SLA</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-rocket text-green-600 text-xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Quick Start</h3>
+                        <p class="text-sm text-gray-600">Get started with HERMES API in under 5 minutes</p>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-shield-alt text-blue-600 text-xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Enterprise Security</h3>
+                        <p class="text-sm text-gray-600">SOC 2 compliant with end-to-end encryption</p>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm p-6 text-center">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-code text-purple-600 text-xl"></i>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Multiple SDKs</h3>
+                        <p class="text-sm text-gray-600">Python, Node.js, PHP, and more</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Getting Started -->
+            <section id="getting-started" class="api-section mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Getting Started</h2>
+
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Base URL</h3>
+                    <div class="code-block p-4 mb-4">
+                        <code class="text-green-400">https://api.hermes.parallax-ai.app/v1</code>
+                    </div>
+                    <p class="text-gray-600">All API requests should be made to this base URL using HTTPS.</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Making Your First Request</h3>
+
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-900 mb-2">1. Get your API key from the dashboard</h4>
+                        <p class="text-gray-600 mb-3">Navigate to your HERMES dashboard and generate an API key in the Settings section.</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-900 mb-2">2. Make a test request</h4>
+                        <div class="code-block">
+<pre><code class="language-bash">curl -X GET "https://api.hermes.parallax-ai.app/v1/status" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json"</code></pre>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-2">3. Expected Response</h4>
+                        <div class="code-block">
+<pre><code class="language-json">{
+  "status": "operational",
+  "service": "HERMES AI Voice Agent",
+  "version": "1.0.0",
+  "timestamp": 1699564800.123
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Authentication -->
+            <section id="authentication" class="api-section mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Authentication</h2>
+
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">API Key Authentication</h3>
+                    <p class="text-gray-600 mb-4">
+                        HERMES API uses API key authentication. Include your API key in the Authorization header of every request.
+                    </p>
+
+                    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+                        <div class="flex">
+                            <i class="fas fa-info-circle text-blue-400 mr-3 mt-1"></i>
+                            <div>
+                                <h4 class="text-blue-800 font-medium">Security Best Practices</h4>
+                                <ul class="text-blue-700 text-sm mt-2 space-y-1">
+                                    <li>• Never expose API keys in client-side code</li>
+                                    <li>• Use environment variables to store API keys</li>
+                                    <li>• Rotate API keys regularly</li>
+                                    <li>• Use different API keys for different environments</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+<pre><code class="language-bash"># Include in every request
+Authorization: Bearer hermes_live_sk_1234567890abcdef</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Voice Processing -->
+            <section id="voice-processing" class="api-section mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Voice Processing API</h2>
+
+                <!-- Process Voice -->
+                <div class="endpoint-card bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <div class="flex items-center mb-4">
+                        <span class="method-post font-bold text-lg mr-4">POST</span>
+                        <code class="bg-gray-100 px-3 py-1 rounded text-sm">/api/voice/process</code>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Process Voice Input</h3>
+                    <p class="text-gray-600 mb-4">
+                        Process audio input with AI voice recognition, legal NLP analysis, and contextual understanding.
+                    </p>
+
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-900 mb-2">Request Body</h4>
+                        <div class="code-block">
+<pre><code class="language-json">{
+  "audio_data": "base64_encoded_audio_data",
+  "session_id": "session_12345",
+  "client_id": "client_abc",
+  "tenant_id": "firm_xyz",
+  "language_preference": "en",
+  "context": {
+    "caller_id": "+1234567890",
+    "practice_area": "personal_injury"
+  }
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-900 mb-2">Response</h4>
+                        <div class="code-block">
+<pre><code class="language-json">{
+  "session_id": "session_12345",
+  "transcription": "I need to speak with an attorney about my car accident",
+  "language": {
+    "detected": "en",
+    "confidence": 0.98
+  },
+  "emotional_state": "concerned",
+  "conversation_phase": "intake",
+  "urgency_level": 7,
+  "legal_analysis": {
+    "entities": [
+      {
+        "type": "legal_matter",
+        "text": "car accident",
+        "confidence": 0.95
+      }
+    ],
+    "practice_area": "personal_injury",
+    "risk_level": "medium",
+    "requires_attorney": true
+  },
+  "suggestions": [
+    "Schedule consultation",
+    "Collect incident details",
+    "Verify insurance information"
+  ],
+  "processing_time": 0.245
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- WebSocket Connection -->
+                <div class="endpoint-card bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <div class="flex items-center mb-4">
+                        <span class="text-purple-600 font-bold text-lg mr-4">WS</span>
+                        <code class="bg-gray-100 px-3 py-1 rounded text-sm">/ws/voice</code>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Real-time Voice Processing</h3>
+                    <p class="text-gray-600 mb-4">
+                        WebSocket connection for real-time voice processing with low latency streaming.
+                    </p>
+
+                    <div class="code-block">
+<pre><code class="language-javascript">// Connect to WebSocket
+const ws = new WebSocket('wss://api.hermes.parallax-ai.app/ws/voice');
+
+// Send audio data
+ws.send(JSON.stringify({
+  type: 'audio',
+  data: audioBase64,
+  session_id: 'session_123'
+}));
+
+// Receive real-time transcription
+ws.onmessage = function(event) {
+  const response = JSON.parse(event.data);
+  console.log('Transcription:', response.transcription);
+};</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Client Management -->
+            <section id="client-management" class="api-section mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Client Management</h2>
+
+                <!-- List Clients -->
+                <div class="endpoint-card bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <div class="flex items-center mb-4">
+                        <span class="method-get font-bold text-lg mr-4">GET</span>
+                        <code class="bg-gray-100 px-3 py-1 rounded text-sm">/api/clients</code>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">List Clients</h3>
+                    <p class="text-gray-600 mb-4">Retrieve a paginated list of clients and their information.</p>
+
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-900 mb-2">Query Parameters</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Parameter</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <tr>
+                                        <td class="px-4 py-2 text-sm text-gray-900">limit</td>
+                                        <td class="px-4 py-2 text-sm text-gray-600">integer</td>
+                                        <td class="px-4 py-2 text-sm text-gray-600">Number of results per page (max 100)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2 text-sm text-gray-900">offset</td>
+                                        <td class="px-4 py-2 text-sm text-gray-600">integer</td>
+                                        <td class="px-4 py-2 text-sm text-gray-600">Number of results to skip</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="px-4 py-2 text-sm text-gray-900">practice_area</td>
+                                        <td class="px-4 py-2 text-sm text-gray-600">string</td>
+                                        <td class="px-4 py-2 text-sm text-gray-600">Filter by practice area</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics -->
+            <section id="analytics" class="api-section mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Analytics API</h2>
+
+                <!-- Get Analytics -->
+                <div class="endpoint-card bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <div class="flex items-center mb-4">
+                        <span class="method-get font-bold text-lg mr-4">GET</span>
+                        <code class="bg-gray-100 px-3 py-1 rounded text-sm">/api/analytics/realtime</code>
+                    </div>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">Real-time Analytics</h3>
+                    <p class="text-gray-600 mb-4">Get real-time analytics data for dashboard display and monitoring.</p>
+
+                    <div class="code-block">
+<pre><code class="language-json">{
+  "timestamp": "2024-01-15T10:30:00Z",
+  "active_sessions": 5,
+  "calls_per_hour": 23,
+  "response_time_avg": 2.3,
+  "conversion_rate": 82.1,
+  "system_health": {
+    "cpu_usage": 45.2,
+    "memory_usage": 67.8,
+    "disk_usage": 23.4
+  },
+  "recent_activities": [
+    {
+      "type": "voice_session_started",
+      "timestamp": "2024-01-15T10:29:45Z",
+      "client_id": "client_123"
+    }
+  ]
+}</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Webhooks -->
+            <section id="webhooks" class="api-section mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Webhooks</h2>
+
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Event Notifications</h3>
+                    <p class="text-gray-600 mb-4">
+                        HERMES can send real-time webhook notifications to your application when important events occur.
+                    </p>
+
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-900 mb-3">Supported Events</h4>
+                        <div class="space-y-2">
+                            <div class="flex items-center p-3 bg-gray-50 rounded">
+                                <code class="text-sm font-mono text-blue-600 mr-3">call.started</code>
+                                <span class="text-sm text-gray-600">New voice call initiated</span>
+                            </div>
+                            <div class="flex items-center p-3 bg-gray-50 rounded">
+                                <code class="text-sm font-mono text-blue-600 mr-3">call.completed</code>
+                                <span class="text-sm text-gray-600">Voice call processing completed</span>
+                            </div>
+                            <div class="flex items-center p-3 bg-gray-50 rounded">
+                                <code class="text-sm font-mono text-blue-600 mr-3">lead.qualified</code>
+                                <span class="text-sm text-gray-600">Lead qualified and requires follow-up</span>
+                            </div>
+                            <div class="flex items-center p-3 bg-gray-50 rounded">
+                                <code class="text-sm font-mono text-blue-600 mr-3">integration.sync</code>
+                                <span class="text-sm text-gray-600">Data synchronized with external system</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h4 class="font-medium text-gray-900 mb-2">Example Webhook Payload</h4>
+                        <div class="code-block">
+<pre><code class="language-json">{
+  "id": "evt_1234567890",
+  "type": "lead.qualified",
+  "created": "2024-01-15T10:30:00Z",
+  "data": {
+    "lead_id": "lead_abc123",
+    "session_id": "session_xyz789",
+    "client_info": {
+      "name": "John Doe",
+      "phone": "+1234567890",
+      "email": "john@example.com"
+    },
+    "practice_area": "personal_injury",
+    "urgency_score": 8.5,
+    "qualification_reason": "High-value case with clear liability"
+  }
+}</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SDKs -->
+            <section id="sdks" class="api-section mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">SDKs & Libraries</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Python SDK -->
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fab fa-python text-2xl text-blue-600 mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Python SDK</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Official Python library for HERMES API integration.</p>
+                        <div class="code-block text-sm">
+<pre><code class="language-bash">pip install hermes-api</code></pre>
+                        </div>
+                        <div class="mt-4">
+                            <a href="#" class="text-blue-600 hover:text-blue-800 text-sm">View Documentation →</a>
+                        </div>
+                    </div>
+
+                    <!-- Node.js SDK -->
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fab fa-node-js text-2xl text-green-600 mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Node.js SDK</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">JavaScript/TypeScript library for Node.js applications.</p>
+                        <div class="code-block text-sm">
+<pre><code class="language-bash">npm install @hermes/api</code></pre>
+                        </div>
+                        <div class="mt-4">
+                            <a href="#" class="text-blue-600 hover:text-blue-800 text-sm">View Documentation →</a>
+                        </div>
+                    </div>
+
+                    <!-- PHP SDK -->
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fab fa-php text-2xl text-purple-600 mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">PHP SDK</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">PHP library for server-side integrations.</p>
+                        <div class="code-block text-sm">
+<pre><code class="language-bash">composer require hermes/api-php</code></pre>
+                        </div>
+                        <div class="mt-4">
+                            <a href="#" class="text-blue-600 hover:text-blue-800 text-sm">View Documentation →</a>
+                        </div>
+                    </div>
+
+                    <!-- REST API -->
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-code text-2xl text-gray-600 mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Raw REST API</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Direct HTTP API calls for any programming language.</p>
+                        <div class="mt-4">
+                            <a href="#" class="text-blue-600 hover:text-blue-800 text-sm">View cURL Examples →</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Python Example -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Python SDK Example</h3>
+                    <div class="code-block">
+<pre><code class="language-python">import hermes_api
+
+# Initialize client
+client = hermes_api.Client(api_key="your_api_key")
+
+# Process voice input
+result = client.voice.process({
+    "audio_data": audio_base64,
+    "session_id": "session_123",
+    "tenant_id": "firm_abc"
+})
+
+print(f"Transcription: {result.transcription}")
+print(f"Practice Area: {result.legal_analysis.practice_area}")
+print(f"Urgency Level: {result.urgency_level}")
+
+# Handle qualified leads
+if result.legal_analysis.requires_attorney:
+    # Create lead in CRM
+    lead = client.leads.create({
+        "name": result.client_info.name,
+        "phone": result.client_info.phone,
+        "practice_area": result.legal_analysis.practice_area,
+        "urgency_score": result.urgency_level
+    })
+    print(f"Lead created: {lead.id}")</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Support -->
+            <section id="support" class="api-section mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Support & Resources</h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-life-ring text-2xl text-blue-600 mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Technical Support</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Get help with API integration and technical issues.</p>
+                        <div class="space-y-2">
+                            <a href="mailto:api-support@hermes.parallax-ai.app" class="block text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-envelope mr-2"></i>api-support@hermes.parallax-ai.app
+                            </a>
+                            <a href="#" class="block text-blue-600 hover:text-blue-800">
+                                <i class="fab fa-slack mr-2"></i>Join Developer Slack
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-book text-2xl text-green-600 mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Documentation</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Comprehensive guides and tutorials.</p>
+                        <div class="space-y-2">
+                            <a href="#" class="block text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-play mr-2"></i>Quick Start Guide
+                            </a>
+                            <a href="#" class="block text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-puzzle-piece mr-2"></i>Integration Examples
+                            </a>
+                            <a href="#" class="block text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-bug mr-2"></i>Troubleshooting Guide
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-download text-2xl text-purple-600 mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Tools & Resources</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Development tools and utilities.</p>
+                        <div class="space-y-2">
+                            <a href="#" class="block text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-download mr-2"></i>Postman Collection
+                            </a>
+                            <a href="#" class="block text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-flask mr-2"></i>API Testing Sandbox
+                            </a>
+                            <a href="#" class="block text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-chart-line mr-2"></i>API Status Page
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-sm p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-users text-2xl text-orange-600 mr-3"></i>
+                            <h3 class="text-lg font-semibold text-gray-900">Community</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Connect with other developers.</p>
+                        <div class="space-y-2">
+                            <a href="#" class="block text-blue-600 hover:text-blue-800">
+                                <i class="fab fa-github mr-2"></i>GitHub Discussions
+                            </a>
+                            <a href="#" class="block text-blue-600 hover:text-blue-800">
+                                <i class="fab fa-discord mr-2"></i>Developer Discord
+                            </a>
+                            <a href="#" class="block text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-calendar mr-2"></i>Developer Office Hours
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Highlight active section in sidebar
+        const observerOptions = {
+            rootMargin: '-80px 0px -80px 0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const id = entry.target.getAttribute('id');
+                const navLink = document.querySelector(`a[href="#${id}"]`);
+
+                if (entry.isIntersecting) {
+                    // Remove active class from all links
+                    document.querySelectorAll('.sidebar a').forEach(link => {
+                        link.classList.remove('bg-blue-100', 'text-blue-900', 'font-medium');
+                    });
+
+                    // Add active class to current link
+                    if (navLink) {
+                        navLink.classList.add('bg-blue-100', 'text-blue-900', 'font-medium');
+                    }
+                }
+            });
+        }, observerOptions);
+
+        // Observe all sections
+        document.querySelectorAll('.api-section').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Copy code functionality
+        document.querySelectorAll('.code-block').forEach(block => {
+            const button = document.createElement('button');
+            button.innerHTML = '<i class="fas fa-copy"></i>';
+            button.className = 'absolute top-2 right-2 p-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity';
+            button.title = 'Copy code';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'relative group';
+            block.parentNode.insertBefore(wrapper, block);
+            wrapper.appendChild(block);
+            wrapper.appendChild(button);
+
+            button.addEventListener('click', () => {
+                const code = block.textContent;
+                navigator.clipboard.writeText(code).then(() => {
+                    button.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="fas fa-copy"></i>';
+                    }, 2000);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

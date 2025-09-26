@@ -33,7 +33,9 @@ from .analytics.engine import AnalyticsEngine
 from .api import analytics_endpoints, billing_endpoints, clio_endpoints, security_endpoints, performance_endpoints
 from .audit import api as audit_api
 from .auth import JWTAuthMiddleware, JWTHandler, TenantManager
+from .auth.api_key_auth import enterprise_api_auth, require_enterprise_api_key
 from .auth.models import TokenPair
+from .billing.enterprise_pricing import EnterprisePricingManager, get_enterprise_pricing_config
 from .automation.workflows import get_workflow_engine
 from .auxiliary_services import (
     cleanup_auxiliary_services,
@@ -41,6 +43,11 @@ from .auxiliary_services import (
 )
 from .config import get_cors_origins_list, settings
 from .database import close_database, get_database_session, init_database
+from .security.license_enforcer import license_enforcer, validate_startup_license, require_valid_license
+from .security.secure_config import initialize_secure_config, get_security_headers, validate_request_authorization
+from .security.compliance_lockdown import initialize_compliance_lockdown, get_legal_headers, require_compliance_check
+from .security.usage_enforcer import usage_enforcer, track_usage
+from .security.security_report import generate_security_report, validate_security
 from .event_streaming import event_streaming
 from .knowledge.graph_sync import get_knowledge_graph_synchronizer
 from .mcp.database_optimizer import db_optimizer
@@ -82,6 +89,26 @@ async def lifespan(app: FastAPI):
     logger.info("Starting HERMES AI Voice Agent System with MCP Integration...")
 
     try:
+        # CRITICAL: License enforcement - validates SaaS deployment
+        logger.info("Validating SaaS license and deployment authorization...")
+        await validate_startup_license()
+        logger.info("License validation completed - deployment authorized")
+
+        # CRITICAL: Secure configuration enforcement
+        logger.info("Initializing secure configuration enforcement...")
+        secure_config_result = initialize_secure_config()
+        logger.info(f"Secure configuration initialized - Score: {secure_config_result['security_score']}/100")
+
+        # CRITICAL: Legal compliance lockdown
+        logger.info("Initializing legal compliance lockdown...")
+        compliance_result = initialize_compliance_lockdown()
+        logger.info(f"Compliance lockdown initialized - Status: {'AUTHORIZED' if compliance_result['authorized'] else 'VIOLATION'}")
+
+        # Initialize usage enforcement
+        logger.info("Initializing usage tracking and billing enforcement...")
+        await usage_enforcer.initialize()
+        logger.info("Usage enforcement initialized")
+
         # Enhanced production validation using secrets manager
         if not (settings.debug or settings.demo_mode):
             # Import here to avoid circular imports
@@ -205,12 +232,45 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Authentication middleware
-app.add_middleware(JWTAuthMiddleware, jwt_handler=jwt_handler)
+# Enterprise SaaS Authentication - API Key Required
+# Note: JWT middleware removed in favor of API key authentication for SaaS
 
-# Security hardening
+# Security hardening for enterprise law firms with SaaS enforcement
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(RateLimitMiddleware)
+
+
+@app.middleware("http")
+async def saas_security_middleware(request: Request, call_next):
+    """SaaS security enforcement middleware."""
+
+    # Validate request authorization
+    request_info = {
+        "origin": request.headers.get("origin", ""),
+        "host": request.headers.get("host", ""),
+        "user_agent": request.headers.get("user-agent", "")
+    }
+
+    if not validate_request_authorization(request_info):
+        return JSONResponse(
+            status_code=403,
+            content={"error": "Unauthorized access - SaaS license required"}
+        )
+
+    # Continue with request
+    response = await call_next(request)
+
+    # Add security headers to all responses
+    security_headers = get_security_headers()
+    for header, value in security_headers.items():
+        response.headers[header] = value
+
+    # Add legal compliance headers
+    legal_headers = get_legal_headers()
+    for header, value in legal_headers.items():
+        response.headers[header] = value
+
+    return response
 
 
 @app.middleware("http")
@@ -243,14 +303,18 @@ class TokenRequest(BaseModel):
 
 
 @app.post("/auth/token", response_model=TokenPair)
+@require_valid_license
+@require_compliance_check()
+@track_usage("api_request")
 async def auth_token(request: TokenRequest) -> TokenPair:
-    """Generate a token pair for testing.
+    """Generate a token pair for authenticated SaaS deployment.
 
-    Disabled unless DEBUG or DEMO_MODE is enabled.
+    CRITICAL: Requires valid SaaS license - self-hosting not permitted.
     """
-    if not (settings.debug or settings.demo_mode):
+    # REMOVED: Debug/demo mode bypass - SaaS only
+    if not license_enforcer.is_license_valid():
         raise HTTPException(
-            status_code=403, detail="Token minting disabled in production"
+            status_code=403, detail="Invalid SaaS license - unauthorized deployment"
         )
     return jwt_handler.create_token_pair(request.subject, request.tenant_id)
 
@@ -309,10 +373,13 @@ async def demo_page():
 
 # Dashboard endpoint
 @app.get("/dashboard")
+@require_valid_license
+@require_compliance_check()
 async def dashboard():
-    """Serve the professional dashboard when demo mode is enabled."""
-    if not (settings.demo_mode or settings.debug):
-        raise HTTPException(status_code=404, detail="Dashboard disabled")
+    """Serve the professional dashboard for authorized SaaS deployments only."""
+    # REMOVED: Debug/demo mode bypass - SaaS license required
+    if not license_enforcer.is_license_valid():
+        raise HTTPException(status_code=403, detail="Valid SaaS license required")
     return FileResponse("static/dashboard/index.html")
 
 
@@ -558,8 +625,8 @@ async def sla_overview() -> Dict[str, Any]:
 
 # Enhanced voice processing with context and multilang support
 @app.post("/api/voice/process")
-async def process_voice_enhanced(request: Dict[str, Any]) -> Dict[str, Any]:
-    """Enhanced voice processing with context, multilang, and legal NLP support"""
+async def process_voice_enhanced(request: Dict[str, Any], auth: Dict = Depends(require_enterprise_api_key())) -> Dict[str, Any]:
+    """Enhanced voice processing with context, multilang, and legal NLP support - Enterprise SaaS Only"""
     try:
         audio_data = request.get("audio_data", "")
         session_id = request.get("session_id", f"session_{int(time.time())}")
@@ -760,13 +827,14 @@ async def search_knowledge_graph_endpoint(
 
 # Enhanced analytics with real-time capabilities
 @app.get("/api/analytics/realtime")
+@require_valid_license
 async def get_realtime_analytics() -> Dict[str, Any]:
-    """Get real-time analytics data"""
+    """Get real-time analytics data for authorized SaaS deployments only"""
     try:
-        # Only return mock data in demo/debug mode
-        if not (settings.demo_mode or settings.debug):
+        # REMOVED: Debug/demo mode bypass - SaaS license required
+        if not license_enforcer.is_license_valid():
             raise HTTPException(
-                status_code=503, detail="Analytics unavailable until data is ready"
+                status_code=403, detail="Valid SaaS license required"
             )
         return {
             "timestamp": datetime.utcnow().isoformat(),
@@ -818,6 +886,67 @@ async def get_session_analytics_endpoint(session_id: str) -> Dict[str, Any]:
         raise HTTPException(
             status_code=500, detail=f"Failed to get session analytics: {str(e)}"
         )
+
+
+# Security status endpoint for SaaS deployment verification
+@app.get("/security/status")
+@require_valid_license
+@require_compliance_check()
+async def security_status():
+    """Get comprehensive security implementation status - SaaS only."""
+    return generate_security_report()
+
+
+@app.get("/security/validate")
+@require_valid_license
+@require_compliance_check()
+async def security_validate():
+    """Validate security implementation - SaaS only."""
+    return validate_security()
+
+
+# Enterprise pricing and billing endpoints
+@app.get("/api/pricing")
+async def get_enterprise_pricing(auth: Dict = Depends(require_enterprise_api_key())) -> Dict[str, Any]:
+    """Get enterprise pricing information for law firm clients."""
+    return get_enterprise_pricing_config()
+
+
+@app.get("/api/billing/usage/{law_firm_id}")
+async def get_usage_summary(law_firm_id: str, auth: Dict = Depends(require_enterprise_api_key())) -> Dict[str, Any]:
+    """Get usage summary and billing information for law firm."""
+
+    # Verify access to firm data
+    if auth["law_firm_id"] != law_firm_id and auth["tier"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied to firm data")
+
+    # Mock usage data for demonstration
+    usage_data = {
+        "interactions_used": 3247,
+        "voice_sessions": 892,
+        "api_calls": 15680,
+        "storage_gb": 4.7,
+        "support_tickets": 2,
+        "next_billing_date": "2024-12-01"
+    }
+
+    pricing_manager = EnterprisePricingManager()
+    return pricing_manager.get_billing_summary(law_firm_id, usage_data)
+
+
+@app.get("/api/billing/limits/{law_firm_id}")
+async def check_usage_limits(law_firm_id: str, auth: Dict = Depends(require_enterprise_api_key())) -> Dict[str, Any]:
+    """Check current usage against enterprise limits."""
+
+    # Verify access to firm data
+    if auth["law_firm_id"] != law_firm_id and auth["tier"] != "admin":
+        raise HTTPException(status_code=403, detail="Access denied to firm data")
+
+    # Get current usage (mock data)
+    current_usage = 3247
+
+    pricing_manager = EnterprisePricingManager()
+    return pricing_manager.validate_usage_limits(law_firm_id, current_usage)
 
 
 # Legal compliance endpoint

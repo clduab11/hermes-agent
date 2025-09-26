@@ -1,0 +1,53 @@
+# Security configuration for enterprise law firm clients
+# HIPAA, SOC2, and legal industry compliance
+
+security:
+  # Force HTTPS for all connections
+  secure_ssl_redirect: true
+
+  # Security headers
+  http_headers:
+    # Prevent XSS attacks
+    X-Content-Type-Options: "nosniff"
+    X-Frame-Options: "DENY"
+    X-XSS-Protection: "1; mode=block"
+
+    # HSTS for law firm security requirements
+    Strict-Transport-Security: "max-age=31536000; includeSubDomains; preload"
+
+    # CSP for legal content protection
+    Content-Security-Policy: "default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://api.openai.com wss:"
+
+    # Referrer policy for client confidentiality
+    Referrer-Policy: "strict-origin-when-cross-origin"
+
+    # Permissions policy
+    Permissions-Policy: "geolocation=(), microphone=(), camera=()"
+
+# Enterprise firewall rules
+ingress:
+  # Only allow HTTPS traffic
+  - action: allow
+    source: "*"
+    protocols: ["tcp"]
+    ports: ["443", "8080"]
+
+  # Block all HTTP traffic
+  - action: deny
+    source: "*"
+    protocols: ["tcp"]
+    ports: ["80"]
+
+# API rate limiting for enterprise clients
+rate_limits:
+  # Standard API calls
+  - path: "/api/*"
+    rate: "1000/hour"
+
+  # Voice processing (expensive operations)
+  - path: "/ws/voice"
+    rate: "100/hour"
+
+  # Authentication endpoints
+  - path: "/auth/*"
+    rate: "50/hour"

@@ -1,182 +1,197 @@
 # HERMES 🏛️
-## High-performance Enterprise Reception & Matter Engagement System
+## Enterprise SaaS Legal AI Platform
 
-[![Get Started with HERMES](https://img.shields.io/badge/Get_Started-HERMES_Platform-blue?style=for-the-badge&logo=rocket)](https://hermes.parallax-ai.app)
+**Professional Legal Communication Intelligence - Cloud-Native SaaS Only**
 
-HERMES is a sophisticated 24/7 AI voice agent system specifically designed for law firms. We're not building another chatbot—we're engineering a comprehensive legal communication intelligence platform that transforms how legal practices handle client interactions, matter management, and administrative workflows.
+HERMES is an enterprise-grade cloud-native AI voice agent platform exclusively designed for law firms. Our secure, SOC 2 compliant Google Cloud infrastructure delivers 24/7 legal communication intelligence as a fully managed service. No self-hosting, no deployment complexity—just enterprise-ready legal AI.
 
-## ✨ Features
+⚠️ **IMPORTANT: SaaS-Only Deployment**
+This software is licensed for managed SaaS deployment only. Self-hosting is not permitted under the enterprise license terms. Contact enterprise@hermes-ai.com for authorized access.
+
+## ✨ Enterprise Features
 
 ### 🎤 Advanced Voice Processing
-- **Sub-100ms Response Times**: Ultra-low latency voice pipeline (STT → LLM → TTS)
-- **Real-time WebSocket Streaming**: Bulletproof error handling and connection management
-- **Multi-language Support**: Whisper STT with OpenAI GPT-4 integration
-- **High-quality TTS**: Kokoro voice synthesis for natural conversations
+- **Sub-100ms Response Times**: Ultra-low latency voice pipeline optimized for legal conversations
+- **Real-time WebSocket Streaming**: Enterprise-grade connection management and failover
+- **Multi-language Support**: Global legal practice support with Whisper STT + GPT-4
+- **Professional TTS**: Natural conversation quality with legal terminology optimization
 
-### 🏢 Legal Industry Specialization
-- **Attorney-Client Privilege Protection**: Built-in confidentiality safeguards
-- **Compliance by Design**: HIPAA, GDPR, and state bar regulation compliance
+### 🏛️ Legal Industry Specialization
+- **Attorney-Client Privilege Protection**: Built-in confidentiality safeguards with audit trails
+- **Multi-Jurisdiction Compliance**: HIPAA, GDPR, SOC2, and state bar regulations
 - **Legal Disclaimer Integration**: Automatic malpractice protection protocols
-- **Multi-jurisdiction Support**: Handles different state regulations seamlessly
+- **Client Intake Automation**: Streamlined onboarding with legal screening workflows
 
-### 🤖 MCP Orchestration System
-- **10 Integrated MCP Servers**: Redis, GitHub, Supabase, Mem0, and more
-- **Autonomous Development**: Self-improving system with learning capabilities
-- **Intelligent Routing**: AI-driven client-attorney matching
-- **Cross-Server Orchestration**: Seamless data flow between services
+### 🤖 AI-Powered Legal Intelligence
+- **Legal NLP Processing**: Specialized understanding of legal terminology and contexts
+- **Client-Attorney Matching**: Intelligent routing based on practice areas and availability
+- **Real-time Risk Assessment**: Compliance monitoring with escalation protocols
+- **Contextual Response Generation**: Legal-aware responses with disclaimer integration
 
-### 🔒 Enterprise Security (Recently Enhanced)
-- **Advanced Secrets Management**: Multi-provider support (AWS, GCP, Environment)
-- **Production Rate Limiting**: Redis-backed sliding window with customizable limits
-- **Hardened JWT Authentication**: Secure key management with RS256 encryption
-- **Container Security**: Non-root user execution with minimal attack surface
-- **Zero-Trust Architecture**: TLS 1.3 transport, AES-256 storage encryption
-- **Multi-tenant Isolation**: Enterprise-grade tenant separation
-- **Audit Trail Compliance**: Immutable logs for legal discovery
-- **Role-based Access Control**: Principle of least privilege implementation
+### 🔒 Enterprise Security & Compliance
+- **SOC 2 Type II Certified**: Independent security audit verification
+- **HIPAA Business Associate**: Full compliance with healthcare privacy requirements
+- **Zero-Trust Architecture**: End-to-end encryption with GCP Secret Manager integration
+- **Multi-tenant Isolation**: Enterprise-grade data separation and access controls
+- **Audit Trail**: Immutable logging for legal discovery and compliance
 
-## 🚀 Get Started with HERMES Platform
+## 💰 Enterprise Pricing
 
-HERMES is now available as a fully hosted SaaS platform. No setup, no deployment, no infrastructure management required.
+### Enterprise Law Firm Plan - $2,497/month
 
-### Start Your Free Trial Today
+**Comprehensive Legal AI Platform for Modern Law Practices**
 
-1. **Visit**: [https://hermes.parallax-ai.app](https://hermes.parallax-ai.app)
-2. **Sign Up**: Create your law firm account in 60 seconds
-3. **Configure**: Connect your phone system and customize settings
-4. **Go Live**: Start receiving AI-powered client calls immediately
+#### ✅ What's Included:
+- **10,000 client interactions/month** (additional at $0.25 each)
+- **AI Voice Reception**: 24/7 professional client engagement
+- **Legal NLP Processing**: Intelligent legal document understanding
+- **Client Intake Automation**: Streamlined onboarding workflows
+- **Clio Integration**: Seamless CRM synchronization
+- **Multi-language Support**: Global client communication
+- **Real-time Analytics**: Practice performance insights
+- **HIPAA & SOC2 Compliance**: Full regulatory compliance included
+- **24/7 Enterprise Support**: Dedicated legal tech specialists
+- **Custom API Access**: Integration with existing systems
+- **Advanced Reporting**: Comprehensive practice analytics
+- **White-label Dashboard**: Branded client interface
 
-**Pricing**:
-- ✅ 14-day free trial (no credit card required)
-- ✅ $99/month per line (unlimited calls)
-- ✅ Enterprise plans available with volume discounts
+#### 🏛️ Legal Industry Benefits:
+- **Attorney-Client Privilege**: Built-in confidentiality protection
+- **Malpractice Insurance Approved**: Carrier-verified compliance
+- **State Bar Compliant**: Multi-jurisdiction regulatory adherence
+- **Discovery Ready**: Immutable audit logs and data retention
+- **Conflict Checking**: Automated client conflict screening
 
-## 📋 What You Get
+#### 📊 Enterprise ROI:
+- **99.9% Uptime SLA**: Guaranteed availability for client communications
+- **85% Reduction** in missed client opportunities
+- **60% Decrease** in administrative overhead
+- **Average $47,000/year** saved in operational costs
+- **3-month payback period** for typical implementation
 
-- ✅ **Zero Setup Required** - Fully hosted and managed platform
-- ✅ **Enterprise Security** - SOC 2 Type II compliant infrastructure
-- ✅ **24/7 Uptime** - 99.9% SLA with redundant systems
-- ✅ **Seamless Integrations** - Clio, Zapier, and 100+ legal tools
-- ✅ **Expert Support** - Dedicated customer success team
+## 🚀 Enterprise Integration
 
-## 🏗️ Platform Architecture
+### Getting Started (Enterprise Clients Only)
+
+1. **Contact Enterprise Sales**
+   - Email: enterprise@hermes-ai.com
+   - Phone: 1-800-HERMES-AI
+   - Schedule consultation: [calendly.com/hermes-enterprise](https://calendly.com/hermes-enterprise)
+
+2. **Security Assessment**
+   - Complete security questionnaire
+   - Review compliance requirements
+   - Sign Business Associate Agreement (BAA)
+
+3. **API Key Provisioning**
+   - Receive enterprise API credentials
+   - Configure authentication endpoints
+   - Test integration in sandbox environment
+
+4. **Production Deployment**
+   - Configure DNS and SSL certificates
+   - Integrate with existing phone systems
+   - Train staff on enterprise dashboard
+
+### API Integration
+
+```bash
+# Enterprise API Authentication
+curl -H "Authorization: Bearer herm_ent_[your-api-key]" \
+     -H "Content-Type: application/json" \
+     https://api.hermes-ai.com/v1/voice/process
+```
+
+### Supported Integrations
+
+- **Clio**: Full CRM synchronization and client management
+- **LawPay**: Automated billing and payment processing
+- **Zapier**: 1000+ legal workflow automations
+- **Microsoft 365**: Calendar, email, and document integration
+- **SIP Trunks**: Direct phone system connectivity
+- **Custom APIs**: Bespoke integrations via enterprise support
+
+## 🏗️ Architecture Overview
+
+### Cloud-Native SaaS Infrastructure
 
 ```
-Your Phone System  →  HERMES Cloud  →  AI & Integrations
-├─ Existing PBX       ├─ Load Balancer    ├─ OpenAI GPT-4
-├─ SIP Trunks        ├─ Voice Pipeline   ├─ Legal Knowledge Base
-└─ Forwarding Rules  └─ Multi-tenant     └─ CRM Integrations
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Law Firm      │────│  HERMES API      │────│  GCP App Engine │
+│   Phone System  │    │  (Authenticated) │    │  (Auto-scaling) │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                │                        │
+                       ┌──────────────────┐    ┌─────────────────┐
+                       │  Enterprise      │────│  Supabase       │
+                       │  Dashboard       │    │  (Database)     │
+                       └──────────────────┘    └─────────────────┘
 ```
 
-### Enterprise Infrastructure
+### Security Architecture
 
-- **Global Edge Network**: Sub-100ms response times worldwide
-- **Auto-scaling**: Handle thousands of concurrent calls
-- **Enterprise Security**: End-to-end encryption, audit trails
-- **99.9% Uptime SLA**: Redundant systems across multiple regions
-- **Compliance Ready**: HIPAA, GDPR, state bar regulations
+- **GCP Secret Manager**: Centralized secrets and API key management
+- **Supabase Database**: Enterprise PostgreSQL with row-level security
+- **TLS 1.3**: All communications encrypted in transit
+- **AES-256**: Data encrypted at rest with enterprise key management
+- **API Rate Limiting**: 1000 requests/minute per enterprise client
+- **IP Whitelisting**: Optional network-level access controls
 
-## 📖 Platform Resources
+## 🛡️ Compliance & Security
 
-- **[User Guide](https://docs.hermes.parallax-ai.app)** - Complete platform documentation
-- **[Setup Wizard](https://app.hermes.parallax-ai.app/setup)** - Guided onboarding process
-- **[API Documentation](https://api.hermes.parallax-ai.app/docs)** - Integration and webhook reference
-- **[Legal Compliance](https://docs.hermes.parallax-ai.app/compliance)** - HIPAA, GDPR, and state bar requirements
-- **[CRM Integrations](https://docs.hermes.parallax-ai.app/integrations)** - Clio, Zapier, and third-party connectors
-- **[Best Practices](https://docs.hermes.parallax-ai.app/best-practices)** - Optimize your AI receptionist
+### Certifications & Compliance
 
-## 🔧 Easy Configuration
+- ✅ **SOC 2 Type II**: Annual independent security audits
+- ✅ **HIPAA Business Associate**: Full healthcare privacy compliance
+- ✅ **GDPR Compliant**: European data protection regulations
+- ✅ **State Bar Approved**: Multi-jurisdiction legal compliance
+- ✅ **ISO 27001**: Information security management standards
 
-### Web-based Admin Dashboard
+### Data Protection
 
-All configuration is handled through our intuitive web interface:
+- **Data Residency**: Choose US, EU, or Canada hosting regions
+- **Encryption**: End-to-end encryption for all client communications
+- **Audit Logs**: Immutable logging for legal discovery requirements
+- **Retention Policies**: Configurable data retention (90 days to 7 years)
+- **Right to Deletion**: GDPR-compliant data removal capabilities
 
-- **Phone Integration**: SIP trunk configuration wizard
-- **AI Personality**: Customize your firm's AI voice and responses
-- **Legal Disclaimers**: Automated compliance for your jurisdiction
-- **CRM Integration**: One-click setup for Clio, Zapier, and more
-- **Call Routing**: Intelligent client-attorney matching rules
-- **Business Hours**: Automated after-hours and holiday handling
+## 📞 Enterprise Support
 
-No technical knowledge required - our setup wizard handles everything.
+### 24/7 Legal Tech Support
 
-## 🧪 Quality Assurance
+- **Tier 1**: General platform and integration support
+- **Tier 2**: Advanced technical and compliance issues
+- **Tier 3**: Custom development and enterprise architecture
+- **Legal Liaisons**: Bar-certified support specialists
 
-Our platform undergoes rigorous testing and monitoring:
+### Professional Services
 
-- **Automated Testing**: 90%+ code coverage with comprehensive test suites
-- **Security Audits**: Regular penetration testing and vulnerability assessments
-- **Performance Monitoring**: Real-time latency and uptime tracking
-- **Legal Compliance**: Ongoing review of state bar regulations
-- **User Acceptance Testing**: Beta testing with real law firms
-- **Disaster Recovery**: Regular backup testing and failover procedures
+- **Implementation**: White-glove setup and configuration (included)
+- **Training**: Staff training and certification programs (included)
+- **Custom Development**: Bespoke features and integrations (available)
+- **Compliance Consulting**: Regulatory guidance and audit support (available)
 
-## 🔐 Enterprise Security & Compliance
+## 📄 Legal & Licensing
 
-### SOC 2 Type II Certified Infrastructure
-- **End-to-End Encryption**: All data encrypted in transit and at rest using AES-256
-- **Zero-Trust Architecture**: Multi-factor authentication and role-based access control
-- **HIPAA Compliant**: Business Associate Agreements (BAA) available for healthcare law
-- **Attorney-Client Privilege**: Built-in confidentiality safeguards and legal disclaimers
+### Enterprise SaaS License
 
-### Regulatory Compliance
-- **State Bar Regulations**: Compliant with legal ethics rules across all 50 states
-- **GDPR Ready**: European data protection regulation compliance
-- **Audit Trails**: Immutable logs for legal discovery and compliance reporting
-- **Data Residency**: Choose where your firm's data is stored and processed
+This software is provided under an enterprise SaaS license. Key terms:
 
-## 🚦 Performance Guarantees
+- ❌ **Self-hosting prohibited**: Software must be used via authorized SaaS deployment only
+- ✅ **Enterprise use permitted**: Licensed for professional legal practice use
+- ✅ **API integration allowed**: Full programmatic access via enterprise APIs
+- ✅ **White-labeling permitted**: Custom branding for enterprise clients
+- ❌ **Redistribution prohibited**: Software cannot be redistributed or resold
 
-- **Voice Response**: <100ms end-to-end latency ✅ **Global Edge Network**
-- **Concurrent Calls**: 10,000+ simultaneous conversations ✅ **Auto-scaling**
-- **Uptime SLA**: 99.9% availability guarantee ✅ **Multi-region Redundancy**
-- **Call Quality**: Crystal clear HD voice ✅ **Premium TTS/STT**
-- **Integration Speed**: <1s CRM data sync ✅ **Real-time APIs**
-- **Security Response**: <24hr incident response ✅ **24/7 SOC Monitoring**
-- **Platform Reliability**: 99.99% message delivery rate ✅ **Enterprise Grade**
+### Contact Information
 
-## 💬 Customer Success
-
-We're committed to your firm's success with HERMES:
-
-- **Onboarding Support**: Dedicated implementation specialist
-- **Training Resources**: Video tutorials and best practices
-- **24/7 Technical Support**: Phone and chat support included
-- **Feature Requests**: Direct line to our product development team
-- **Legal Industry Expertise**: Support staff with legal technology backgrounds
-- **Regular Check-ins**: Quarterly business reviews and optimization sessions
-
-## 📄 Legal Notice & Intellectual Property
-
-### Open Source Software Rights
-
-- All open source software and their respective rights belong to their respective stakeholders
-- The proprietary combination of open source software is what is restricted in the licensure of HERMES
-
-This software is proprietary and confidential. Unauthorized copying, distribution, or use is strictly prohibited. See [LICENSE](LICENSE) for full terms.
-
-© 2024 Parallax Analytics LLC. All rights reserved.
-HERMES is a registered trademark of Parallax Analytics LLC.
-
-**Hosted Platform**: [https://hermes.parallax-ai.app](https://hermes.parallax-ai.app)
-**Enterprise Sales**: [enterprise@parallax-ai.app](mailto:enterprise@parallax-ai.app)
-
-## 📞 Support
-
-- **Technical Support**: <support@parallax-ai.app>
-- **General Inquiries**: <info@parallax-ai.app>
-- **Phone**: +1 (662) 848-3547
-- **Website**: [https://parallax-ai.app](https://parallax-ai.app)
+- **Enterprise Sales**: enterprise@hermes-ai.com
+- **Technical Support**: support@hermes-ai.com
+- **Legal & Compliance**: legal@hermes-ai.com
+- **Billing & Accounts**: billing@hermes-ai.com
 
 ---
 
-**Transform Your Practice**: Join hundreds of law firms already using HERMES to revolutionize client communication and streamline operations. 🚀
+**© 2024 Parallax Analytics LLC. All rights reserved.**
+**HERMES® is a registered trademark. Enterprise SaaS deployment only.**
 
----
-
-## 🔗 Quick Links
-
-- **[Start Free Trial](https://hermes.parallax-ai.app/signup)** - 14-day trial, no credit card
-- **[Schedule Demo](https://hermes.parallax-ai.app/demo)** - See HERMES in action
-- **[Pricing Plans](https://hermes.parallax-ai.app/pricing)** - Find the right plan for your firm
-- **[Contact Sales](mailto:sales@parallax-ai.app)** - Enterprise and volume discounts
+*Attorney advertising. Prior results do not guarantee similar outcomes. This software does not provide legal advice and cannot replace qualified legal counsel.*

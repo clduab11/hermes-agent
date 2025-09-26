@@ -105,8 +105,10 @@ class Settings(BaseSettings):
 
     @property
     def secure_database_url(self) -> Optional[str]:
-        """Get database URL from secure secrets manager."""
-        return secrets_manager.get_database_url() or self.database_url
+        """Get database URL from GCP Secret Manager or secure secrets manager."""
+        # Priority: GCP Secret Manager > Secrets Manager > Direct config
+        gcp_db_url = self._get_gcp_secret("SUPABASE_DATABASE_URL")
+        return gcp_db_url or secrets_manager.get_database_url() or self.database_url
 
     @property
     def secure_redis_url(self) -> Optional[str]:
@@ -208,6 +210,39 @@ class Settings(BaseSettings):
     def get_security_report(self) -> str:
         """Generate comprehensive security report."""
         return config_validator.generate_security_report()
+
+    def _get_gcp_secret(self, secret_name: str) -> Optional[str]:
+        """Get secret from GCP Secret Manager for enterprise SaaS deployment."""
+        try:
+            import os
+            from google.cloud import secretmanager
+
+            # Only in GCP environment
+            if not os.getenv("GOOGLE_CLOUD_PROJECT"):
+                return None
+
+            client = secretmanager.SecretManagerServiceClient()
+            project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+            secret_path = f"projects/{project_id}/secrets/{secret_name}/versions/latest"
+
+            response = client.access_secret_version(request={"name": secret_path})
+            return response.payload.data.decode("UTF-8")
+
+        except Exception:
+            # Gracefully fall back to other secret sources
+            return None
+
+    @property
+    def secure_api_key_encryption_secret(self) -> Optional[str]:
+        """Get API key encryption secret from GCP Secret Manager."""
+        gcp_secret = self._get_gcp_secret("API_KEY_ENCRYPTION_SECRET")
+        return gcp_secret or secrets_manager.get_secret("API_KEY_ENCRYPTION_SECRET")
+
+    @property
+    def enterprise_saas_mode(self) -> bool:
+        """Check if running in enterprise SaaS mode (GCP deployment)."""
+        import os
+        return bool(os.getenv("GOOGLE_CLOUD_PROJECT") and not self.debug and not self.demo_mode)
 
 
 # Backward compatibility alias for legacy attribute name

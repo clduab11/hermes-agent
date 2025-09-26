@@ -16,7 +16,40 @@ from weakref import WeakValueDictionary, WeakSet
 from collections import defaultdict
 
 import psutil
-from pympler import tracker, muppy, summary
+
+# Optional pympler import for memory profiling
+try:
+    from pympler import tracker, muppy, summary
+    PYMPLER_AVAILABLE = True
+except ImportError:
+    PYMPLER_AVAILABLE = False
+    # Create mock objects for when pympler is not available
+    class MockSummaryTracker:
+        def track(self, *args, **kwargs): pass
+        def create_snapshot(self, *args, **kwargs): return []
+        def compare_to_snapshot(self, *args, **kwargs): return []
+        def get_stats(self): return {}
+        def print_diff(self): pass
+
+    class MockTracker:
+        def track(self, *args, **kwargs): pass
+        def create_snapshot(self, *args, **kwargs): return []
+        def compare_to_snapshot(self, *args, **kwargs): return []
+        SummaryTracker = MockSummaryTracker
+
+    class MockMuppy:
+        @staticmethod
+        def get_objects(): return []
+
+    class MockSummary:
+        @staticmethod
+        def summarize(obj): return []
+        @staticmethod
+        def print_(summary, file=None): pass
+
+    tracker = MockTracker()
+    muppy = MockMuppy()
+    summary = MockSummary()
 
 from ..config import settings
 from ..monitoring.enhanced_metrics import metrics_collector

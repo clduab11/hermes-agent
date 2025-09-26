@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="HERMES - Enterprise AI Voice Reception System for Law Firms. Streamline client intake with intelligent voice AI that understands legal workflows and integrates with Clio.">
+    <meta name="keywords" content="legal AI, law firm reception, voice AI, client intake, Clio integration, legal technology">
+    <title>HERMES - Enterprise Legal AI Voice Reception | Parallax AI</title>
+
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="HERMES - Enterprise Legal AI Voice Reception">
+    <meta property="og:description" content="Transform your law firm's client intake with AI-powered voice reception that integrates seamlessly with Clio and legal workflows.">
+    <meta property="og:image" content="https://hermes.parallax-ai.app/static/assets/hermes-social.jpg">
+    <meta property="og:url" content="https://hermes.parallax-ai.app">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/static/assets/favicon.svg">
+    <link rel="alternate icon" href="/static/assets/favicon.ico">
+
+    <!-- CSS Framework -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --navy-primary: #1a365d;
+            --navy-secondary: #2c5282;
+            --gold-accent: #d69e2e;
+            --gold-light: #faf5e6;
+            --text-primary: #2d3748;
+            --text-secondary: #4a5568;
+            --success: #38a169;
+        }
+
+        .legal-gradient {
+            background: linear-gradient(135deg, var(--navy-primary) 0%, var(--navy-secondary) 100%);
+        }
+
+        .gold-gradient {
+            background: linear-gradient(135deg, var(--gold-accent) 0%, #ecc94b 100%);
+        }
+
+        .hero-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .floating-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .pricing-card {
+            transition: all 0.3s ease;
+        }
+
+        .pricing-card:hover {
+            transform: scale(1.02);
+        }
+
+        .stats-counter {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--navy-primary);
+            border-radius: 4px;
+        }
+
+        .smooth-scroll {
+            scroll-behavior: smooth;
+        }
+    </style>
+
+    <!-- Schema.org structured data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "HERMES",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "description": "Enterprise AI Voice Reception System for Law Firms",
+        "url": "https://hermes.parallax-ai.app",
+        "provider": {
+            "@type": "Organization",
+            "name": "Parallax AI",
+            "url": "https://parallax-ai.com"
+        },
+        "offers": {
+            "@type": "Offer",
+            "price": "2497",
+            "priceCurrency": "USD",
+            "billingIncrement": "P1M"
+        }
+    }
+    </script>
+</head>
+<body class="smooth-scroll">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-white/95 backdrop-blur-md shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="flex items-center">
+                            <i class="fas fa-balance-scale text-2xl text-blue-900 mr-3"></i>
+                            <span class="text-xl font-bold text-gray-900">HERMES</span>
+                            <span class="text-sm text-gray-600 ml-2">by Parallax AI</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#features" class="text-gray-600 hover:text-blue-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Features</a>
+                        <a href="#integrations" class="text-gray-600 hover:text-blue-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Integrations</a>
+                        <a href="#pricing" class="text-gray-600 hover:text-blue-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Pricing</a>
+                        <a href="#security" class="text-gray-600 hover:text-blue-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">Security</a>
+                        <a href="/dashboard" class="bg-blue-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-800 transition-colors">Dashboard</a>
+                    </div>
+                </div>
+
+                <div class="md:hidden">
+                    <button id="mobileMenuBtn" class="text-gray-600 hover:text-gray-900">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div id="mobileMenu" class="md:hidden hidden bg-white border-t">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="#features" class="block px-3 py-2 text-gray-600 hover:text-blue-900">Features</a>
+                <a href="#integrations" class="block px-3 py-2 text-gray-600 hover:text-blue-900">Integrations</a>
+                <a href="#pricing" class="block px-3 py-2 text-gray-600 hover:text-blue-900">Pricing</a>
+                <a href="#security" class="block px-3 py-2 text-gray-600 hover:text-blue-900">Security</a>
+                <a href="/dashboard" class="block px-3 py-2 bg-blue-900 text-white rounded-md mt-2">Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="legal-gradient hero-pattern pt-20 pb-16 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center">
+                <div class="floating-animation mb-8">
+                    <i class="fas fa-balance-scale text-6xl text-yellow-400 mb-4"></i>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold text-white mb-6">
+                    Transform Your Law Firm's
+                    <span class="text-yellow-400">Client Reception</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-blue-100 mb-8 max-w-4xl mx-auto leading-relaxed">
+                    HERMES delivers enterprise-grade AI voice reception that captures every lead, qualifies prospects intelligently, and integrates seamlessly with your Clio practice management system.
+                </p>
+
+                <!-- CTA Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+                    <button id="startTrialBtn" class="gold-gradient text-blue-900 font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                        <i class="fas fa-rocket mr-2"></i>
+                        Start Free Trial
+                    </button>
+                    <button id="requestDemoBtn" class="border-2 border-white text-white font-semibold py-4 px-8 rounded-lg hover:bg-white hover:text-blue-900 transition-all duration-200">
+                        <i class="fas fa-video mr-2"></i>
+                        Request Demo
+                    </button>
+                </div>
+
+                <!-- Key Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-yellow-400 stats-counter" data-count="300">0</div>
+                        <div class="text-blue-100">Law Firms Served</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-yellow-400 stats-counter" data-count="98.7">0</div>
+                        <div class="text-blue-100">% Uptime SLA</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-yellow-400 stats-counter" data-count="85">0</div>
+                        <div class="text-blue-100">% Lead Conversion Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decorative elements -->
+        <div class="absolute top-0 right-0 w-96 h-96 bg-yellow-400 rounded-full opacity-10 -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-blue-400 rounded-full opacity-10 translate-y-1/2 -translate-x-1/2"></div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Enterprise Features Built for Law Firms
+                </h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                    HERMES combines cutting-edge AI technology with deep legal industry expertise to deliver unmatched client reception capabilities.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Voice AI Intelligence -->
+                <div class="feature-card bg-white rounded-xl shadow-lg p-8 text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-brain text-2xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Legal AI Intelligence</h3>
+                    <p class="text-gray-600 mb-4">
+                        Advanced NLP trained on legal terminology. Understands practice areas, case types, and urgency levels for intelligent call routing.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-1">
+                        <li>• Practice area recognition</li>
+                        <li>• Urgency classification</li>
+                        <li>• Legal entity extraction</li>
+                    </ul>
+                </div>
+
+                <!-- Clio Integration -->
+                <div class="feature-card bg-white rounded-xl shadow-lg p-8 text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-plug text-2xl text-green-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Native Clio Integration</h3>
+                    <p class="text-gray-600 mb-4">
+                        Seamlessly sync leads, contacts, and matters directly into your Clio practice management system with zero manual data entry.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-1">
+                        <li>• Real-time lead creation</li>
+                        <li>• Contact synchronization</li>
+                        <li>• Matter classification</li>
+                    </ul>
+                </div>
+
+                <!-- 24/7 Availability -->
+                <div class="feature-card bg-white rounded-xl shadow-lg p-8 text-center">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-clock text-2xl text-purple-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">24/7 Client Capture</h3>
+                    <p class="text-gray-600 mb-4">
+                        Never miss a potential client again. HERMES handles calls around the clock with intelligent screening and appointment scheduling.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-1">
+                        <li>• After-hours reception</li>
+                        <li>• Intelligent screening</li>
+                        <li>• Calendar integration</li>
+                    </ul>
+                </div>
+
+                <!-- HIPAA Compliance -->
+                <div class="feature-card bg-white rounded-xl shadow-lg p-8 text-center">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-shield-alt text-2xl text-red-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">HIPAA & SOC 2 Compliant</h3>
+                    <p class="text-gray-600 mb-4">
+                        Enterprise-grade security with end-to-end encryption, audit trails, and compliance frameworks law firms trust.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-1">
+                        <li>• End-to-end encryption</li>
+                        <li>• Complete audit trails</li>
+                        <li>• Compliance reporting</li>
+                    </ul>
+                </div>
+
+                <!-- Analytics Dashboard -->
+                <div class="feature-card bg-white rounded-xl shadow-lg p-8 text-center">
+                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-chart-line text-2xl text-yellow-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Executive Analytics</h3>
+                    <p class="text-gray-600 mb-4">
+                        Comprehensive dashboards track conversion rates, revenue impact, and ROI metrics to optimize your practice development.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-1">
+                        <li>• Conversion tracking</li>
+                        <li>• Revenue attribution</li>
+                        <li>• ROI analysis</li>
+                    </ul>
+                </div>
+
+                <!-- Multi-Language Support -->
+                <div class="feature-card bg-white rounded-xl shadow-lg p-8 text-center">
+                    <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-globe text-2xl text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-4">Multi-Language Support</h3>
+                    <p class="text-gray-600 mb-4">
+                        Serve diverse client populations with native support for Spanish, Mandarin, and other major languages in your market.
+                    </p>
+                    <ul class="text-sm text-gray-500 space-y-1">
+                        <li>• Real-time translation</li>
+                        <li>• Cultural context awareness</li>
+                        <li>• Accent recognition</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integration Section -->
+    <section id="integrations" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Seamless Legal Tech Integration
+                </h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                    HERMES integrates with your existing legal technology stack to create a unified client experience.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center">
+                <div class="flex justify-center">
+                    <div class="bg-gray-50 rounded-lg p-4 w-24 h-24 flex items-center justify-center">
+                        <img src="/static/assets/integrations/clio-logo.png" alt="Clio" class="max-w-full max-h-full" onerror="this.innerHTML='<div class=\'text-gray-600 font-semibold text-sm\'>Clio</div>'">
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <div class="bg-gray-50 rounded-lg p-4 w-24 h-24 flex items-center justify-center">
+                        <img src="/static/assets/integrations/zapier-logo.png" alt="Zapier" class="max-w-full max-h-full" onerror="this.innerHTML='<div class=\'text-gray-600 font-semibold text-sm\'>Zapier</div>'">
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <div class="bg-gray-50 rounded-lg p-4 w-24 h-24 flex items-center justify-center">
+                        <img src="/static/assets/integrations/calendly-logo.png" alt="Calendly" class="max-w-full max-h-full" onerror="this.innerHTML='<div class=\'text-gray-600 font-semibold text-sm\'>Calendly</div>'">
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <div class="bg-gray-50 rounded-lg p-4 w-24 h-24 flex items-center justify-center">
+                        <img src="/static/assets/integrations/slack-logo.png" alt="Slack" class="max-w-full max-h-full" onerror="this.innerHTML='<div class=\'text-gray-600 font-semibold text-sm\'>Slack</div>'">
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <div class="bg-gray-50 rounded-lg p-4 w-24 h-24 flex items-center justify-center">
+                        <img src="/static/assets/integrations/stripe-logo.png" alt="Stripe" class="max-w-full max-h-full" onerror="this.innerHTML='<div class=\'text-gray-600 font-semibold text-sm\'>Stripe</div>'">
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <div class="bg-gray-50 rounded-lg p-4 w-24 h-24 flex items-center justify-center">
+                        <img src="/static/assets/integrations/hubspot-logo.png" alt="HubSpot" class="max-w-full max-h-full" onerror="this.innerHTML='<div class=\'text-gray-600 font-semibold text-sm\'>HubSpot</div>'">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Enterprise Pricing Built for Law Firms
+                </h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                    Transparent, value-based pricing that scales with your practice. No hidden fees, no surprises.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                <!-- Professional Plan -->
+                <div class="pricing-card bg-white rounded-xl shadow-lg p-8">
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Professional</h3>
+                        <div class="text-4xl font-bold text-blue-600 mb-2">
+                            $997<span class="text-lg text-gray-600">/month</span>
+                        </div>
+                        <p class="text-gray-600">Up to 1,000 calls/month</p>
+                    </div>
+
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span>24/7 AI Voice Reception</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span>Basic Clio Integration</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span>English Language Support</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span>Basic Analytics Dashboard</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span>Email Support</span>
+                        </li>
+                    </ul>
+
+                    <button class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                        Start Free Trial
+                    </button>
+                </div>
+
+                <!-- Enterprise Plan (Featured) -->
+                <div class="pricing-card bg-blue-900 text-white rounded-xl shadow-xl p-8 relative">
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <span class="bg-yellow-400 text-blue-900 px-4 py-1 rounded-full text-sm font-bold">MOST POPULAR</span>
+                    </div>
+
+                    <div class="text-center mb-8 pt-4">
+                        <h3 class="text-2xl font-bold mb-2">Enterprise</h3>
+                        <div class="text-4xl font-bold text-yellow-400 mb-2">
+                            $2,497<span class="text-lg text-blue-200">/month</span>
+                        </div>
+                        <p class="text-blue-200">Up to 10,000 calls/month</p>
+                    </div>
+
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-yellow-400 mr-3"></i>
+                            <span>Everything in Professional</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-yellow-400 mr-3"></i>
+                            <span>Advanced Clio Integration</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-yellow-400 mr-3"></i>
+                            <span>Multi-Language Support</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-yellow-400 mr-3"></i>
+                            <span>Executive Analytics Suite</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-yellow-400 mr-3"></i>
+                            <span>Priority Phone Support</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-yellow-400 mr-3"></i>
+                            <span>Custom Integrations</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-yellow-400 mr-3"></i>
+                            <span>Dedicated Success Manager</span>
+                        </li>
+                    </ul>
+
+                    <button class="w-full gold-gradient text-blue-900 py-3 rounded-lg hover:opacity-90 transition-opacity font-bold">
+                        Start Free Trial
+                    </button>
+                </div>
+
+                <!-- Custom Plan -->
+                <div class="pricing-card bg-white rounded-xl shadow-lg p-8">
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Custom</h3>
+                        <div class="text-4xl font-bold text-gray-600 mb-2">
+                            Let's Talk
+                        </div>
+                        <p class="text-gray-600">Unlimited calls & custom features</p>
+                    </div>
+
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span>Everything in Enterprise</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span>Unlimited Call Volume</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span>White-Label Options</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span>Custom AI Training</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span>On-Premise Deployment</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check text-green-500 mr-3"></i>
+                            <span>24/7 Phone Support</span>
+                        </li>
+                    </ul>
+
+                    <button class="w-full border-2 border-blue-600 text-blue-600 py-3 rounded-lg hover:bg-blue-600 hover:text-white transition-colors font-semibold">
+                        Contact Sales
+                    </button>
+                </div>
+            </div>
+
+            <!-- ROI Calculator -->
+            <div class="mt-16 bg-white rounded-xl shadow-lg p-8 max-w-4xl mx-auto">
+                <h3 class="text-2xl font-bold text-gray-900 text-center mb-8">Calculate Your ROI</h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Average Case Value ($)
+                        </label>
+                        <input type="number" id="caseValue" value="5000" class="w-full border rounded-lg px-3 py-2" min="1000" max="100000" step="500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Calls per Month
+                        </label>
+                        <input type="number" id="monthlyRoiCalls" value="500" class="w-full border rounded-lg px-3 py-2" min="100" max="10000" step="50">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Current Conversion Rate (%)
+                        </label>
+                        <input type="number" id="conversionRateInput" value="15" class="w-full border rounded-lg px-3 py-2" min="5" max="50" step="1">
+                    </div>
+                </div>
+
+                <div class="mt-8 p-6 bg-blue-50 rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-blue-600" id="additionalRevenue">$0</div>
+                            <div class="text-sm text-gray-600">Additional Annual Revenue</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-green-600" id="roiMultiplier">0x</div>
+                            <div class="text-sm text-gray-600">ROI Multiplier</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-purple-600" id="paybackPeriod">0</div>
+                            <div class="text-sm text-gray-600">Months to Break Even</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security Section -->
+    <section id="security" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                    Enterprise-Grade Security & Compliance
+                </h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+                    Built with the highest security standards that law firms require. Your clients' data is protected by the same technology that powers Fortune 500 companies.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-shield-alt text-2xl text-green-600"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-900 mb-2">SOC 2 Type II</h4>
+                    <p class="text-sm text-gray-600">Certified security controls and annual audits</p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-lock text-2xl text-blue-600"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-900 mb-2">End-to-End Encryption</h4>
+                    <p class="text-sm text-gray-600">AES-256 encryption for all data in transit and at rest</p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-clipboard-check text-2xl text-purple-600"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-900 mb-2">HIPAA Compliant</h4>
+                    <p class="text-sm text-gray-600">Full compliance for healthcare-related legal matters</p>
+                </div>
+
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-history text-2xl text-red-600"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-900 mb-2">Complete Audit Trails</h4>
+                    <p class="text-sm text-gray-600">Detailed logging for compliance and legal discovery</p>
+                </div>
+            </div>
+
+            <div class="mt-16 bg-gray-50 rounded-xl p-8">
+                <h3 class="text-xl font-bold text-gray-900 text-center mb-8">Trusted by Leading Law Firms</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8 opacity-60">
+                    <div class="text-center">
+                        <div class="text-lg font-semibold text-gray-600">BigLaw Partners</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-semibold text-gray-600">Regional Firms</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-semibold text-gray-600">Solo Practitioners</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-semibold text-gray-600">Legal Aid Organizations</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="legal-gradient py-16">
+        <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">
+                Ready to Transform Your Client Reception?
+            </h2>
+            <p class="text-xl text-blue-100 mb-8">
+                Join hundreds of law firms already using HERMES to capture more leads, improve client satisfaction, and grow their practice.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button id="ctaStartTrial" class="gold-gradient text-blue-900 font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                    <i class="fas fa-rocket mr-2"></i>
+                    Start Your Free Trial
+                </button>
+                <button id="ctaContactSales" class="border-2 border-white text-white font-semibold py-4 px-8 rounded-lg hover:bg-white hover:text-blue-900 transition-all duration-200">
+                    <i class="fas fa-phone mr-2"></i>
+                    Speak with Sales
+                </button>
+            </div>
+
+            <p class="text-sm text-blue-200 mt-4">
+                No credit card required • 14-day free trial • Setup in under 24 hours
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-balance-scale text-2xl text-yellow-400 mr-3"></i>
+                        <span class="text-xl font-bold">HERMES</span>
+                    </div>
+                    <p class="text-gray-300 mb-4">
+                        Enterprise AI Voice Reception for Law Firms
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-yellow-400">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-yellow-400">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-yellow-400">
+                            <i class="fab fa-youtube"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Product</h4>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="#features" class="hover:text-yellow-400">Features</a></li>
+                        <li><a href="#integrations" class="hover:text-yellow-400">Integrations</a></li>
+                        <li><a href="#pricing" class="hover:text-yellow-400">Pricing</a></li>
+                        <li><a href="/api-docs" class="hover:text-yellow-400">API Documentation</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Company</h4>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="/about" class="hover:text-yellow-400">About</a></li>
+                        <li><a href="/careers" class="hover:text-yellow-400">Careers</a></li>
+                        <li><a href="/press" class="hover:text-yellow-400">Press</a></li>
+                        <li><a href="/contact" class="hover:text-yellow-400">Contact</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Legal</h4>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><a href="/privacy" class="hover:text-yellow-400">Privacy Policy</a></li>
+                        <li><a href="/terms" class="hover:text-yellow-400">Terms of Service</a></li>
+                        <li><a href="/security" class="hover:text-yellow-400">Security</a></li>
+                        <li><a href="/compliance" class="hover:text-yellow-400">Compliance</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; 2024 Parallax AI. All rights reserved. HERMES is a trademark of Parallax AI.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Stats counter animation
+        function animateCounter(element) {
+            const target = parseInt(element.dataset.count);
+            const duration = 2000; // 2 seconds
+            const steps = 60;
+            const increment = target / steps;
+            let current = 0;
+
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(timer);
+                }
+                element.textContent = Math.floor(current);
+                if (element.textContent.includes('.')) {
+                    element.textContent = current.toFixed(1);
+                }
+            }, duration / steps);
+        }
+
+        // Intersection Observer for stats animation
+        const statsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const counters = entry.target.querySelectorAll('.stats-counter');
+                    counters.forEach(counter => {
+                        if (!counter.classList.contains('animated')) {
+                            animateCounter(counter);
+                            counter.classList.add('animated');
+                        }
+                    });
+                }
+            });
+        });
+
+        // Observe the hero section for stats animation
+        const heroSection = document.querySelector('section');
+        if (heroSection) {
+            statsObserver.observe(heroSection);
+        }
+
+        // ROI Calculator
+        function updateROI() {
+            const caseValue = parseInt(document.getElementById('caseValue').value) || 5000;
+            const monthlyCalls = parseInt(document.getElementById('monthlyRoiCalls').value) || 500;
+            const currentConversion = parseInt(document.getElementById('conversionRateInput').value) || 15;
+
+            // Assume HERMES improves conversion by 35-50%
+            const improvedConversion = currentConversion * 1.4; // 40% improvement
+            const additionalConversions = (monthlyCalls * (improvedConversion - currentConversion) / 100) * 12;
+            const additionalRevenue = additionalConversions * caseValue;
+            const annualCost = 2497 * 12; // Enterprise plan
+            const roiMultiplier = additionalRevenue / annualCost;
+            const paybackPeriod = Math.ceil(annualCost / (additionalRevenue / 12));
+
+            document.getElementById('additionalRevenue').textContent = '$' + additionalRevenue.toLocaleString();
+            document.getElementById('roiMultiplier').textContent = roiMultiplier.toFixed(1) + 'x';
+            document.getElementById('paybackPeriod').textContent = paybackPeriod + ' months';
+        }
+
+        // Update ROI when inputs change
+        ['caseValue', 'monthlyRoiCalls', 'conversionRateInput'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('input', updateROI);
+            }
+        });
+
+        // Initial ROI calculation
+        updateROI();
+
+        // CTA button handlers
+        const ctaButtons = [
+            'startTrialBtn',
+            'requestDemoBtn',
+            'ctaStartTrial',
+            'ctaContactSales'
+        ];
+
+        ctaButtons.forEach(buttonId => {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.addEventListener('click', function() {
+                    // Redirect to appropriate action
+                    if (buttonId.includes('Demo') || buttonId.includes('Sales')) {
+                        window.location.href = '/contact?type=demo';
+                    } else {
+                        window.location.href = '/signup?plan=enterprise';
+                    }
+                });
+            }
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Hide loading overlay
+        window.addEventListener('load', function() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+        });
+    </script>
+
+    <!-- Analytics -->
+    <script>
+        // Google Analytics or other analytics code would go here
+        // For now, using basic event tracking
+        function trackEvent(category, action, label) {
+            if (typeof gtag !== 'undefined') {
+                gtag('event', action, {
+                    event_category: category,
+                    event_label: label
+                });
+            }
+        }
+
+        // Track CTA clicks
+        document.addEventListener('click', function(e) {
+            if (e.target.matches('[id*="Trial"], [id*="Demo"], [id*="Sales"]')) {
+                trackEvent('Conversion', 'CTA_Click', e.target.id);
+            }
+        });
+    </script>
+</body>
+</html>

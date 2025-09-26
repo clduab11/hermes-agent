@@ -1,0 +1,372 @@
+# HERMES Enterprise SaaS - GCP Monitoring Configuration
+# This file defines comprehensive monitoring for production deployment
+
+# Alert Policies
+alertPolicies:
+  - displayName: "HERMES - High Error Rate"
+    documentation:
+      content: "Alert when error rate exceeds 5% over 5 minutes"
+    conditions:
+      - displayName: "Error rate too high"
+        conditionThreshold:
+          filter: 'resource.type="gae_app" AND resource.label.project_id="hermes-legal-ai"'
+          comparison: COMPARISON_GREATER_THAN
+          thresholdValue: 0.05
+          duration: 300s
+          aggregations:
+            - alignmentPeriod: 60s
+              perSeriesAligner: ALIGN_RATE
+              crossSeriesReducer: REDUCE_MEAN
+    notificationChannels: ["${notification_channel_email}", "${notification_channel_slack}"]
+    enabled: true
+
+  - displayName: "HERMES - High Response Time"
+    documentation:
+      content: "Alert when average response time exceeds 5 seconds"
+    conditions:
+      - displayName: "Response time too high"
+        conditionThreshold:
+          filter: 'resource.type="gae_app" AND resource.label.project_id="hermes-legal-ai"'
+          comparison: COMPARISON_GREATER_THAN
+          thresholdValue: 5000
+          duration: 300s
+          aggregations:
+            - alignmentPeriod: 60s
+              perSeriesAligner: ALIGN_MEAN
+    notificationChannels: ["${notification_channel_email}", "${notification_channel_pagerduty}"]
+    enabled: true
+
+  - displayName: "HERMES - Low Availability"
+    documentation:
+      content: "Alert when service availability drops below 99.5%"
+    conditions:
+      - displayName: "Service unavailable"
+        conditionThreshold:
+          filter: 'resource.type="gae_app" AND resource.label.project_id="hermes-legal-ai"'
+          comparison: COMPARISON_LESS_THAN
+          thresholdValue: 0.995
+          duration: 300s
+          aggregations:
+            - alignmentPeriod: 300s
+              perSeriesAligner: ALIGN_FRACTION_TRUE
+              crossSeriesReducer: REDUCE_MEAN
+    notificationChannels: ["${notification_channel_email}", "${notification_channel_pagerduty}"]
+    enabled: true
+
+  - displayName: "HERMES - High Memory Usage"
+    documentation:
+      content: "Alert when memory usage exceeds 85%"
+    conditions:
+      - displayName: "Memory usage too high"
+        conditionThreshold:
+          filter: 'resource.type="gae_app" AND resource.label.project_id="hermes-legal-ai"'
+          comparison: COMPARISON_GREATER_THAN
+          thresholdValue: 0.85
+          duration: 600s
+          aggregations:
+            - alignmentPeriod: 60s
+              perSeriesAligner: ALIGN_MEAN
+              crossSeriesReducer: REDUCE_MEAN
+    notificationChannels: ["${notification_channel_email}"]
+    enabled: true
+
+  - displayName: "HERMES - API Rate Limit Exceeded"
+    documentation:
+      content: "Alert when API rate limits are being hit frequently"
+    conditions:
+      - displayName: "Rate limit errors"
+        conditionThreshold:
+          filter: 'resource.type="gae_app" AND metric.type="appengine.googleapis.com/http/server/response_count" AND metric.label.response_code="429"'
+          comparison: COMPARISON_GREATER_THAN
+          thresholdValue: 100
+          duration: 300s
+          aggregations:
+            - alignmentPeriod: 60s
+              perSeriesAligner: ALIGN_RATE
+              crossSeriesReducer: REDUCE_SUM
+    notificationChannels: ["${notification_channel_email}"]
+    enabled: true
+
+# Notification Channels
+notificationChannels:
+  - type: "email"
+    displayName: "HERMES Operations Email"
+    labels:
+      email_address: "ops@parallax-ai.com"
+    enabled: true
+
+  - type: "slack"
+    displayName: "HERMES Alerts Slack Channel"
+    labels:
+      channel_name: "#hermes-alerts"
+      url: "${slack_webhook_url}"
+    enabled: true
+
+  - type: "pagerduty"
+    displayName: "HERMES Critical Alerts PagerDuty"
+    labels:
+      service_key: "${pagerduty_service_key}"
+    enabled: true
+
+# Uptime Checks
+uptimeChecks:
+  - displayName: "HERMES Health Check"
+    monitoredResource:
+      type: "uptime_url"
+      labels:
+        project_id: "hermes-legal-ai"
+        host: "hermes-legal-ai.appspot.com"
+    httpCheck:
+      path: "/health"
+      port: 443
+      useSsl: true
+      headers:
+        User-Agent: "Google-Cloud-Uptime-Check"
+      acceptedResponseStatusCodes:
+        - statusClass: STATUS_CLASS_2XX
+    checkIntervalSeconds: 60
+    timeout: 10s
+    contentMatchers:
+      - content: '"status":"healthy"'
+        matcher: CONTAINS_STRING
+
+  - displayName: "HERMES API Endpoint Check"
+    monitoredResource:
+      type: "uptime_url"
+      labels:
+        project_id: "hermes-legal-ai"
+        host: "hermes-legal-ai.appspot.com"
+    httpCheck:
+      path: "/status"
+      port: 443
+      useSsl: true
+      headers:
+        User-Agent: "Google-Cloud-Uptime-Check"
+      acceptedResponseStatusCodes:
+        - statusClass: STATUS_CLASS_2XX
+    checkIntervalSeconds: 300
+    timeout: 10s
+
+  - displayName: "HERMES Dashboard Availability"
+    monitoredResource:
+      type: "uptime_url"
+      labels:
+        project_id: "hermes-legal-ai"
+        host: "hermes-legal-ai.appspot.com"
+    httpCheck:
+      path: "/dashboard"
+      port: 443
+      useSsl: true
+      headers:
+        User-Agent: "Google-Cloud-Uptime-Check"
+      acceptedResponseStatusCodes:
+        - statusClass: STATUS_CLASS_2XX
+        - statusClass: STATUS_CLASS_3XX
+    checkIntervalSeconds: 300
+    timeout: 10s
+
+# Custom Metrics
+customMetrics:
+  - type: "custom.googleapis.com/hermes/voice_processing_latency"
+    displayName: "HERMES Voice Processing Latency"
+    description: "Time taken to process voice input in milliseconds"
+    metricKind: "GAUGE"
+    valueType: "DOUBLE"
+    unit: "ms"
+
+  - type: "custom.googleapis.com/hermes/lead_conversion_rate"
+    displayName: "HERMES Lead Conversion Rate"
+    description: "Percentage of calls that result in qualified leads"
+    metricKind: "GAUGE"
+    valueType: "DOUBLE"
+    unit: "1"
+
+  - type: "custom.googleapis.com/hermes/active_sessions"
+    displayName: "HERMES Active Sessions"
+    description: "Number of currently active voice sessions"
+    metricKind: "GAUGE"
+    valueType: "INT64"
+    unit: "1"
+
+  - type: "custom.googleapis.com/hermes/clio_sync_success_rate"
+    displayName: "HERMES Clio Sync Success Rate"
+    description: "Success rate of Clio CRM synchronization"
+    metricKind: "GAUGE"
+    valueType: "DOUBLE"
+    unit: "1"
+
+# Dashboards
+dashboards:
+  - displayName: "HERMES Production Overview"
+    mosaicLayout:
+      tiles:
+        - width: 6
+          height: 3
+          xPos: 0
+          yPos: 0
+          widget:
+            title: "Request Rate"
+            xyChart:
+              dataSets:
+                - timeSeriesQuery:
+                    timeSeriesFilter:
+                      filter: 'resource.type="gae_app" AND resource.label.project_id="hermes-legal-ai"'
+                      aggregation:
+                        alignmentPeriod: 60s
+                        perSeriesAligner: ALIGN_RATE
+                  plotType: LINE
+                  targetAxis: Y1
+
+        - width: 6
+          height: 3
+          xPos: 6
+          yPos: 0
+          widget:
+            title: "Error Rate"
+            xyChart:
+              dataSets:
+                - timeSeriesQuery:
+                    timeSeriesFilter:
+                      filter: 'resource.type="gae_app" AND resource.label.project_id="hermes-legal-ai"'
+                      aggregation:
+                        alignmentPeriod: 60s
+                        perSeriesAligner: ALIGN_RATE
+                  plotType: LINE
+                  targetAxis: Y1
+
+        - width: 6
+          height: 3
+          xPos: 0
+          yPos: 3
+          widget:
+            title: "Response Time (95th percentile)"
+            xyChart:
+              dataSets:
+                - timeSeriesQuery:
+                    timeSeriesFilter:
+                      filter: 'resource.type="gae_app" AND resource.label.project_id="hermes-legal-ai"'
+                      aggregation:
+                        alignmentPeriod: 60s
+                        perSeriesAligner: ALIGN_DELTA
+                        crossSeriesReducer: REDUCE_PERCENTILE_95
+                  plotType: LINE
+                  targetAxis: Y1
+
+        - width: 6
+          height: 3
+          xPos: 6
+          yPos: 3
+          widget:
+            title: "Memory Usage"
+            xyChart:
+              dataSets:
+                - timeSeriesQuery:
+                    timeSeriesFilter:
+                      filter: 'resource.type="gae_app" AND resource.label.project_id="hermes-legal-ai"'
+                      aggregation:
+                        alignmentPeriod: 60s
+                        perSeriesAligner: ALIGN_MEAN
+                  plotType: LINE
+                  targetAxis: Y1
+
+        - width: 12
+          height: 3
+          xPos: 0
+          yPos: 6
+          widget:
+            title: "Active Voice Sessions"
+            xyChart:
+              dataSets:
+                - timeSeriesQuery:
+                    timeSeriesFilter:
+                      filter: 'metric.type="custom.googleapis.com/hermes/active_sessions"'
+                      aggregation:
+                        alignmentPeriod: 60s
+                        perSeriesAligner: ALIGN_MEAN
+                  plotType: LINE
+                  targetAxis: Y1
+
+  - displayName: "HERMES Business Metrics"
+    mosaicLayout:
+      tiles:
+        - width: 6
+          height: 4
+          xPos: 0
+          yPos: 0
+          widget:
+            title: "Lead Conversion Rate"
+            xyChart:
+              dataSets:
+                - timeSeriesQuery:
+                    timeSeriesFilter:
+                      filter: 'metric.type="custom.googleapis.com/hermes/lead_conversion_rate"'
+                      aggregation:
+                        alignmentPeriod: 300s
+                        perSeriesAligner: ALIGN_MEAN
+                  plotType: LINE
+                  targetAxis: Y1
+
+        - width: 6
+          height: 4
+          xPos: 6
+          yPos: 0
+          widget:
+            title: "Voice Processing Latency"
+            xyChart:
+              dataSets:
+                - timeSeriesQuery:
+                    timeSeriesFilter:
+                      filter: 'metric.type="custom.googleapis.com/hermes/voice_processing_latency"'
+                      aggregation:
+                        alignmentPeriod: 60s
+                        perSeriesAligner: ALIGN_MEAN
+                        crossSeriesReducer: REDUCE_PERCENTILE_95
+                  plotType: LINE
+                  targetAxis: Y1
+
+        - width: 12
+          height: 4
+          xPos: 0
+          yPos: 4
+          widget:
+            title: "Clio Integration Health"
+            xyChart:
+              dataSets:
+                - timeSeriesQuery:
+                    timeSeriesFilter:
+                      filter: 'metric.type="custom.googleapis.com/hermes/clio_sync_success_rate"'
+                      aggregation:
+                        alignmentPeriod: 300s
+                        perSeriesAligner: ALIGN_MEAN
+                  plotType: LINE
+                  targetAxis: Y1
+
+# Log-based Metrics
+logBasedMetrics:
+  - name: "hermes_voice_errors"
+    description: "Count of voice processing errors"
+    filter: 'resource.type="gae_app" AND resource.labels.project_id="hermes-legal-ai" AND severity>=ERROR AND jsonPayload.component="voice_pipeline"'
+    labelExtractors:
+      error_type: 'EXTRACT(jsonPayload.error_type)'
+      session_id: 'EXTRACT(jsonPayload.session_id)'
+    metricDescriptor:
+      metricKind: "COUNTER"
+      valueType: "INT64"
+      displayName: "HERMES Voice Processing Errors"
+
+  - name: "hermes_legal_analysis_accuracy"
+    description: "Accuracy of legal entity extraction"
+    filter: 'resource.type="gae_app" AND resource.labels.project_id="hermes-legal-ai" AND jsonPayload.component="legal_nlp" AND jsonPayload.accuracy EXISTS'
+    valueExtractor: 'EXTRACT(jsonPayload.accuracy)'
+    metricDescriptor:
+      metricKind: "GAUGE"
+      valueType: "DOUBLE"
+      displayName: "HERMES Legal Analysis Accuracy"
+
+  - name: "hermes_high_value_leads"
+    description: "Count of high-value lead qualifications"
+    filter: 'resource.type="gae_app" AND resource.labels.project_id="hermes-legal-ai" AND jsonPayload.event="lead_qualified" AND jsonPayload.value_score>8'
+    metricDescriptor:
+      metricKind: "COUNTER"
+      valueType: "INT64"
+      displayName: "HERMES High-Value Leads"

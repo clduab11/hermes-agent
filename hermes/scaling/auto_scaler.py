@@ -34,6 +34,13 @@ class ResourceType(Enum):
     DATABASE_CONNECTIONS = "db_connections"
     CACHE_HIT_RATIO = "cache_hit_ratio"
 
+class MemoryPressureLevel(Enum):
+    """Memory pressure levels for scaling decisions."""
+    LOW = "low"
+    MODERATE = "moderate"
+    HIGH = "high"
+    CRITICAL = "critical"
+
 @dataclass
 class ScalingRule:
     """Configuration for scaling rules."""

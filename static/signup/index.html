@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Your HERMES Trial - Enterprise Legal AI</title>
+    <meta name="description" content="Start your free 14-day trial of HERMES Enterprise Legal AI. No credit card required.">
+
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --navy-primary: #1a365d;
+            --navy-secondary: #2c5282;
+            --gold-accent: #d69e2e;
+        }
+
+        .legal-gradient {
+            background: linear-gradient(135deg, var(--navy-primary) 0%, var(--navy-secondary) 100%);
+        }
+
+        .gold-gradient {
+            background: linear-gradient(135deg, var(--gold-accent) 0%, #ecc94b 100%);
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center">
+                        <i class="fas fa-balance-scale text-2xl text-blue-900 mr-3"></i>
+                        <span class="text-xl font-bold text-gray-900">HERMES</span>
+                        <span class="text-sm text-gray-600 ml-2">by Parallax AI</span>
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/dashboard" class="text-gray-600 hover:text-blue-900">Sign In</a>
+                    <a href="/contact" class="text-gray-600 hover:text-blue-900">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <!-- Progress Bar -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-medium text-gray-600">Step <span id="currentStep">1</span> of 4</span>
+                <span class="text-sm text-gray-600">Free 14-Day Trial</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progressBar" class="progress-bar bg-blue-600 h-2 rounded-full" style="width: 25%"></div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="px-6 py-8">
+                <!-- Step 1: Plan Selection -->
+                <div id="step1" class="form-step active">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">Choose Your Plan</h2>
+                        <p class="text-lg text-gray-600">Start with a 14-day free trial, no credit card required</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Professional Plan -->
+                        <div class="plan-card border-2 border-gray-200 rounded-lg p-6 cursor-pointer hover:border-blue-300 transition-colors" data-plan="professional">
+                            <div class="text-center mb-6">
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">Professional</h3>
+                                <div class="text-3xl font-bold text-blue-600 mb-2">
+                                    $997<span class="text-lg text-gray-600">/month</span>
+                                </div>
+                                <p class="text-gray-600">Perfect for small to medium law firms</p>
+                            </div>
+
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Up to 1,000 calls/month</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>24/7 AI Voice Reception</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Basic Clio Integration</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Email Support</span>
+                                </li>
+                            </ul>
+
+                            <button class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors select-plan-btn">
+                                Select Professional
+                            </button>
+                        </div>
+
+                        <!-- Enterprise Plan -->
+                        <div class="plan-card border-2 border-blue-500 rounded-lg p-6 cursor-pointer relative" data-plan="enterprise">
+                            <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                <span class="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-bold">RECOMMENDED</span>
+                            </div>
+
+                            <div class="text-center mb-6 pt-4">
+                                <h3 class="text-xl font-bold text-gray-900 mb-2">Enterprise</h3>
+                                <div class="text-3xl font-bold text-blue-600 mb-2">
+                                    $2,497<span class="text-lg text-gray-600">/month</span>
+                                </div>
+                                <p class="text-gray-600">For established firms seeking growth</p>
+                            </div>
+
+                            <ul class="space-y-3 mb-6">
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Up to 10,000 calls/month</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Everything in Professional</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Advanced Analytics Suite</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Priority Support</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Multi-Language Support</span>
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-check text-green-500 mr-3"></i>
+                                    <span>Dedicated Success Manager</span>
+                                </li>
+                            </ul>
+
+                            <button class="w-full gold-gradient text-blue-900 py-3 rounded-lg hover:opacity-90 transition-opacity font-bold select-plan-btn">
+                                Select Enterprise
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Firm Information -->
+                <div id="step2" class="form-step">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">Tell Us About Your Firm</h2>
+                        <p class="text-lg text-gray-600">Help us customize HERMES for your practice</p>
+                    </div>
+
+                    <div class="max-w-2xl mx-auto">
+                        <form id="firmInfoForm" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Firm Name *
+                                    </label>
+                                    <input type="text" name="firmName" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Number of Attorneys
+                                    </label>
+                                    <select name="attorneyCount" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">Select...</option>
+                                        <option value="1">Solo Practice</option>
+                                        <option value="2-5">2-5 Attorneys</option>
+                                        <option value="6-20">6-20 Attorneys</option>
+                                        <option value="21-50">21-50 Attorneys</option>
+                                        <option value="50+">50+ Attorneys</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Primary Practice Areas
+                                    </label>
+                                    <div class="space-y-2 max-h-40 overflow-y-auto">
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="practiceAreas" value="personal_injury" class="mr-2">
+                                            <span class="text-sm">Personal Injury</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="practiceAreas" value="family_law" class="mr-2">
+                                            <span class="text-sm">Family Law</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="practiceAreas" value="criminal_defense" class="mr-2">
+                                            <span class="text-sm">Criminal Defense</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="practiceAreas" value="corporate" class="mr-2">
+                                            <span class="text-sm">Corporate Law</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="practiceAreas" value="real_estate" class="mr-2">
+                                            <span class="text-sm">Real Estate</span>
+                                        </label>
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="practiceAreas" value="employment" class="mr-2">
+                                            <span class="text-sm">Employment Law</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Current Monthly Call Volume
+                                    </label>
+                                    <select name="callVolume" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                        <option value="">Select...</option>
+                                        <option value="0-100">0-100 calls</option>
+                                        <option value="100-500">100-500 calls</option>
+                                        <option value="500-1000">500-1,000 calls</option>
+                                        <option value="1000-5000">1,000-5,000 calls</option>
+                                        <option value="5000+">5,000+ calls</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Current Practice Management System
+                                </label>
+                                <select name="currentPMS" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Select...</option>
+                                    <option value="clio">Clio</option>
+                                    <option value="mycase">MyCase</option>
+                                    <option value="lawgistic">Lawgistic</option>
+                                    <option value="practicesuite">PracticeSuite</option>
+                                    <option value="casepeer">CasePeer</option>
+                                    <option value="filevine">Filevine</option>
+                                    <option value="other">Other</option>
+                                    <option value="none">No current system</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    What's your biggest challenge with client intake?
+                                </label>
+                                <textarea name="challenges" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Tell us about your current pain points..."></textarea>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Step 3: Contact Information -->
+                <div id="step3" class="form-step">
+                    <div class="text-center mb-8">
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">Contact Information</h2>
+                        <p class="text-lg text-gray-600">We'll use this to set up your trial account</p>
+                    </div>
+
+                    <div class="max-w-2xl mx-auto">
+                        <form id="contactForm" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        First Name *
+                                    </label>
+                                    <input type="text" name="firstName" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        Last Name *
+                                    </label>
+                                    <input type="text" name="lastName" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Email Address *
+                                </label>
+                                <input type="email" name="email" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Phone Number *
+                                </label>
+                                <input type="tel" name="phone" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    Job Title
+                                </label>
+                                <input type="text" name="jobTitle" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Managing Partner, Attorney, Office Manager, etc.">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    How did you hear about HERMES?
+                                </label>
+                                <select name="referralSource" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Select...</option>
+                                    <option value="google">Google Search</option>
+                                    <option value="linkedin">LinkedIn</option>
+                                    <option value="referral">Colleague Referral</option>
+                                    <option value="legal_publication">Legal Publication</option>
+                                    <option value="conference">Legal Conference</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Step 4: Trial Confirmation -->
+                <div id="step4" class="form-step">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-check text-2xl text-green-600"></i>
+                        </div>
+                        <h2 class="text-3xl font-bold text-gray-900 mb-4">Trial Account Created!</h2>
+                        <p class="text-lg text-gray-600 mb-8">
+                            Your HERMES trial is ready to go. We'll be in touch within 24 hours to help you get started.
+                        </p>
+
+                        <div class="bg-blue-50 rounded-lg p-6 mb-8 max-w-2xl mx-auto">
+                            <h3 class="text-lg font-semibold text-blue-900 mb-4">What happens next?</h3>
+                            <div class="space-y-3 text-left">
+                                <div class="flex items-start">
+                                    <div class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-0.5">1</div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">Setup Call (Within 24 hours)</h4>
+                                        <p class="text-sm text-gray-600">Our team will call to configure HERMES for your specific practice areas and call flow.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-0.5">2</div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">Integration Setup (Day 2-3)</h4>
+                                        <p class="text-sm text-gray-600">We'll connect HERMES to your Clio account and configure your custom call routing.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-0.5">3</div>
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">Go Live (Within 1 week)</h4>
+                                        <p class="text-sm text-gray-600">Start receiving calls through HERMES and watch your lead conversion improve.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <a href="/dashboard" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                                <i class="fas fa-tachometer-alt mr-2"></i>
+                                Access Dashboard
+                            </a>
+                            <button id="scheduleCallBtn" class="border-2 border-blue-600 text-blue-600 px-6 py-3 rounded-lg hover:bg-blue-600 hover:text-white transition-colors font-semibold">
+                                <i class="fas fa-calendar mr-2"></i>
+                                Schedule Setup Call Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="px-6 py-4 bg-gray-50 flex justify-between">
+                <button id="prevBtn" class="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors hidden">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Previous
+                </button>
+                <div class="flex-1"></div>
+                <button id="nextBtn" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                    Continue
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Trust Signals -->
+        <div class="mt-8 text-center">
+            <div class="flex flex-wrap justify-center items-center space-x-8 text-gray-500">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-shield-alt text-green-500 mr-2"></i>
+                    <span class="text-sm">SOC 2 Compliant</span>
+                </div>
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-lock text-green-500 mr-2"></i>
+                    <span class="text-sm">256-bit Encryption</span>
+                </div>
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-phone text-green-500 mr-2"></i>
+                    <span class="text-sm">24/7 Support</span>
+                </div>
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-clock text-green-500 mr-2"></i>
+                    <span class="text-sm">Setup in 24 hours</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedPlan = '';
+        const totalSteps = 4;
+
+        // Plan selection
+        document.querySelectorAll('.plan-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // Remove previous selections
+                document.querySelectorAll('.plan-card').forEach(c => {
+                    c.classList.remove('border-blue-500', 'bg-blue-50');
+                    c.classList.add('border-gray-200');
+                });
+
+                // Select this card
+                this.classList.remove('border-gray-200');
+                this.classList.add('border-blue-500', 'bg-blue-50');
+                selectedPlan = this.dataset.plan;
+
+                // Enable next button
+                document.getElementById('nextBtn').disabled = false;
+            });
+        });
+
+        // Navigation
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            if (currentStep < totalSteps) {
+                if (validateCurrentStep()) {
+                    nextStep();
+                }
+            } else {
+                // Submit form
+                submitTrial();
+            }
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            if (currentStep > 1) {
+                prevStep();
+            }
+        });
+
+        function nextStep() {
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            currentStep++;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            updateProgress();
+            updateNavigation();
+        }
+
+        function prevStep() {
+            document.getElementById(`step${currentStep}`).classList.remove('active');
+            currentStep--;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            updateProgress();
+            updateNavigation();
+        }
+
+        function updateProgress() {
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('currentStep').textContent = currentStep;
+        }
+
+        function updateNavigation() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            if (currentStep === 1) {
+                prevBtn.classList.add('hidden');
+            } else {
+                prevBtn.classList.remove('hidden');
+            }
+
+            if (currentStep === totalSteps) {
+                nextBtn.textContent = 'Start Trial';
+                nextBtn.innerHTML = '<i class="fas fa-rocket mr-2"></i>Start Trial';
+            } else {
+                nextBtn.innerHTML = 'Continue <i class="fas fa-arrow-right ml-2"></i>';
+            }
+        }
+
+        function validateCurrentStep() {
+            switch(currentStep) {
+                case 1:
+                    if (!selectedPlan) {
+                        alert('Please select a plan to continue.');
+                        return false;
+                    }
+                    return true;
+                case 2:
+                    const firmName = document.querySelector('[name="firmName"]').value;
+                    if (!firmName.trim()) {
+                        alert('Please enter your firm name.');
+                        return false;
+                    }
+                    return true;
+                case 3:
+                    const email = document.querySelector('[name="email"]').value;
+                    const firstName = document.querySelector('[name="firstName"]').value;
+                    const lastName = document.querySelector('[name="lastName"]').value;
+                    const phone = document.querySelector('[name="phone"]').value;
+
+                    if (!email.trim() || !firstName.trim() || !lastName.trim() || !phone.trim()) {
+                        alert('Please fill in all required fields.');
+                        return false;
+                    }
+
+                    if (!isValidEmail(email)) {
+                        alert('Please enter a valid email address.');
+                        return false;
+                    }
+                    return true;
+                default:
+                    return true;
+            }
+        }
+
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function submitTrial() {
+            const trialData = {
+                plan: selectedPlan,
+                firm: Object.fromEntries(new FormData(document.getElementById('firmInfoForm'))),
+                contact: Object.fromEntries(new FormData(document.getElementById('contactForm')))
+            };
+
+            // Show loading state
+            const nextBtn = document.getElementById('nextBtn');
+            nextBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating Account...';
+            nextBtn.disabled = true;
+
+            // Simulate API call
+            setTimeout(() => {
+                nextStep();
+                // Track conversion
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'sign_up', {
+                        method: 'website',
+                        plan: selectedPlan
+                    });
+                }
+            }, 2000);
+
+            // In production, send data to API:
+            /*
+            fetch('/api/trials', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(trialData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    nextStep();
+                } else {
+                    alert('Error creating trial account. Please try again.');
+                    nextBtn.disabled = false;
+                    nextBtn.innerHTML = '<i class="fas fa-rocket mr-2"></i>Start Trial';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating trial account. Please try again.');
+                nextBtn.disabled = false;
+                nextBtn.innerHTML = '<i class="fas fa-rocket mr-2"></i>Start Trial';
+            });
+            */
+        }
+
+        // Schedule call functionality
+        document.getElementById('scheduleCallBtn').addEventListener('click', function() {
+            // In production, integrate with Calendly or similar
+            window.open('https://calendly.com/hermes-setup', '_blank');
+        });
+
+        // Initialize
+        updateProgress();
+        updateNavigation();
+    </script>
+</body>
+</html>

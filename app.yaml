@@ -1,0 +1,93 @@
+runtime: python311
+service: default
+
+# Enterprise SaaS Configuration for Law Firm Clients
+automatic_scaling:
+  min_instances: 3
+  max_instances: 100
+  target_cpu_utilization: 0.65
+  target_throughput_utilization: 0.70
+  cool_down_period_sec: 120
+  max_concurrent_requests: 1000
+  max_idle_instances: 5
+
+# Enterprise resource allocation with enhanced performance
+resources:
+  cpu: 4
+  memory_gb: 8
+
+# Security headers for law firm compliance
+env_variables:
+  PYTHONPATH: /srv
+  # Production mode - no debug/demo features
+  DEBUG: "false"
+  DEMO_MODE: "false"
+  API_HOST: "0.0.0.0"
+  API_PORT: "8080"
+
+  # Enterprise security settings
+  CORS_ALLOW_ORIGINS: "https://hermes.parallax-ai.app,https://admin.hermes.parallax-ai.app,https://api.hermes.parallax-ai.app"
+  JWT_ALGORITHM: "RS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES: "15"
+  REFRESH_TOKEN_EXPIRE_DAYS: "1"
+
+  # Legal compliance
+  CONFIDENCE_THRESHOLD: "0.9"
+  ENABLE_DISCLAIMERS: "true"
+  AUDIT_LOGGING: "true"
+
+  # Enterprise pricing tier
+  STRIPE_TRIAL_DAYS: "0"
+  ENTERPRISE_PLAN_PRICE: "2497"
+  MAX_MONTHLY_INTERACTIONS: "10000"
+
+  # Cloud-native secrets (referenced from GCP Secret Manager)
+  DATABASE_URL: ${SUPABASE_DATABASE_URL}
+  SUPABASE_URL: ${SUPABASE_PROJECT_URL}
+  SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_KEY}
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+  JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY}
+  STRIPE_API_KEY: ${STRIPE_API_KEY}
+  STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+  API_KEY_ENCRYPTION_SECRET: ${API_KEY_ENCRYPTION_SECRET}
+
+# Health check configuration
+readiness_check:
+  path: "/health"
+  check_interval_sec: 5
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+
+liveness_check:
+  path: "/health"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 4
+  success_threshold: 2
+
+# Network security
+network:
+  session_affinity: false
+
+# VPC connector for private Supabase access (enterprise security)
+vpc_access_connector:
+  name: "projects/PROJECT_ID/locations/REGION/connectors/hermes-connector"
+
+handlers:
+# Static files for dashboard (enterprise clients only)
+- url: /static
+  static_dir: static
+  secure: always
+  redirect_http_response_code: 301
+
+# API endpoints with authentication required
+- url: /.*
+  script: auto
+  secure: always
+  redirect_http_response_code: 301
+
+# Security headers for HIPAA/SOC2 compliance
+includes:
+- file: security.yaml

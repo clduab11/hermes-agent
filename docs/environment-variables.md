@@ -1,9 +1,8 @@
-# HERMES Environment Variables
+# HERMES Platform Integration - Environment Configuration
 
-This document consolidates all environment variables used across the repository and explains when to set them.
+This document explains environment variables for integrating with the HERMES hosted platform.
 
-- Never commit real secrets. Use a local `.env` for development and a secret manager in production.
-- See [.env.example](../.env.example) for a ready-to-copy template.
+**Note**: HERMES is now exclusively available as a hosted SaaS platform. These variables are for API integration and webhook configuration only.
 
 ## Core (Required to run LLM)
 - `OPENAI_API_KEY` (required): OpenAI API key for LLM and certain TTS features.
@@ -63,11 +62,9 @@ This document consolidates all environment variables used across the repository 
 - Use least-privilege tokens (GitHub PAT, Supabase service role). Never expose service role keys to the client.
 - Rotate keys regularly and after any suspected exposure.
 
-## Quick Start
-```bash
-cp .env.example .env
-# Edit .env and set OPENAI_API_KEY at minimum
-python mock_tts_server.py &
-python setup_demo.py
-python -m hermes.main
-```
+## Platform Integration Setup
+
+For hosted platform integration, visit: [https://hermes.parallax-ai.app/setup](https://hermes.parallax-ai.app/setup)
+
+**API Integration**: Use the official HERMES API at `https://api.hermes.parallax-ai.app`
+**Documentation**: [https://api.hermes.parallax-ai.app/docs](https://api.hermes.parallax-ai.app/docs)

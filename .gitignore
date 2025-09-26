@@ -99,9 +99,8 @@ temp/
 secrets.json
 config.local.json
 
-# Docker
-.dockerignore
-docker-compose.override.yml
+# No longer needed - Docker infrastructure removed
+# HERMES is now exclusively hosted platform
 
 # Database
 *.db
