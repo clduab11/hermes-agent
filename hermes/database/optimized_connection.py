@@ -3,6 +3,8 @@ Optimized database connection management with enterprise-grade performance featu
 """
 
 import asyncio
+import ast
+import json
 import logging
 import time
 from contextlib import asynccontextmanager
@@ -301,7 +303,15 @@ class OptimizedDatabaseManager:
                         total_cache_requests = self._metrics.cache_hits + self._metrics.cache_misses
                         tenant_metrics.cache_hit_ratio = self._metrics.cache_hits / max(1, total_cache_requests)
 
-                return eval(cached_result)  # Note: In production, use proper serialization
+                # Secure deserialization to prevent code injection
+                try:
+                    return json.loads(cached_result)
+                except json.JSONDecodeError:
+                    try:
+                        return ast.literal_eval(cached_result)
+                    except (ValueError, SyntaxError):
+                        logger.warning(f"Failed to deserialize cached result for key {cache_key}, falling back to query execution")
+                        # Continue to query execution below
 
         except Exception as e:
             logger.warning(f"Cache retrieval failed: {e}")
@@ -311,12 +321,26 @@ class OptimizedDatabaseManager:
             result = await session.execute(text(query), parameters or {})
             data = result.fetchall()
 
-            # Cache the result
+            # Cache the result with secure JSON serialization
             try:
+                # Convert SQLAlchemy result to JSON-serializable format
+                serialized_data = []
+                for row in data:
+                    if hasattr(row, '_asdict'):
+                        # Named tuple-like results
+                        serialized_data.append(row._asdict())
+                    elif hasattr(row, '__dict__'):
+                        # Object results
+                        serialized_data.append({k: v for k, v in row.__dict__.items() 
+                                               if not k.startswith('_')})
+                    else:
+                        # Simple tuple results
+                        serialized_data.append(list(row) if hasattr(row, '__iter__') else row)
+                
                 await self.redis_client.setex(
                     cache_key,
                     ttl or self._query_cache_ttl,
-                    str(data)
+                    json.dumps(serialized_data, default=str)  # Use str() for datetime, decimal, etc.
                 )
             except Exception as e:
                 logger.warning(f"Cache storage failed: {e}")
