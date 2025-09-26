@@ -225,6 +225,28 @@ validate_deployment() {
 deploy_application() {
     log_info "Deploying HERMES to App Engine..."
 
+    # Process app.yaml template with environment variables
+    log_info "Processing app.yaml template with project configuration..."
+    
+    # Create deployment-specific app.yaml
+    cp app.yaml app-deploy.yaml
+    
+    # Substitute environment variables
+    export GCP_PROJECT_ID="$PROJECT_ID"
+    export GCP_REGION="$REGION"
+    
+    # Use envsubst if available, otherwise use sed
+    if command -v envsubst >/dev/null 2>&1; then
+        envsubst < app.yaml > app-deploy.yaml
+    else
+        # Fallback to sed substitution
+        sed -e "s/\${GCP_PROJECT_ID}/$PROJECT_ID/g" \
+            -e "s/\${GCP_REGION}/$REGION/g" \
+            app.yaml > app-deploy.yaml
+    fi
+    
+    log_info "App.yaml processed for project $PROJECT_ID in region $REGION"
+
     # Deploy the application
     gcloud app deploy app-deploy.yaml \
         --project="$PROJECT_ID" \
@@ -239,6 +261,9 @@ deploy_application() {
     app_url=$(gcloud app describe --project="$PROJECT_ID" --format="value(defaultHostname)")
 
     log_success "HERMES is now available at: https://$app_url"
+    
+    # Clean up deployment file
+    rm -f app-deploy.yaml
 }
 
 # Configure custom domain (if provided)

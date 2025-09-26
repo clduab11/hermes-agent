@@ -125,3 +125,21 @@ coverage.xml
 test-results.xml
 vulns.json
 vulns_updated.json
+
+# Production deployment files (generated during deployment)
+app-deploy.yaml
+service-account-key.json
+google-cloud-credentials.json
+
+# Security and monitoring reports
+security-report.json
+bandit-report.json
+safety-report.json
+production-validation-report.json
+
+# Prometheus metrics
+prometheus_multiproc/
+
+# Temporary deployment artifacts
+*.tmp
+*.temp
