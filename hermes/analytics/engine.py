@@ -232,19 +232,29 @@ class AnalyticsEngine:
                 )
                 return []
 
-            # Build dynamic query based on parameters
-            base_query = """
-                SELECT 
+            # Validate aggregation function to prevent SQL injection
+            allowed_aggregations = {'sum', 'avg', 'count', 'min', 'max'}
+            if query.aggregation.lower() not in allowed_aggregations:
+                logger.error(f"Invalid aggregation function: {query.aggregation}")
+                raise ValueError(f"Invalid aggregation function: {query.aggregation}")
+
+            # Validate time range to prevent SQL injection
+            allowed_time_ranges = {tr.value for tr in TimeRange}
+            if query.time_range.value not in allowed_time_ranges:
+                logger.error(f"Invalid time range: {query.time_range.value}")
+                raise ValueError(f"Invalid time range: {query.time_range.value}")
+
+            # Build secure query with validated parameters
+            base_query = f"""
+                SELECT
                     name,
-                    {aggregation}(CAST(value AS DECIMAL)) as value,
-                    DATE_TRUNC('{time_range}', timestamp) as period,
+                    {query.aggregation.upper()}(CAST(value AS DECIMAL)) as value,
+                    DATE_TRUNC('{query.time_range.value}', timestamp) as period,
                     tenant_id,
                     metric_type
-                FROM analytics_metrics 
+                FROM analytics_metrics
                 WHERE 1=1
-            """.format(
-                aggregation=query.aggregation, time_range=query.time_range.value
-            )
+            """  # nosec B608 - Parameters are validated against allowed values above
 
             params = {}
 

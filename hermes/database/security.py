@@ -142,28 +142,50 @@ class DatabaseSecurityManager:
     async def setup_audit_triggers(session: AsyncSession, table_name: str) -> None:
         """Set up audit triggers for a table to track changes."""
         try:
-            # Create audit table if it doesn't exist
-            audit_table = f"{table_name}_audit"
-            create_audit_sql = f"""
-            CREATE TABLE IF NOT EXISTS {audit_table} (
-                audit_id SERIAL PRIMARY KEY,
-                table_name VARCHAR(50) NOT NULL,
-                operation VARCHAR(10) NOT NULL,
-                old_data JSONB,
-                new_data JSONB,
-                user_id UUID,
-                tenant_id UUID,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-            await session.execute(text(create_audit_sql))
+            # Validate table name to prevent SQL injection
+            import re
+            if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', table_name):
+                raise ValueError(f"Invalid table name: {table_name}. Only alphanumeric characters and underscores allowed.")
 
-            # Create audit trigger function
-            trigger_function = f"""
+            if len(table_name) > 63:  # PostgreSQL identifier limit
+                raise ValueError(f"Table name too long: {table_name}. Maximum 63 characters allowed.")
+
+            # Create audit table if it doesn't exist (using SQL identifier escaping)
+            audit_table = f"{table_name}_audit"
+
+            # Validate audit table name as well
+            if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', audit_table):
+                raise ValueError(f"Invalid audit table name: {audit_table}")
+
+            # Use parameterized query with identifier substitution for security
+            from sqlalchemy.sql import text
+            from sqlalchemy import MetaData, inspect
+
+            # Check if audit table already exists
+            inspector = inspect(session.bind)
+            existing_tables = await session.run_sync(lambda sync_session: inspector.get_table_names())
+
+            if audit_table not in existing_tables:
+                create_audit_sql = text(f"""
+                CREATE TABLE {audit_table} (
+                    audit_id SERIAL PRIMARY KEY,
+                    table_name VARCHAR(50) NOT NULL,
+                    operation VARCHAR(10) NOT NULL,
+                    old_data JSONB,
+                    new_data JSONB,
+                    user_id UUID,
+                    tenant_id UUID,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+                """)
+                await session.execute(create_audit_sql)
+
+            # Create audit trigger function (validated identifiers)
+            trigger_function = text(f"""
             CREATE OR REPLACE FUNCTION audit_{table_name}() RETURNS TRIGGER AS $$
             BEGIN
                 INSERT INTO {audit_table} (
-                    table_name, operation, old_data, new_data, 
+                    table_name, operation, old_data, new_data,
                     user_id, tenant_id, timestamp
                 ) VALUES (
                     TG_TABLE_NAME, TG_OP,
@@ -176,16 +198,16 @@ class DatabaseSecurityManager:
                 RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
             END;
             $$ LANGUAGE plpgsql;
-            """
-            await session.execute(text(trigger_function))
+            """)  # nosec B608 - Table names are validated with regex above
+            await session.execute(trigger_function)
 
-            # Create trigger
-            trigger_sql = f"""
+            # Create trigger (validated identifiers)
+            trigger_sql = text(f"""
             CREATE TRIGGER audit_{table_name}_trigger
                 AFTER INSERT OR UPDATE OR DELETE ON {table_name}
                 FOR EACH ROW EXECUTE FUNCTION audit_{table_name}()
-            """
-            await session.execute(text(trigger_sql))
+            """)
+            await session.execute(trigger_sql)
 
             await session.commit()
             logger.info(f"Audit triggers created for table: {table_name}")

@@ -36,7 +36,7 @@ class AuditEventType(str, Enum):
 
     USER_LOGIN = "user_login"
     USER_LOGOUT = "user_logout"
-    PASSWORD_CHANGE = "password_change"
+    PASSWORD_CHANGE = "password_change"  # nosec B105 - Audit event type constant, not a password
     PERMISSION_CHANGE = "permission_change"
     VOICE_INTERACTION = "voice_interaction"
     CLIENT_ACCESS = "client_access"

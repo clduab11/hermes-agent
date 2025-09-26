@@ -320,7 +320,8 @@ class EventStreamingService:
                     info[f"stream_length_{tenant_id}"] = await self.redis_client.xlen(
                         stream_name
                     )
-                except:
+                except Exception as e:
+                    logger.warning(f"Failed to get stream length for tenant {tenant_id}: {e}")
                     info[f"stream_length_{tenant_id}"] = 0
             else:
                 # Get global stream info
@@ -328,7 +329,8 @@ class EventStreamingService:
                     info["global_stream_length"] = await self.redis_client.xlen(
                         "voice_events:global"
                     )
-                except:
+                except Exception as e:
+                    logger.warning(f"Failed to get global stream length: {e}")
                     info["global_stream_length"] = 0
 
             return info

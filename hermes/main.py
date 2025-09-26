@@ -30,7 +30,7 @@ from pydantic import BaseModel
 from .analytics.engine import AnalyticsEngine
 
 # Import new API modules
-from .api import analytics_endpoints, billing_endpoints, clio_endpoints
+from .api import analytics_endpoints, billing_endpoints, clio_endpoints, security_endpoints, performance_endpoints
 from .audit import api as audit_api
 from .auth import JWTAuthMiddleware, JWTHandler, TenantManager
 from .auth.models import TokenPair
@@ -82,22 +82,52 @@ async def lifespan(app: FastAPI):
     logger.info("Starting HERMES AI Voice Agent System with MCP Integration...")
 
     try:
-        # Basic secret validation for production
+        # Enhanced production validation using secrets manager
         if not (settings.debug or settings.demo_mode):
-            missing = []
-            if not settings.openai_api_key:
-                missing.append("OPENAI_API_KEY")
-            if not settings.jwt_private_key or not settings.jwt_public_key:
-                missing.append("JWT_PRIVATE_KEY/JWT_PUBLIC_KEY")
-            if missing:
-                raise RuntimeError(
-                    f"Missing required environment variables for production: {', '.join(missing)}"
-                )
+            # Import here to avoid circular imports
+            from .security.secrets_manager import validate_production_secrets
+            from .security.config_validator import config_validator
+
+            # Validate secrets
+            secrets_validation = validate_production_secrets()
+            if not secrets_validation["ready"]:
+                missing_secrets = secrets_validation["missing_secrets"]
+                invalid_secrets = [item["key"] for item in secrets_validation["invalid_secrets"]]
+
+                error_msg = "Production validation failed:\n"
+                if missing_secrets:
+                    error_msg += f"Missing secrets: {', '.join(missing_secrets)}\n"
+                if invalid_secrets:
+                    error_msg += f"Invalid secrets: {', '.join(invalid_secrets)}\n"
+
+                raise RuntimeError(error_msg.strip())
+
+            # Validate configuration
+            config_validation = config_validator.validate_production_deployment()
+            if config_validation["errors"]:
+                error_msg = f"Configuration errors: {'; '.join(config_validation['errors'])}"
+                raise RuntimeError(error_msg)
+
+            if config_validation["security_warnings"]:
+                # Log warnings but don't fail startup
+                logger.warning("Security warnings detected", warnings=config_validation["security_warnings"])
+
+            logger.info("Production validation completed successfully",
+                       secrets_score=secrets_validation.get("score", "N/A"),
+                       config_score=config_validation.get("configuration_score", "N/A"))
         app.state.start_time = time.time()
 
         # Initialize database connection
         await init_database()
         logger.info("Database initialization completed")
+
+        # Initialize performance optimization suite
+        from .performance.performance_suite import initialize_performance_suite
+        performance_ready = await initialize_performance_suite()
+        if performance_ready:
+            logger.info("Performance optimization suite initialized successfully")
+        else:
+            logger.warning("Performance optimization suite initialization had issues - continuing startup")
 
         # Initialize MCP orchestrator
         await mcp_orchestrator.initialize()
@@ -149,6 +179,11 @@ async def lifespan(app: FastAPI):
 
         # Cleanup event streaming
         await event_streaming.cleanup()
+
+        # Cleanup performance optimization suite
+        from .performance.performance_suite import cleanup_performance_suite
+        await cleanup_performance_suite()
+        logger.info("Performance optimization suite cleaned up")
 
         # Cleanup database connection
         await close_database()
@@ -260,6 +295,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(clio_endpoints.router)
 app.include_router(analytics_endpoints.router)
 app.include_router(billing_endpoints.router)
+app.include_router(security_endpoints.router)
+app.include_router(performance_endpoints.router)
 app.include_router(audit_api.router)
 
 
@@ -410,8 +447,8 @@ async def voice_websocket(websocket: WebSocket):
         logger.error(f"Voice WebSocket error: {str(e)}")
         try:
             await websocket.close(code=1011, reason="Internal server error")
-        except:
-            pass
+        except Exception as e:
+            logger.debug(f"Failed to close WebSocket gracefully: {e}")
     finally:
         if websocket_handler:
             update_active_connections(websocket_handler.get_connection_count())

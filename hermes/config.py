@@ -1,11 +1,12 @@
 """Configuration management for HERMES voice agent system."""
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .security.secrets_manager import secrets_manager
+from .security.config_validator import config_validator
 
 
 class Settings(BaseSettings):
@@ -30,6 +31,11 @@ class Settings(BaseSettings):
     # OpenAI Configuration
     openai_api_key: str = Field(default="", description="OpenAI API key")
     openai_model: str = Field(default="gpt-4", description="OpenAI model to use")
+
+    @property
+    def secure_openai_api_key(self) -> str:
+        """Get OpenAI API key from secure secrets manager."""
+        return secrets_manager.get_api_key("openai") or self.openai_api_key
 
     # Voice Configuration
     whisper_model: str = Field(default="base", description="Whisper model size")
@@ -97,6 +103,16 @@ class Settings(BaseSettings):
         default="redis://localhost:6379", description="Redis connection URL"
     )
 
+    @property
+    def secure_database_url(self) -> Optional[str]:
+        """Get database URL from secure secrets manager."""
+        return secrets_manager.get_database_url() or self.database_url
+
+    @property
+    def secure_redis_url(self) -> Optional[str]:
+        """Get Redis URL from secure secrets manager."""
+        return secrets_manager.get_secret("REDIS_URL") or self.redis_url
+
     # MCP Configuration
     clio_client_id: Optional[str] = Field(
         default=None, description="Clio OAuth client ID"
@@ -143,6 +159,55 @@ class Settings(BaseSettings):
     stripe_trial_days: int = Field(
         default=14, ge=0, description="Trial period length in days"
     )
+
+    # Secure property accessors for sensitive configuration
+    @property
+    def secure_clio_client_secret(self) -> Optional[str]:
+        """Get Clio client secret from secure secrets manager."""
+        return secrets_manager.get_secret("CLIO_CLIENT_SECRET") or self.clio_client_secret
+
+    @property
+    def secure_clio_token_encryption_key(self) -> Optional[str]:
+        """Get Clio token encryption key from secure secrets manager."""
+        return secrets_manager.get_secret("CLIO_TOKEN_ENCRYPTION_KEY") or self.clio_token_encryption_key
+
+    @property
+    def secure_zapier_api_key(self) -> Optional[str]:
+        """Get Zapier API key from secure secrets manager."""
+        return secrets_manager.get_api_key("zapier") or self.zapier_api_key
+
+    @property
+    def secure_github_token(self) -> Optional[str]:
+        """Get GitHub token from secure secrets manager."""
+        return secrets_manager.get_secret("GITHUB_TOKEN") or self.github_token
+
+    @property
+    def secure_supabase_service_role_key(self) -> Optional[str]:
+        """Get Supabase service role key from secure secrets manager."""
+        return secrets_manager.get_secret("SUPABASE_SERVICE_ROLE_KEY") or self.supabase_service_role_key
+
+    @property
+    def secure_mem0_api_key(self) -> Optional[str]:
+        """Get Mem0 API key from secure secrets manager."""
+        return secrets_manager.get_api_key("mem0") or self.mem0_api_key
+
+    @property
+    def secure_stripe_api_key(self) -> Optional[str]:
+        """Get Stripe API key from secure secrets manager."""
+        return secrets_manager.get_api_key("stripe") or self.stripe_api_key
+
+    @property
+    def secure_stripe_webhook_secret(self) -> Optional[str]:
+        """Get Stripe webhook secret from secure secrets manager."""
+        return secrets_manager.get_secret("STRIPE_WEBHOOK_SECRET") or self.stripe_webhook_secret
+
+    def validate_production_config(self) -> Dict[str, Any]:
+        """Validate configuration for production deployment."""
+        return config_validator.validate_production_deployment()
+
+    def get_security_report(self) -> str:
+        """Generate comprehensive security report."""
+        return config_validator.generate_security_report()
 
 
 # Backward compatibility alias for legacy attribute name

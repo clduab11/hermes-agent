@@ -30,7 +30,7 @@ class ClioAuthHandler:
 
     # Clio OAuth endpoints
     AUTHORIZE_URL = "https://app.clio.com/oauth/authorize"
-    TOKEN_URL = "https://app.clio.com/oauth/token"
+    TOKEN_URL = "https://app.clio.com/oauth/token"  # nosec B105 - OAuth2 endpoint URL, not a password
 
     # Required scopes for HERMES integration
     SCOPES = [

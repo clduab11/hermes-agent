@@ -112,3 +112,17 @@ docker-compose.override.yml
 mcp_servers/*/logs/
 mcp_servers/*/cache/
 *.mcp.log
+
+# Development artifact directories (prevent recreation)
+.roo/
+.hive-mind/
+.swarm/
+.claude-flow/
+.roomodes
+
+# Additional development artifacts
+bandit-results.json
+coverage.xml
+test-results.xml
+vulns.json
+vulns_updated.json

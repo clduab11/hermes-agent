@@ -1,160 +1,196 @@
+# HERMES Platform Integration Guide
 
-# HERMES Backend Deployment Guide
+This guide explains how to integrate your systems with the HERMES hosted platform. No deployment or infrastructure management required.
 
-This guide explains how to deploy the HERMES backend to make the GitHub Pages demo fully functional with voice transcription and TTS capabilities.
+## Platform Overview
 
-## Current Status
+HERMES is now available exclusively as a fully hosted SaaS platform. All infrastructure, scaling, security, and maintenance is handled by Parallax Analytics.
 
-The HERMES demo at https://clduab11.github.io/hermes-agent/ currently runs in "demo mode" because it only serves static files through GitHub Pages. To enable full functionality, you need to deploy the Python FastAPI backend to a cloud service.
+**Platform URL**: [https://hermes.parallax-ai.app](https://hermes.parallax-ai.app)
 
-## Quick Deploy Options
+## Getting Started
 
-### Option 1: Render.com (Recommended for Demo)
+### Step 1: Create Your Account
 
-Render offers a generous free tier perfect for demonstrations:
+1. Visit [https://hermes.parallax-ai.app/signup](https://hermes.parallax-ai.app/signup)
+2. Choose your firm size and practice areas
+3. Complete the 14-day free trial setup (no credit card required)
+4. Verify your email and phone number
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/clduab11/hermes-agent)
+### Step 2: Configure Your Phone System
 
-**Steps:**
-1. Click the "Deploy to Render" button above
-2. Connect your GitHub account and fork the repository  
-3. Set your OpenAI API key in the environment variables
-4. Deploy (takes ~5-10 minutes)
-5. Copy the deployed URL and update the frontend configuration
+HERMES integrates with any SIP-compatible phone system:
 
-**Free Tier Limits:**
-- 512MB RAM, shared CPU
-- Sleeps after 15 minutes of inactivity  
-- 750 build hours/month
-- Perfect for demonstrations and testing
+**Supported Systems:**
+- RingCentral
+- 8x8
+- Vonage Business
+- Microsoft Teams Phone
+- Cisco Webex Calling
+- Any SIP trunk provider
 
-### Option 2: Railway.app 
+**Configuration Steps:**
+1. Access the Setup Wizard in your HERMES dashboard
+2. Enter your SIP trunk details (provided by your phone provider)
+3. Configure call forwarding rules for after-hours and overflow
+4. Test the integration with a live call
 
-Railway offers $5/month credit and excellent developer experience:
+### Step 3: Legal Compliance Setup
 
-1. Install Railway CLI: `npm install -g @railway/cli`
-2. Clone and navigate to this repository
-3. Run `railway login` and `railway up`
-4. Set environment variables: `railway variables set OPENAI_API_KEY=your_key_here`
-5. Your app will be deployed automatically
+1. Select your jurisdiction (all 50 US states supported)
+2. Configure legal disclaimers for your practice areas
+3. Set up attorney-client privilege protections
+4. Enable HIPAA compliance if handling medical cases
+5. Configure audit trails for legal discovery
 
-### Option 3: Local Development with Docker
+## Integration Options
 
-For local development and testing:
+### CRM Integration
 
-1. Clone the repository
-2. Copy `.env.example` to `.env` and set your API keys
-3. Run `docker-compose up` to start frontend and backend services
-4. Access the demo at http://localhost:5173
-5. Backend API available at http://localhost:8000
+**Supported Platforms:**
+- Clio Manage (recommended)
+- MyCase
+- PracticePanther
+- Smokeball
+- Filevine
+- LawPay
+- Custom integrations via API
 
-## Required Environment Variables
+**Setup Process:**
+1. Navigate to Integrations in your HERMES dashboard
+2. Click "Connect" next to your CRM platform
+3. Authorize HERMES access (read-only permissions recommended)
+4. Map client data fields and matter types
+5. Test client lookup and data sync
 
-For any deployment, you'll need:
+### Business Automation
 
-```bash
-# Required
-OPENAI_API_KEY=sk-...  # Get from https://platform.openai.com/
+**Zapier Integration:**
+- 3,000+ app integrations
+- Automatic matter creation
+- Client intake workflows
+- Document generation
+- Calendar scheduling
+- Email notifications
 
-# Recommended for production
-CORS_ALLOW_ORIGINS=https://clduab11.github.io  # Allow GitHub Pages
-DEMO_MODE=true  # Enable demo features
-WHISPER_MODEL=tiny  # Use smallest model for better performance
-CONFIDENCE_THRESHOLD=0.7  # Lower threshold for demo
-```
+**Microsoft 365 / Google Workspace:**
+- Calendar integration for appointment scheduling
+- Email sync for client communications
+- Document management connections
+- Contact directory synchronization
 
-## Connecting Frontend to Deployed Backend
+## API Integration
 
-After deploying your backend, you need to update the frontend to connect to it:
+For custom integrations, HERMES provides enterprise APIs:
 
-### Method 1: Update GitHub Pages Deployment
+**Base URL**: `https://api.hermes.parallax-ai.app`
 
-1. Fork this repository
-2. Go to your repository settings → Secrets and variables → Actions  
-3. Add repository secrets:
-   ```
-   VITE_BACKEND_WS_URL: wss://your-hermes-app.onrender.com
-   VITE_BACKEND_URL: https://your-hermes-app.onrender.com
-   VITE_ENVIRONMENT: production
-   ```
-4. Push a change to trigger GitHub Pages rebuild
-5. Your demo will now connect to the backend!
+**Authentication**: Bearer token (provided in dashboard)
 
-## Deployment Architecture
+**Key Endpoints:**
+- `/v1/calls` - Call history and recordings
+- `/v1/clients` - Client data management
+- `/v1/matters` - Matter tracking and updates
+- `/v1/webhooks` - Real-time event notifications
+- `/v1/settings` - Configuration management
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  GitHub Pages   │────▶│  Cloud Backend   │────▶│  External APIs  │
-│  (Static Site)  │     │  (Render/Railway)│     │                 │
-│                 │     │                 │     │  - OpenAI API   │
-│  - React App    │     │  - FastAPI      │     │  - Whisper STT  │
-│  - WebSocket    │     │  - WebSocket    │     │  - GPT-4 LLM    │
-│    Client       │     │  - Voice Pipeline│     │  - TTS Service  │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-```
+**Documentation**: [https://api.hermes.parallax-ai.app/docs](https://api.hermes.parallax-ai.app/docs)
 
-## Testing Your Deployment
+## Security & Compliance
 
-1. Visit your deployed backend URL + `/health` (e.g., `https://your-app.onrender.com/health`)
-2. You should see: `{"status": "healthy", "timestamp": "..."}`
-3. Visit the GitHub Pages demo: https://clduab11.github.io/hermes-agent/
-4. Click "Try Voice Demo" and "Start Voice Input"
-5. You should see "✅ Connected to HERMES voice processing backend"
+### SOC 2 Type II Certification
+- Annual third-party security audits
+- Penetration testing and vulnerability assessments
+- 24/7 security monitoring and incident response
 
-## Integration Documentation
+### Data Protection
+- End-to-end encryption (AES-256)
+- Data residency options (US, EU, Canada)
+- Automatic backup and disaster recovery
+- GDPR compliance for international clients
 
-- Clio OAuth Setup: `docs/clio-setup.md`
-- Supabase Integration: `docs/supabase-setup.md`
+### Legal Industry Compliance
+- Attorney-client privilege protection
+- State bar regulation compliance (all 50 states)
+- Legal ethics rules integration
+- Malpractice insurance compatibility
 
-## Production Notes
+## Monitoring & Analytics
 
-- Set `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` for database-backed features
-- Set `CLIO_CLIENT_ID`, `CLIO_CLIENT_SECRET`, `CLIO_REDIRECT_URI` for Clio integration
-- Restrict CORS via `CORS_ALLOW_ORIGINS` and disable demo mode in production
-- Monitor API usage costs (OpenAI, TTS services)
-- Consider rate limiting for public deployments
+### Real-time Dashboard
+- Live call monitoring
+- Response time metrics
+- Client satisfaction scores
+- Matter conversion tracking
+- Revenue attribution
 
-## Google Cloud Platform Deployment (Advanced)
+### Reporting
+- Monthly performance reports
+- Client interaction analytics
+- Call volume and patterns
+- Integration health monitoring
+- Compliance audit trails
 
-### Prerequisites
+## Support & Training
 
-1. Google Cloud SDK installed and configured
-2. Docker installed
-3. HERMES repository cloned
-4. Environment variables configured
+### 24/7 Technical Support
+- Phone: +1 (662) 848-3547
+- Email: support@parallax-ai.app
+- Live chat: Available in dashboard
+- Emergency escalation: Available for enterprise clients
 
-### Step 1: Build Docker Image
+### Training Resources
+- Video tutorial library
+- Best practices documentation
+- Weekly office hours with experts
+- Custom training sessions for large firms
 
-```bash
-# Build production Docker image
-docker build -t hermes-ai-voice-agent .
+### Professional Services
+- Implementation consulting
+- Custom integration development
+- Workflow optimization
+- Change management support
 
-# Tag for Google Container Registry
-docker tag hermes-ai-voice-agent gcr.io/YOUR_PROJECT_ID/hermes-ai-voice-agent
-```
+## Pricing & Plans
 
-### Step 2: Push to Container Registry
+### Professional Plan - $99/month per line
+- Unlimited calls and messages
+- Basic CRM integrations
+- Standard support (business hours)
+- 99.9% uptime SLA
 
-```bash
-# Configure Docker for GCR
-gcloud auth configure-docker
+### Enterprise Plan - Custom pricing
+- Volume discounts available
+- Advanced integrations and APIs
+- 24/7 priority support
+- Custom SLA options
+- Dedicated customer success manager
 
-# Push image
-docker push gcr.io/YOUR_PROJECT_ID/hermes-ai-voice-agent
-```
+### White Label - Contact sales
+- Custom branding and domain
+- Private deployment options
+- Advanced security features
+- Regulatory compliance packages
 
-### Step 3: Deploy to Cloud Run
+## Migration from Self-Hosted
 
-```bash
-gcloud run deploy hermes-voice-agent \
-  --image gcr.io/YOUR_PROJECT_ID/hermes-ai-voice-agent \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --memory 2Gi \
-  --cpu 2 \
-  --concurrency 80 \
-  --max-instances 10 \
-  --set-env-vars "OPENAI_API_KEY=your-key,SUPABASE_URL=your-url"
-```
-        
+If you were previously running a self-hosted version of HERMES:
+
+1. **Data Export**: Contact support to export your existing data
+2. **Configuration Import**: We'll migrate your settings and integrations
+3. **Testing Period**: 30-day parallel running to ensure smooth transition
+4. **Go-Live Support**: Dedicated engineer during cutover
+5. **Training**: Team training on platform differences
+
+**Migration Timeline**: Typically 1-2 weeks depending on complexity
+
+## Getting Help
+
+- **Platform Status**: [https://status.hermes.parallax-ai.app](https://status.hermes.parallax-ai.app)
+- **Documentation**: [https://docs.hermes.parallax-ai.app](https://docs.hermes.parallax-ai.app)
+- **Community Forum**: [https://community.hermes.parallax-ai.app](https://community.hermes.parallax-ai.app)
+- **Contact Sales**: enterprise@parallax-ai.app
+
+---
+
+**Ready to get started?** [Start your free 14-day trial](https://hermes.parallax-ai.app/signup) or [schedule a personalized demo](https://hermes.parallax-ai.app/demo).

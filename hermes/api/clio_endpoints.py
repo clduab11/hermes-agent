@@ -599,7 +599,7 @@ async def revoke_clio_tokens(
         if revoke_remote:
             try:
                 await handler.revoke_token(
-                    tokens.refresh_token, token_type="refresh_token"
+                    tokens.refresh_token, token_type="refresh_token"  # nosec B106 - OAuth2 token type parameter
                 )
             except Exception as e:
                 logger.warning(f"Remote revoke failed: {e}")

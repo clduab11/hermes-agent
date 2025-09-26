@@ -118,7 +118,8 @@ def require_permission(permission: str):
             else:
                 try:
                     normalized.add(Role(r))
-                except Exception:
+                except Exception as e:
+                    logger.debug(f"Failed to convert role '{r}' to Role enum: {e}")
                     continue
         if normalized.isdisjoint(required_roles):
             raise HTTPException(

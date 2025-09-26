@@ -192,10 +192,10 @@ class VoiceWebSocketHandler:
 
             try:
                 await connection_info.websocket.close()
-            except Exception:
+            except Exception as e:
                 # Connection might already be closed or in an invalid state,
                 # this is acceptable during cleanup
-                pass
+                logger.debug(f"Failed to close WebSocket connection {session_id}: {e}")
 
             del self.active_connections[session_id]
 

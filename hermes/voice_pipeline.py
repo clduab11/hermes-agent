@@ -4,7 +4,7 @@ Core voice pipeline integrating STT, LLM processing, and TTS.
 
 import asyncio
 import logging
-import random
+import secrets
 import time
 from datetime import datetime, timezone
 from typing import Any, AsyncGenerator, Dict, List, Literal, Optional, TypedDict
@@ -534,11 +534,11 @@ Respond naturally and conversationally, as if speaking to someone on the phone."
 
         if response:
             if is_compliance_response(response):
-                prefix = random.choice(self._COMPLIANCE_PREFIXES)
+                prefix = secrets.choice(self._COMPLIANCE_PREFIXES)
             elif is_offer_response(response):
-                prefix = random.choice(self._OFFER_PREFIXES + self._GENERAL_PREFIXES)
+                prefix = secrets.choice(self._OFFER_PREFIXES + self._GENERAL_PREFIXES)
             else:
-                prefix = random.choice(self._GENERAL_PREFIXES)
+                prefix = secrets.choice(self._GENERAL_PREFIXES)
 
             if prefix:
                 response = f"{prefix} {response}"

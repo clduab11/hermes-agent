@@ -416,13 +416,13 @@ Set required environment variables:
 ```bash
 # Supabase Configuration
 export SUPABASE_URL="https://your-project.supabase.co"
-export SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+export SUPABASE_SERVICE_ROLE_KEY=""  # Set your Supabase service role key
 
-# Mem0 Configuration  
-export MEM0_API_KEY="your-mem0-api-key"
+# Mem0 Configuration
+export MEM0_API_KEY=""  # Set your Mem0 API key (optional for local usage)
 
 # GitHub Configuration
-export GITHUB_TOKEN="your-github-token"
+export GITHUB_TOKEN=""  # Set your GitHub personal access token
 ```
 
 ## Initialize MCP Orchestrator

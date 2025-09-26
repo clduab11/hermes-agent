@@ -769,8 +769,8 @@ class LegalNLPProcessor:
             match = re.search(r"[\d.]+", cleaned)
             if match:
                 return float(match.group())
-        except:
-            pass
+        except (ValueError, AttributeError, TypeError) as e:
+            logger.debug(f"Failed to extract monetary value: {e}")
         return 0.0
 
     def _categorize_legal_concept(self, term: str) -> str:
