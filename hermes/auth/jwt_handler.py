@@ -22,8 +22,8 @@ class JWTHandler:
         access_expire_minutes: int | None = None,
         refresh_expire_days: int | None = None,
     ) -> None:
-        self.private_key = private_key or settings.jwt_private_key
-        self.public_key = public_key or settings.jwt_public_key
+        self.private_key = private_key or settings.secure_jwt_private_key
+        self.public_key = public_key or settings.secure_jwt_public_key
         self.algorithm = algorithm or settings.jwt_algorithm
         self.access_expire_minutes = (
             access_expire_minutes or settings.access_token_expire_minutes

@@ -4,11 +4,11 @@ services:
   hermes-backend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.production
     image: hermes-backend:latest
     container_name: hermes-backend
     env_file:
-      - .env.example
+      - .env
     environment:
       UVICORN_HOST: 0.0.0.0
       UVICORN_PORT: 8000

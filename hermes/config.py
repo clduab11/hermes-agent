@@ -5,6 +5,8 @@ from typing import List, Optional
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from .security.secrets_manager import secrets_manager
+
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables with validation."""
@@ -69,6 +71,16 @@ class Settings(BaseSettings):
     # JWT Authentication
     jwt_private_key: str = Field(default="", description="JWT private key")
     jwt_public_key: str = Field(default="", description="JWT public key")
+
+    @property
+    def secure_jwt_private_key(self) -> str:
+        """Get JWT private key from secure secrets manager."""
+        return secrets_manager.get_secret("JWT_PRIVATE_KEY") or self.jwt_private_key
+
+    @property
+    def secure_jwt_public_key(self) -> str:
+        """Get JWT public key from secure secrets manager."""
+        return secrets_manager.get_secret("JWT_PUBLIC_KEY") or self.jwt_public_key
     jwt_algorithm: str = Field(default="RS256", description="JWT algorithm")
     access_token_expire_minutes: int = Field(
         default=15, ge=1, le=1440, description="Access token expiry"
@@ -158,8 +170,8 @@ def get_cors_origins_list() -> List[str]:
         configured_origins = [o.strip() for o in settings.cors_allow_origins.split(",") if o.strip()]
         origins.extend(configured_origins)
     elif settings.debug:
-        # In debug mode without specific config, allow all
-        return ["*"]
+        # In debug mode without specific config, allow localhost only for security
+        return ["http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173"]
     
     # Add development origins if in debug or demo mode
     if settings.debug or settings.demo_mode:
