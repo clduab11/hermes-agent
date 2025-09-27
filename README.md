@@ -74,7 +74,7 @@ This software is licensed for managed SaaS deployment only. Self-hosting is not 
 ### Getting Started (Enterprise Clients Only)
 
 1. **Contact Enterprise Sales**
-   - Email: enterprise@hermes-ai.com
+   - Email: info@parallax-ai.app
    - Phone: 1-800-HERMES-AI
    - Schedule consultation: [calendly.com/hermes-enterprise](https://calendly.com/hermes-enterprise)
 
@@ -184,10 +184,11 @@ This software is provided under an enterprise SaaS license. Key terms:
 
 ### Contact Information
 
-- **Enterprise Sales**: enterprise@hermes-ai.com
-- **Technical Support**: support@hermes-ai.com
-- **Legal & Compliance**: legal@hermes-ai.com
-- **Billing & Accounts**: billing@hermes-ai.com
+- **General Contact**: info@parallax-ai.app
+- **Privacy Contact**: privacy@parallax-ai.app
+- **Technical Support**: info@parallax-ai.app
+- **Legal & Compliance**: info@parallax-ai.app
+- **Billing & Accounts**: info@parallax-ai.app
 
 ---
 
