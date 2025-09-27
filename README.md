@@ -6,7 +6,7 @@
 HERMES is an enterprise-grade cloud-native AI voice agent platform exclusively designed for law firms. Our secure, SOC 2 compliant Google Cloud infrastructure delivers 24/7 legal communication intelligence as a fully managed service. No self-hosting, no deployment complexity—just enterprise-ready legal AI.
 
 ⚠️ **IMPORTANT: SaaS-Only Deployment**
-This software is licensed for managed SaaS deployment only. Self-hosting is not permitted under the enterprise license terms. Contact enterprise@hermes-ai.com for authorized access.
+This software is licensed for managed SaaS deployment only. Self-hosting is not permitted under the enterprise license terms. Contact info@parallax-ai.app for authorized access.
 
 ## ✨ Enterprise Features
 
