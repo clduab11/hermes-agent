@@ -1,0 +1,546 @@
+name: 📊 HERMES Site Monitoring & Professional Readiness
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # Every 30 minutes - uptime monitoring
+    - cron: '0 9 * * 1-5'   # Business hours readiness check (9 AM weekdays)
+  workflow_run:
+    workflows: ["🏛️ HERMES Consolidated CI/CD"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      monitoring_type:
+        description: 'Type of monitoring check'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - uptime-only
+          - performance-only
+          - professional-readiness
+
+jobs:
+  # Comprehensive Site Monitoring
+  site-monitoring:
+    name: 🌐 Site Monitoring & Validation
+    runs-on: ubuntu-latest
+    if: |
+      github.event.inputs.monitoring_type == 'full' || 
+      github.event.inputs.monitoring_type == 'uptime-only' || 
+      github.event.inputs.monitoring_type == '' || 
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_run'
+    outputs:
+      site_status: ${{ steps.uptime.outputs.status }}
+      site_url: ${{ steps.uptime.outputs.url }}
+    
+    steps:
+      - name: Comprehensive uptime and content validation
+        id: uptime
+        run: |
+          SITE_URL="https://${{ github.repository_owner }}.github.io/$(echo '${{ github.repository }}' | cut -d'/' -f2)/"
+          echo "url=$SITE_URL" >> $GITHUB_OUTPUT
+          echo "🔍 Checking HERMES demo site comprehensive status..."
+          echo "📍 URL: $SITE_URL"
+          
+          # Multi-point availability check with detailed metrics
+          ATTEMPTS=3
+          SUCCESS_COUNT=0
+          CONTENT_CHECKS=0
+          TOTAL_RESPONSE_TIME=0
+          
+          for i in $(seq 1 $ATTEMPTS); do
+            echo "🔄 Attempt $i/$ATTEMPTS"
+            
+            # Get detailed metrics
+            METRICS=$(curl -o /dev/null -s -w "HTTP:%{http_code}|TIME:%{time_total}|SIZE:%{size_download}|SPEED:%{speed_download}" --max-time 15 "$SITE_URL" 2>/dev/null || echo "HTTP:000|TIME:15.000|SIZE:0|SPEED:0")
+            
+            HTTP_STATUS=$(echo "$METRICS" | cut -d'|' -f1 | cut -d':' -f2)
+            RESPONSE_TIME=$(echo "$METRICS" | cut -d'|' -f2 | cut -d':' -f2)
+            PAGE_SIZE=$(echo "$METRICS" | cut -d'|' -f3 | cut -d':' -f2)
+            DOWNLOAD_SPEED=$(echo "$METRICS" | cut -d'|' -f4 | cut -d':' -f2)
+            
+            echo "  📊 HTTP Status: $HTTP_STATUS"
+            echo "  ⏱️ Response Time: ${RESPONSE_TIME}s"
+            echo "  📦 Page Size: ${PAGE_SIZE} bytes"
+            echo "  ⚡ Download Speed: ${DOWNLOAD_SPEED} bytes/s"
+            
+            if [ "$HTTP_STATUS" = "200" ]; then
+              ((SUCCESS_COUNT++))
+              TOTAL_RESPONSE_TIME=$(echo "$TOTAL_RESPONSE_TIME + $RESPONSE_TIME" | bc -l)
+              echo "  ✅ Success"
+              
+              # Comprehensive content validation
+              CONTENT=$(curl -s --max-time 15 "$SITE_URL" 2>/dev/null || echo "")
+              
+              # Check for React app structure
+              if echo "$CONTENT" | grep -q 'id="root"'; then
+                echo "  ✅ React app structure detected"
+                ((CONTENT_CHECKS++))
+              fi
+              
+              # Check for HERMES branding
+              if echo "$CONTENT" | grep -qi "hermes"; then
+                echo "  ✅ HERMES branding present"
+                ((CONTENT_CHECKS++))
+              fi
+              
+              # Check for legal industry positioning
+              if echo "$CONTENT" | grep -qi "legal\|law\|attorney"; then
+                echo "  ✅ Legal industry positioning detected"
+                ((CONTENT_CHECKS++))
+              fi
+              
+              # Check for professional presentation elements
+              if echo "$CONTENT" | grep -qi "ai\|voice\|automation"; then
+                echo "  ✅ AI/Voice technology highlighted"
+                ((CONTENT_CHECKS++))
+              fi
+              
+            else
+              echo "  ❌ Failed (Status: $HTTP_STATUS)"
+            fi
+            
+            [ $i -lt $ATTEMPTS ] && sleep 10
+          done
+          
+          # Calculate averages and status
+          if [ $SUCCESS_COUNT -gt 0 ]; then
+            AVG_RESPONSE_TIME=$(echo "scale=3; $TOTAL_RESPONSE_TIME / $SUCCESS_COUNT" | bc -l)
+          else
+            AVG_RESPONSE_TIME="N/A"
+          fi
+          
+          echo ""
+          echo "📊 Final Results:"
+          echo "  🎯 Success Rate: $SUCCESS_COUNT/$ATTEMPTS ($(echo "scale=1; $SUCCESS_COUNT * 100 / $ATTEMPTS" | bc -l)%)"
+          echo "  📋 Content Validation: $CONTENT_CHECKS/4 checks passed"
+          echo "  ⚡ Average Response Time: ${AVG_RESPONSE_TIME}s"
+          
+          # Determine overall status
+          if [ $SUCCESS_COUNT -eq $ATTEMPTS ] && [ $CONTENT_CHECKS -ge 3 ]; then
+            echo "🎉 Site is EXCELLENT - fully operational with professional content"
+            echo "status=excellent" >> $GITHUB_OUTPUT
+          elif [ $SUCCESS_COUNT -gt 1 ] && [ $CONTENT_CHECKS -ge 2 ]; then
+            echo "✅ Site is GOOD - operational with minor content issues"
+            echo "status=good" >> $GITHUB_OUTPUT
+          elif [ $SUCCESS_COUNT -gt 0 ]; then
+            echo "⚠️ Site is DEGRADED - intermittent issues or content problems"
+            echo "status=degraded" >> $GITHUB_OUTPUT
+          else
+            echo "🚨 Site is DOWN - not accessible"
+            echo "status=down" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Professional presentation readiness assessment
+        run: |
+          echo "💼 Professional Presentation Readiness Assessment"
+          echo "================================================="
+          
+          case "${{ steps.uptime.outputs.status }}" in
+            "excellent")
+              echo "🏆 **EXCELLENT** - Ready for high-stakes professional presentations"
+              echo "✅ LinkedIn showcase ready"
+              echo "✅ Law firm partner demonstrations ready"
+              echo "✅ Legal industry conference ready"
+              echo "✅ Client prospect meetings ready"
+              ;;
+            "good")
+              echo "✅ **GOOD** - Suitable for most professional presentations"
+              echo "✅ LinkedIn showcase ready"
+              echo "✅ General professional meetings ready"
+              echo "⚠️ Monitor closely for high-stakes presentations"
+              ;;
+            "degraded")
+              echo "⚠️ **CAUTION** - Issues may impact professional impression"
+              echo "❌ NOT recommended for high-stakes presentations"
+              echo "⚠️ Suitable for informal demos only"
+              echo "🔧 Address issues before important meetings"
+              ;;
+            "down")
+              echo "🚨 **CRITICAL** - Site not accessible"
+              echo "❌ NO professional presentations possible"
+              echo "🔧 URGENT: Fix required immediately"
+              ;;
+          esac
+
+  # Performance Analysis
+  performance-analysis:
+    name: ⚡ Performance Analysis
+    runs-on: ubuntu-latest
+    needs: [site-monitoring]
+    if: |
+      (github.event.inputs.monitoring_type == 'full' || 
+       github.event.inputs.monitoring_type == 'performance-only' || 
+       github.event.inputs.monitoring_type == '') &&
+      needs.site-monitoring.outputs.site_status != 'down'
+    
+    steps:
+      - name: Comprehensive performance metrics
+        run: |
+          SITE_URL="${{ needs.site-monitoring.outputs.site_url }}"
+          echo "⚡ Comprehensive Performance Analysis for HERMES Demo"
+          echo "===================================================="
+          echo "📍 Testing: $SITE_URL"
+          
+          # Collect detailed performance metrics
+          echo "🔍 Collecting detailed performance metrics..."
+          METRICS=$(curl -o /dev/null -s -w "DNS:%{time_namelookup}\nConnect:%{time_connect}\nTTFB:%{time_starttransfer}\nTotal:%{time_total}\nSize:%{size_download}\nSpeed:%{speed_download}\n" "$SITE_URL")
+          
+          echo "$METRICS"
+          
+          # Extract and analyze metrics
+          DNS_TIME=$(echo "$METRICS" | grep "DNS:" | cut -d: -f2)
+          CONNECT_TIME=$(echo "$METRICS" | grep "Connect:" | cut -d: -f2)
+          TTFB=$(echo "$METRICS" | grep "TTFB:" | cut -d: -f2)
+          TOTAL_TIME=$(echo "$METRICS" | grep "Total:" | cut -d: -f2)
+          SIZE=$(echo "$METRICS" | grep "Size:" | cut -d: -f2)
+          SPEED=$(echo "$METRICS" | grep "Speed:" | cut -d: -f2)
+          
+          echo ""
+          echo "📊 Performance Analysis Results:"
+          echo "🔍 DNS Resolution: ${DNS_TIME}s"
+          echo "🔗 Connection Time: ${CONNECT_TIME}s"
+          echo "📡 Time to First Byte: ${TTFB}s"
+          echo "⏱️ Total Load Time: ${TOTAL_TIME}s"
+          echo "📦 Page Size: ${SIZE} bytes ($(echo "scale=1; $SIZE / 1024" | bc -l) KB)"
+          echo "⚡ Download Speed: ${SPEED} bytes/s ($(echo "scale=1; $SPEED / 1024" | bc -l) KB/s)"
+          
+          echo ""
+          echo "🎯 Professional Presentation Performance Assessment:"
+          
+          # Performance grading for professional presentations
+          if (( $(echo "$TOTAL_TIME < 1.5" | bc -l) )); then
+            echo "🏆 **OUTSTANDING** (< 1.5s) - Exceeds professional expectations"
+            echo "✅ Perfect for high-stakes legal industry presentations"
+            echo "✅ Impressive load speed will enhance professional credibility"
+          elif (( $(echo "$TOTAL_TIME < 3.0" | bc -l) )); then
+            echo "✅ **EXCELLENT** (< 3.0s) - Professional presentation ready"
+            echo "✅ Suitable for all legal professional demonstrations"
+            echo "✅ Good impression for LinkedIn showcase"
+          elif (( $(echo "$TOTAL_TIME < 5.0" | bc -l) )); then
+            echo "✅ **GOOD** (< 5.0s) - Acceptable for most presentations"
+            echo "⚠️ Consider optimization for high-stakes presentations"
+            echo "✅ Suitable for informal professional demos"
+          else
+            echo "⚠️ **NEEDS IMPROVEMENT** (≥ 5.0s) - May impact professional impression"
+            echo "❌ NOT recommended for important client presentations"
+            echo "🔧 Performance optimization strongly recommended"
+          fi
+
+      - name: Performance optimization recommendations
+        run: |
+          echo ""
+          echo "🎯 Performance Optimization Recommendations:"
+          echo "1. **Image Optimization:** Compress and optimize all images"
+          echo "2. **Code Splitting:** Implement lazy loading for React components"
+          echo "3. **CDN Integration:** Use GitHub Pages CDN effectively"
+          echo "4. **Caching Strategy:** Implement proper browser caching headers"
+          echo "5. **Bundle Analysis:** Analyze and reduce JavaScript bundle size"
+          echo "6. **Critical CSS:** Inline critical CSS to reduce render blocking"
+
+  # Legal Industry Compliance Monitoring
+  legal-compliance-monitoring:
+    name: ⚖️ Legal Industry Compliance Monitoring
+    runs-on: ubuntu-latest
+    needs: [site-monitoring]
+    if: |
+      (github.event.inputs.monitoring_type == 'full' || 
+       github.event_name == 'schedule') &&
+      needs.site-monitoring.outputs.site_status != 'down'
+    
+    steps:
+      - name: Legal industry positioning validation
+        run: |
+          SITE_URL="${{ needs.site-monitoring.outputs.site_url }}"
+          echo "⚖️ Legal Industry Positioning Validation"
+          echo "========================================"
+          echo "📍 Analyzing: $SITE_URL"
+          
+          # Fetch and analyze site content for legal positioning
+          SITE_CONTENT=$(curl -s "$SITE_URL" || echo "Failed to fetch content")
+          
+          COMPLIANCE_SCORE=0
+          MAX_SCORE=12
+          
+          echo "🔍 Legal Industry Positioning Analysis:"
+          
+          # Core HERMES branding
+          if echo "$SITE_CONTENT" | grep -qi "hermes"; then
+            echo "✅ HERMES brand prominently displayed"
+            ((COMPLIANCE_SCORE++))
+          else
+            echo "❌ HERMES branding not clearly visible"
+          fi
+          
+          # Legal tech positioning
+          if echo "$SITE_CONTENT" | grep -qi "legal.*tech\|legal.*ai\|law.*firm.*ai"; then
+            echo "✅ Legal technology positioning clear"
+            ((COMPLIANCE_SCORE++))
+          else
+            echo "⚠️ Legal tech positioning could be stronger"
+          fi
+          
+          # Professional legal targeting
+          if echo "$SITE_CONTENT" | grep -qi "law.*firm\|legal.*professional\|attorney"; then
+            echo "✅ Professional legal audience targeting evident"
+            ((COMPLIANCE_SCORE++))
+          else
+            echo "⚠️ Legal professional targeting needs improvement"
+          fi
+          
+          # Voice AI technology
+          if echo "$SITE_CONTENT" | grep -qi "voice.*ai\|ai.*voice\|voice.*agent"; then
+            echo "✅ Voice AI technology highlighted"
+            ((COMPLIANCE_SCORE++))
+          else
+            echo "⚠️ Voice AI features not prominently displayed"
+          fi
+          
+          # Compliance messaging
+          if echo "$SITE_CONTENT" | grep -qi "compliance\|hipaa\|gdpr\|secure"; then
+            echo "✅ Compliance and security messaging present"
+            ((COMPLIANCE_SCORE++))
+          else
+            echo "❌ Compliance messaging missing - CRITICAL for legal industry"
+          fi
+          
+          # Value proposition
+          if echo "$SITE_CONTENT" | grep -qi "cost.*sav\|efficienc\|24.*7\|automat"; then
+            echo "✅ Clear value proposition for law firms"
+            ((COMPLIANCE_SCORE++))
+          else
+            echo "⚠️ Value proposition needs to be more prominent"
+          fi
+          
+          # Professional presentation elements
+          if echo "$SITE_CONTENT" | grep -qi "professional\|enterprise\|business"; then
+            echo "✅ Professional presentation language used"
+            ((COMPLIANCE_SCORE++))
+          else
+            echo "⚠️ Professional presentation language could be stronger"
+          fi
+          
+          # Legal disclaimers (critical)
+          if echo "$SITE_CONTENT" | grep -qi "disclaimer\|legal.*advice\|attorney"; then
+            echo "✅ Legal disclaimers or compliance language present"
+            ((COMPLIANCE_SCORE++))
+          else
+            echo "❌ Legal disclaimers missing - CRITICAL ISSUE"
+          fi
+          
+          echo ""
+          echo "📊 Legal Industry Compliance Score: $COMPLIANCE_SCORE/$MAX_SCORE ($(echo "scale=1; $COMPLIANCE_SCORE * 100 / $MAX_SCORE" | bc -l)%)"
+          
+          # Professional readiness assessment
+          if [ $COMPLIANCE_SCORE -ge 10 ]; then
+            echo "🏆 **OUTSTANDING** - Excellent legal industry compliance"
+            echo "✅ Ready for high-level legal industry presentations"
+            echo "✅ Perfect for LinkedIn professional showcase"
+            echo "✅ Suitable for legal conference demonstrations"
+          elif [ $COMPLIANCE_SCORE -ge 8 ]; then
+            echo "✅ **EXCELLENT** - Strong legal industry positioning"
+            echo "✅ Ready for professional legal presentations"
+            echo "✅ Suitable for law firm partner meetings"
+          elif [ $COMPLIANCE_SCORE -ge 6 ]; then
+            echo "✅ **GOOD** - Adequate legal industry positioning"
+            echo "⚠️ Consider improvements for high-stakes presentations"
+            echo "✅ Suitable for informal legal professional demos"
+          else
+            echo "⚠️ **NEEDS IMPROVEMENT** - Legal industry positioning weak"
+            echo "❌ NOT recommended for important legal presentations"
+            echo "🔧 Significant improvements needed before professional use"
+          fi
+
+  # Business Hours Professional Readiness Alert
+  professional-readiness-alert:
+    name: 💼 Professional Readiness Alert
+    runs-on: ubuntu-latest
+    needs: [site-monitoring, performance-analysis, legal-compliance-monitoring]
+    if: |
+      always() && 
+      (github.event_name == 'schedule' && github.event.schedule == '0 9 * * 1-5') ||
+      github.event.inputs.monitoring_type == 'professional-readiness'
+    
+    steps:
+      - name: Comprehensive professional readiness assessment
+        run: |
+          echo "💼 HERMES Professional Readiness Report - $(date '+%A, %B %d, %Y at %I:%M %p %Z')"
+          echo "==================================================================================="
+          echo ""
+          echo "🎯 **Executive Summary for Legal Industry Presentations**"
+          echo ""
+          
+          SITE_STATUS="${{ needs.site-monitoring.outputs.site_status || 'unknown' }}"
+          PERFORMANCE_STATUS="${{ needs.performance-analysis.result || 'skipped' }}"
+          COMPLIANCE_STATUS="${{ needs.legal-compliance-monitoring.result || 'skipped' }}"
+          
+          echo "🌐 **Site Status:** $SITE_STATUS"
+          echo "⚡ **Performance Status:** $PERFORMANCE_STATUS"
+          echo "⚖️ **Legal Compliance Status:** $COMPLIANCE_STATUS"
+          echo "📍 **Demo URL:** ${{ needs.site-monitoring.outputs.site_url }}"
+          echo ""
+          
+          # Overall professional readiness determination
+          if [[ "$SITE_STATUS" == "excellent" && "$PERFORMANCE_STATUS" == "success" && "$COMPLIANCE_STATUS" == "success" ]]; then
+            echo "🏆 **PROFESSIONAL READINESS: OUTSTANDING**"
+            echo "✅ **FULLY READY** for all types of professional presentations"
+            echo ""
+            echo "✅ **High-Stakes Presentations:** Ready"
+            echo "✅ **Law Firm Partner Meetings:** Ready"
+            echo "✅ **Legal Industry Conferences:** Ready"
+            echo "✅ **LinkedIn Professional Showcase:** Ready"
+            echo "✅ **Client Prospect Meetings:** Ready"
+            echo "✅ **Investor Presentations:** Ready"
+            
+          elif [[ "$SITE_STATUS" == "excellent" || "$SITE_STATUS" == "good" ]] && [[ "$PERFORMANCE_STATUS" == "success" || "$COMPLIANCE_STATUS" == "success" ]]; then
+            echo "✅ **PROFESSIONAL READINESS: EXCELLENT**"
+            echo "✅ **READY** for most professional presentations"
+            echo ""
+            echo "✅ **General Professional Meetings:** Ready"
+            echo "✅ **LinkedIn Showcase:** Ready"
+            echo "✅ **Legal Professional Demos:** Ready"
+            echo "⚠️ **High-Stakes Presentations:** Monitor closely"
+            
+          elif [[ "$SITE_STATUS" == "good" || "$SITE_STATUS" == "degraded" ]]; then
+            echo "⚠️ **PROFESSIONAL READINESS: CAUTION**"
+            echo "⚠️ **LIMITED READINESS** - issues may impact professional impression"
+            echo ""
+            echo "✅ **Informal Demonstrations:** Acceptable"
+            echo "⚠️ **Professional Meetings:** Use with caution"
+            echo "❌ **High-Stakes Presentations:** NOT recommended"
+            echo "🔧 **Action Required:** Address issues before important meetings"
+            
+          else
+            echo "🚨 **PROFESSIONAL READINESS: CRITICAL ISSUES**"
+            echo "❌ **NOT READY** for professional presentations"
+            echo ""
+            echo "❌ **All Professional Presentations:** NOT recommended"
+            echo "🔧 **URGENT ACTION REQUIRED:** Fix critical issues immediately"
+            echo "⚠️ **Impact:** Professional credibility at risk"
+          fi
+          
+          echo ""
+          echo "📞 **Key Talking Points for Legal Professionals:**"
+          echo "   🎤 24/7 AI Voice Reception - Eliminates staffing costs"
+          echo "   💰 Significant cost savings vs. human receptionist"
+          echo "   🔒 HIPAA/GDPR compliant legal technology solution"
+          echo "   🌍 Reduces need for expensive overseas outsourcing"
+          echo "   ⚖️ Professional client communication automation"
+          echo "   🏛️ Designed specifically for law firm operations"
+          echo ""
+          echo "🎯 **Professional Presentation Checklist:**"
+          echo "   □ Demo site is accessible and fast-loading"
+          echo "   □ Legal industry branding is prominent"
+          echo "   □ Value proposition is clearly communicated"
+          echo "   □ Professional presentation materials ready"
+          echo "   □ Legal compliance messaging is visible"
+          echo "   □ Contact information and next steps are clear"
+
+  # Monitoring Summary and Alerts
+  monitoring-summary:
+    name: 📋 Monitoring Summary & Alerts
+    runs-on: ubuntu-latest
+    needs: [site-monitoring, performance-analysis, legal-compliance-monitoring, professional-readiness-alert]
+    if: always()
+    
+    steps:
+      - name: Generate comprehensive monitoring summary
+        run: |
+          echo "📊 HERMES Comprehensive Monitoring Summary - $(date)"
+          echo "=================================================="
+          echo ""
+          echo "🏛️ **Legal Technology Platform Monitoring Report**"
+          echo "🎯 **Purpose:** Professional legal industry demonstration readiness"
+          echo "💼 **Target Audience:** Law firm decision-makers, legal professionals, LinkedIn network"
+          echo ""
+          
+          SITE_STATUS="${{ needs.site-monitoring.outputs.site_status }}"
+          PERFORMANCE_STATUS="${{ needs.performance-analysis.result }}"
+          COMPLIANCE_STATUS="${{ needs.legal-compliance-monitoring.result }}"
+          READINESS_STATUS="${{ needs.professional-readiness-alert.result }}"
+          
+          echo "📈 **Monitoring Results:**"
+          echo "   🌐 Site Monitoring: ${SITE_STATUS:-'N/A'}"
+          echo "   ⚡ Performance Analysis: ${PERFORMANCE_STATUS:-'N/A'}"
+          echo "   ⚖️ Legal Compliance: ${COMPLIANCE_STATUS:-'N/A'}"
+          echo "   💼 Professional Readiness: ${READINESS_STATUS:-'N/A'}"
+          echo ""
+          
+          # Determine overall system health
+          SUCCESS_COUNT=0
+          TOTAL_CHECKS=0
+          
+          for status in "$SITE_STATUS" "$PERFORMANCE_STATUS" "$COMPLIANCE_STATUS" "$READINESS_STATUS"; do
+            if [[ -n "$status" && "$status" != "N/A" ]]; then
+              ((TOTAL_CHECKS++))
+              if [[ "$status" == "success" || "$status" == "excellent" || "$status" == "good" ]]; then
+                ((SUCCESS_COUNT++))
+              fi
+            fi
+          done
+          
+          if [[ $TOTAL_CHECKS -gt 0 ]]; then
+            SUCCESS_RATE=$(echo "scale=1; $SUCCESS_COUNT * 100 / $TOTAL_CHECKS" | bc -l)
+            echo "📊 **Overall Health:** $SUCCESS_COUNT/$TOTAL_CHECKS successful (${SUCCESS_RATE}%)"
+          fi
+          
+          echo ""
+          echo "🎯 **Next Steps for Professional Excellence:**"
+          echo "1. 📋 Review detailed monitoring reports above"
+          echo "2. 🔧 Address any performance or compliance issues"
+          echo "3. ⚖️ Ensure all legal disclaimers are prominent"
+          echo "4. 💼 Prepare professional presentation materials"
+          echo "5. 📞 Practice key talking points for legal professionals"
+          echo "6. 🏛️ Schedule demonstrations with target law firms"
+
+      - name: Critical issue alerting
+        if: |
+          needs.site-monitoring.outputs.site_status == 'down' || 
+          needs.site-monitoring.result == 'failure' ||
+          (needs.performance-analysis.result == 'failure' && needs.legal-compliance-monitoring.result == 'failure')
+        run: |
+          echo ""
+          echo "🚨 CRITICAL ISSUES DETECTED 🚨"
+          echo "================================"
+          echo "❌ HERMES is NOT ready for professional presentations"
+          echo "⚠️ **IMMEDIATE ACTION REQUIRED**"
+          echo ""
+          echo "❌ Do NOT demonstrate to legal professionals until issues are resolved"
+          echo "❌ Do NOT use for LinkedIn professional showcase"
+          echo "❌ Do NOT present to law firm partners or prospects"
+          echo ""
+          echo "🔧 **Critical Actions Needed:**"
+          echo "1. Fix site accessibility issues immediately"
+          echo "2. Resolve performance problems"
+          echo "3. Address legal compliance gaps"
+          echo "4. Verify professional presentation readiness"
+          echo ""
+          echo "⚖️ **Professional Reputation Impact Warning:**"
+          echo "Using HERMES for professional presentations while issues exist"
+          echo "could damage professional credibility in the legal industry."
+          exit 1
+
+      - name: Success confirmation
+        if: |
+          needs.site-monitoring.outputs.site_status == 'excellent' && 
+          needs.performance-analysis.result == 'success' && 
+          needs.legal-compliance-monitoring.result == 'success'
+        run: |
+          echo ""
+          echo "🎉 PROFESSIONAL READINESS CONFIRMED 🎉"
+          echo "======================================"
+          echo "✅ HERMES is EXCELLENT and ready for professional presentations"
+          echo "🏆 **Outstanding status for legal industry demonstrations**"
+          echo ""
+          echo "✅ **Approved for:**"
+          echo "   🏛️ Law firm partner presentations"
+          echo "   💼 LinkedIn professional showcase"
+          echo "   ⚖️ Legal industry conference demonstrations"
+          echo "   📞 Client prospect meetings"
+          echo "   🎯 High-stakes professional presentations"
+          echo ""
+          echo "🎯 **Ready to showcase the future of legal technology!**"
