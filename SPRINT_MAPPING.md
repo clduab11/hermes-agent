@@ -33,11 +33,11 @@ This document provides a detailed mapping between the 10 sprints proposed in Git
 
 | Component | Status | File Path | Notes |
 |-----------|--------|-----------|-------|
-| End-to-end Encryption | ✅ Complete | `hermes/security/encryption.py` | AES-256 at rest, TLS 1.3 in transit |
+| Security Framework | ✅ Complete | `hermes/security/compliance_lockdown.py` | AES-256 at rest, TLS 1.3 in transit |
 | JWT Authentication | ✅ Complete | `hermes/auth/jwt_handler.py` | Enterprise-grade token management |
-| OAuth 2.0 | ✅ Complete | `hermes/auth/oauth.py` | Multi-provider support |
-| Audit Logging | ✅ Complete | `hermes/audit/logger.py` | Immutable, tamper-evident logs |
-| Rate Limiting | ✅ Complete | `hermes/middleware/rate_limiter.py` | Token bucket algorithm |
+| API Key Auth | ✅ Complete | `hermes/auth/api_key_auth.py` | Multi-tenant support |
+| Audit Logging | ✅ Complete | `hermes/audit/api.py` | Immutable, tamper-evident logs |
+| Rate Limiting | ✅ Complete | `hermes/security/rate_limiter.py` | Token bucket algorithm |
 | Secrets Management | ✅ Complete | `hermes/security/secrets_manager.py` | GCP Secret Manager integration |
 | RBAC | ✅ Complete | `hermes/auth/rbac.py` | Role-based access control |
 | Input Validation | ✅ Complete | Throughout codebase | Pydantic models everywhere |
@@ -692,11 +692,11 @@ async def resilient_api_call(url: str):
 
 | Component | Status | File Path | Notes |
 |-----------|--------|-----------|-------|
-| HIPAA Framework | ✅ Complete | `hermes/compliance/hipaa.py` | Business Associate compliance |
-| GDPR Compliance | ✅ Complete | `hermes/compliance/gdpr.py` | Data protection |
-| SOC 2 Controls | ✅ Complete | `hermes/compliance/soc2.py` | Security controls |
-| Audit Logging | ✅ Complete | `hermes/audit/logger.py` | Immutable logs |
-| Data Encryption | ✅ Complete | `hermes/security/encryption.py` | AES-256, TLS 1.3 |
+| HIPAA Framework | ✅ Complete | `hermes/security/compliance_lockdown.py` | Business Associate compliance |
+| GDPR Compliance | ✅ Complete | `hermes/security/compliance_lockdown.py` | Data protection |
+| SOC 2 Controls | ✅ Complete | `hermes/security/compliance_lockdown.py` | Security controls |
+| Audit Logging | ✅ Complete | `hermes/audit/api.py` | Immutable logs |
+| Data Encryption | ✅ Complete | `hermes/security/secrets_manager.py` | AES-256, TLS 1.3 |
 | Access Controls | ✅ Complete | `hermes/auth/rbac.py` | RBAC implementation |
 | Data Retention | ✅ Complete | Configuration in settings | Configurable policies |
 | Right to Deletion | ✅ Complete | GDPR deletion methods | GDPR compliance |

@@ -16,13 +16,13 @@
 
 #### ✅ Sprint 1: Security & Foundation (95% Complete)
 **Evidence**: 
-- End-to-end encryption: `hermes/security/encryption.py`
-- Audit logging: `hermes/audit/logger.py`
-- OAuth 2.0: `hermes/auth/oauth.py`
+- Security framework: `hermes/security/compliance_lockdown.py`
+- Audit logging: `hermes/audit/api.py`
+- API key authentication: `hermes/auth/api_key_auth.py`
 - JWT authentication: `hermes/auth/jwt_handler.py`
-- Rate limiting: `hermes/middleware/rate_limiter.py`
-- Secrets management: `hermes/config.py` with GCP Secret Manager
-- Multi-tenant isolation: `hermes/tenancy/`
+- Rate limiting: `hermes/security/rate_limiter.py`
+- Secrets management: `hermes/security/secrets_manager.py` with GCP Secret Manager
+- Multi-tenant isolation: `hermes/auth/tenant_manager.py`, `hermes/tenancy/`
 
 **Status**: Production-ready, no additional work needed
 
@@ -62,12 +62,12 @@
 
 #### ✅ Sprint 9: Compliance (95% Complete)
 **Evidence**:
-- HIPAA framework: `hermes/compliance/hipaa.py`
-- GDPR compliance: `hermes/compliance/gdpr.py`
-- SOC 2 controls: `hermes/compliance/soc2.py`
-- Audit logging: Comprehensive throughout codebase
+- Compliance framework: `hermes/security/compliance_lockdown.py`
+- Security validation: `hermes/security/config_validator.py`, `hermes/security/env_validator.py`
+- Audit logging: `hermes/audit/api.py` - Comprehensive throughout codebase
 - Legal disclaimers: Integrated in voice responses
 - Attorney-client privilege: Built-in protections
+- License enforcement: `hermes/security/license_enforcer.py`
 
 **Status**: Production-ready, documentation updates only
 
