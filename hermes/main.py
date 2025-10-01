@@ -30,7 +30,17 @@ from pydantic import BaseModel
 from .analytics.engine import AnalyticsEngine
 
 # Import new API modules
-from .api import analytics_endpoints, billing_endpoints, clio_endpoints, security_endpoints, performance_endpoints
+from .api import (
+    analytics_endpoints,
+    billing_endpoints,
+    clio_endpoints,
+    security_endpoints,
+    performance_endpoints,
+    leads_endpoints,
+    social_endpoints,
+    marketing_analytics_endpoints,
+    webhooks_endpoints,
+)
 from .audit import api as audit_api
 from .auth import JWTAuthMiddleware, JWTHandler, TenantManager
 from .auth.api_key_auth import enterprise_api_auth, require_enterprise_api_key
@@ -362,6 +372,12 @@ app.include_router(billing_endpoints.router)
 app.include_router(security_endpoints.router)
 app.include_router(performance_endpoints.router)
 app.include_router(audit_api.router)
+
+# Marketing Command Center API routers
+app.include_router(leads_endpoints.router)
+app.include_router(social_endpoints.router)
+app.include_router(marketing_analytics_endpoints.router)
+app.include_router(webhooks_endpoints.router)
 
 
 # Demo page endpoint
