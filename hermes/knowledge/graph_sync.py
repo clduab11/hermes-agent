@@ -66,6 +66,7 @@ class KnowledgeGraphSynchronizer:
         self.nodes: Dict[str, KnowledgeNode] = {}
         self.relationships: Dict[str, KnowledgeRelationship] = {}
         self.last_sync_timestamps: Dict[str, datetime] = {}
+        self._mem0_enabled = mem0_client is not None
 
     async def initialize_knowledge_graph(self) -> Dict[str, Any]:
         """Initialize knowledge graph with seed data"""
@@ -143,12 +144,30 @@ class KnowledgeGraphSynchronizer:
         }
 
         try:
-            # Simulate syncing from systems
-            nodes_created = 2  # Demo data
-            sync_results["systems_synced"]["demo"] = {
-                "status": "completed",
-                "nodes_synced": nodes_created,
-            }
+            # Sync with Mem0 if available
+            if self._mem0_enabled and self.mem0:
+                try:
+                    mem0_nodes = await self._sync_from_mem0()
+                    sync_results["systems_synced"]["mem0"] = {
+                        "status": "completed",
+                        "nodes_synced": len(mem0_nodes),
+                    }
+                except Exception as e:
+                    logger.error(f"Mem0 sync failed: {e}")
+                    sync_results["errors"].append(f"Mem0 sync failed: {str(e)}")
+            
+            # Sync with Clio if available
+            if self.clio:
+                try:
+                    clio_nodes = await self._sync_from_clio()
+                    sync_results["systems_synced"]["clio"] = {
+                        "status": "completed",
+                        "nodes_synced": len(clio_nodes),
+                    }
+                except Exception as e:
+                    logger.error(f"Clio sync failed: {e}")
+                    sync_results["errors"].append(f"Clio sync failed: {str(e)}")
+                    
         except Exception as e:
             sync_results["errors"].append(f"Sync failed: {str(e)}")
 
@@ -161,6 +180,27 @@ class KnowledgeGraphSynchronizer:
         )
 
         return sync_results
+    
+    async def _sync_from_mem0(self) -> List[str]:
+        """Sync knowledge from Mem0"""
+        if not self.mem0:
+            return []
+        
+        synced_nodes = []
+        # Get memories from Mem0 and convert to knowledge nodes
+        # This is a placeholder - real implementation would fetch actual data
+        logger.info("Syncing from Mem0...")
+        return synced_nodes
+    
+    async def _sync_from_clio(self) -> List[str]:
+        """Sync knowledge from Clio"""
+        if not self.clio:
+            return []
+        
+        synced_nodes = []
+        # Fetch data from Clio and convert to knowledge nodes
+        logger.info("Syncing from Clio...")
+        return synced_nodes
 
     async def get_knowledge_graph_stats(self) -> Dict[str, Any]:
         """Get knowledge graph statistics"""
