@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import DemoContainer from './components/DemoContainer.jsx';
 import RoiCalculator from './components/RoiCalculator.jsx';
 import Testimonials from './components/Testimonials.jsx';
 import PartnerLogos from './components/PartnerLogos.jsx';
+import DashboardLayout from './components/dashboard/DashboardLayout.jsx';
+import DashboardOverview from './components/dashboard/DashboardOverview.jsx';
+import LeadsPage from './pages/LeadsPage.jsx';
+import SocialMediaPage from './pages/SocialMediaPage.jsx';
+import AnalyticsPage from './pages/AnalyticsPage.jsx';
+import TechnicalDocsPage from './pages/TechnicalDocsPage.jsx';
 
-export default function App() {
+const queryClient = new QueryClient();
+
+function HomePage() {
   const [scenario, setScenario] = useState(null);
   const [activeSection, setActiveSection] = useState('home');
   
@@ -151,6 +161,14 @@ export default function App() {
             >
               🎙️ Try Voice Demo
             </a>
+            <Link 
+              to="/dashboard"
+              style={{...styles.ctaButton, ...styles.ctaSecondary}}
+              onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.3)'}
+              onMouseOut={(e) => e.target.style.background = 'rgba(255,255,255,0.2)'}
+            >
+              📊 Marketing Dashboard
+            </Link>
             <a 
               href="#pricing" 
               style={{...styles.ctaButton, ...styles.ctaSecondary}}
@@ -419,5 +437,24 @@ export default function App() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<DashboardOverview />} />
+            <Route path="leads" element={<LeadsPage />} />
+            <Route path="social" element={<SocialMediaPage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="technical" element={<TechnicalDocsPage />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
