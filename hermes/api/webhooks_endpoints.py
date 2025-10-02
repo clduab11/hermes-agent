@@ -68,8 +68,8 @@ async def receive_webhook(
         return event
         
     except Exception as e:
-        logger.error(f"Error processing webhook: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to process webhook")
 
 
 @router.post("/trigger")
@@ -97,8 +97,8 @@ async def trigger_webhook(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error triggering webhook: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error triggering webhook: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to trigger webhook")
 
 
 @router.get("/events", response_model=List[WebhookResponse])
@@ -125,8 +125,8 @@ async def list_events(
         return events
         
     except Exception as e:
-        logger.error(f"Error listing webhook events: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error listing webhook events: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve webhook events")
 
 
 @router.get("/events/{event_id}", response_model=WebhookResponse)
@@ -154,5 +154,5 @@ async def get_event(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error retrieving webhook event {event_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error retrieving webhook event {event_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve webhook event")

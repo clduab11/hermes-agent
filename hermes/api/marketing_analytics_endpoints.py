@@ -45,8 +45,8 @@ async def get_metrics(
         return metrics
         
     except Exception as e:
-        logger.error(f"Error retrieving metrics: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error retrieving metrics: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve metrics")
 
 
 @router.get("/funnel")
@@ -65,8 +65,8 @@ async def get_funnel(
         return funnel
         
     except Exception as e:
-        logger.error(f"Error retrieving funnel metrics: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error retrieving funnel metrics: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve funnel metrics")
 
 
 @router.get("/pipeline")
@@ -84,8 +84,8 @@ async def get_pipeline(
         return pipeline
         
     except Exception as e:
-        logger.error(f"Error retrieving pipeline metrics: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error retrieving pipeline metrics: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve pipeline metrics")
 
 
 @router.get("/social")
@@ -104,8 +104,8 @@ async def get_social_performance(
         return social
         
     except Exception as e:
-        logger.error(f"Error retrieving social metrics: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error retrieving social metrics: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve social metrics")
 
 
 @router.get("/roi")
@@ -123,5 +123,5 @@ async def get_roi(
         return roi
         
     except Exception as e:
-        logger.error(f"Error retrieving ROI metrics: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error retrieving ROI metrics: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve ROI metrics")

@@ -48,7 +48,22 @@ class SocialService:
             
         Returns:
             Created SocialPost object
+            
+        Raises:
+            ValueError: If content exceeds platform limits
         """
+        # Validate content length based on platform
+        max_lengths = {
+            SocialPlatform.TWITTER: 280,
+            SocialPlatform.LINKEDIN: 3000,
+            SocialPlatform.FACEBOOK: 63206,
+            SocialPlatform.INSTAGRAM: 2200
+        }
+        
+        max_length = max_lengths.get(platform, 5000)
+        if len(content) > max_length:
+            raise ValueError(f"Content exceeds maximum length of {max_length} characters for {platform.value}")
+        
         post = SocialPost(
             platform=platform,
             content=content,

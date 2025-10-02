@@ -49,9 +49,9 @@ class Lead(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     firm_name = Column(String(255), nullable=False, index=True)
-    contact_name = Column(String(255))
-    contact_email = Column(String(255), index=True)
-    contact_phone = Column(String(50))
+    contact_name = Column(String(255), nullable=True)
+    contact_email = Column(String(255), nullable=True, index=True)
+    contact_phone = Column(String(50), nullable=True)
     
     status = Column(SQLEnum(LeadStatus), default=LeadStatus.NEW, nullable=False, index=True)
     

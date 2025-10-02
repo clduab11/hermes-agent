@@ -164,10 +164,10 @@ class AnalyticsService:
         total_clicks = result.total_clicks or 0
         total_conversions = result.total_conversions or 0
         
-        # Calculate engagement rate
-        engagement_rate = (total_engagements / total_impressions * 100) if total_impressions > 0 else 0
-        click_rate = (total_clicks / total_impressions * 100) if total_impressions > 0 else 0
-        conversion_rate = (total_conversions / total_clicks * 100) if total_clicks > 0 else 0
+        # Calculate engagement rate with safe division
+        engagement_rate = round((total_engagements / total_impressions * 100), 2) if total_impressions > 0 else 0.0
+        click_rate = round((total_clicks / total_impressions * 100), 2) if total_impressions > 0 else 0.0
+        conversion_rate = round((total_conversions / total_clicks * 100), 2) if total_clicks > 0 else 0.0
         
         # Count by status
         published = query.filter(SocialPost.status == PostStatus.PUBLISHED).count()

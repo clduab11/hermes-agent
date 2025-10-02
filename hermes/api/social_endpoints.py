@@ -97,8 +97,8 @@ async def create_post(
         return post
         
     except Exception as e:
-        logger.error(f"Error creating post: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error creating post: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to create social post")
 
 
 @router.get("/posts", response_model=List[SocialPostResponse])
@@ -122,8 +122,8 @@ async def list_posts(
         return posts
         
     except Exception as e:
-        logger.error(f"Error listing posts: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error listing posts: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve social posts")
 
 
 @router.get("/posts/{post_id}", response_model=SocialPostResponse)
@@ -151,8 +151,8 @@ async def get_post(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error retrieving post {post_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error retrieving post {post_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve social post")
 
 
 @router.post("/posts/{post_id}/schedule", response_model=SocialPostResponse)
@@ -172,8 +172,8 @@ async def schedule_post(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"Error scheduling post {post_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error scheduling post {post_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to schedule post")
 
 
 @router.post("/posts/{post_id}/publish", response_model=SocialPostResponse)
@@ -192,8 +192,8 @@ async def publish_post(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        logger.error(f"Error publishing post {post_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error publishing post {post_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to publish post")
 
 
 @router.post("/generate", response_model=ContentGenerationResponse)
@@ -217,5 +217,5 @@ async def generate_content(
         )
         
     except Exception as e:
-        logger.error(f"Error generating content: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error generating content: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to generate content")

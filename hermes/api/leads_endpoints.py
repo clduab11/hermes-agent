@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from sqlalchemy.orm import Session
 
 from ..database import get_database_session
@@ -27,7 +27,7 @@ class LeadCreate(BaseModel):
     """Lead creation request model."""
     firm_name: str = Field(..., min_length=1, max_length=255)
     contact_name: Optional[str] = Field(None, max_length=255)
-    contact_email: Optional[str] = Field(None, max_length=255)
+    contact_email: Optional[EmailStr] = None
     contact_phone: Optional[str] = Field(None, max_length=50)
     status: LeadStatus = LeadStatus.NEW
     firm_size: Optional[str] = None
@@ -44,7 +44,7 @@ class LeadUpdate(BaseModel):
     """Lead update request model."""
     firm_name: Optional[str] = Field(None, min_length=1, max_length=255)
     contact_name: Optional[str] = Field(None, max_length=255)
-    contact_email: Optional[str] = Field(None, max_length=255)
+    contact_email: Optional[EmailStr] = None
     contact_phone: Optional[str] = Field(None, max_length=50)
     status: Optional[LeadStatus] = None
     firm_size: Optional[str] = None
@@ -62,7 +62,7 @@ class LeadResponse(BaseModel):
     id: int
     firm_name: str
     contact_name: Optional[str]
-    contact_email: Optional[str]
+    contact_email: Optional[EmailStr]
     contact_phone: Optional[str]
     status: LeadStatus
     firm_size: Optional[str]
@@ -123,15 +123,15 @@ async def create_lead(
         return lead
         
     except Exception as e:
-        logger.error(f"Error creating lead: {str(e)}")
+        logger.error(f"Error creating lead: {str(e)}", exc_info=True)
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to create lead")
 
 
 @router.get("", response_model=List[LeadResponse])
 async def list_leads(
     status: Optional[LeadStatus] = Query(None, description="Filter by status"),
-    source: Optional[str] = Query(None, description="Filter by source"),
+    source: Optional[str] = Query(None, description="Filter by source", max_length=100),
     limit: int = Query(50, ge=1, le=500, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     db: Session = Depends(get_database_session),
@@ -173,8 +173,8 @@ async def list_leads(
         return leads
         
     except Exception as e:
-        logger.error(f"Error listing leads: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error listing leads: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve leads")
 
 
 @router.get("/{lead_id}", response_model=LeadResponse)
@@ -212,8 +212,8 @@ async def get_lead(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error retrieving lead {lead_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error retrieving lead {lead_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve lead")
 
 
 @router.put("/{lead_id}", response_model=LeadResponse)
@@ -266,9 +266,9 @@ async def update_lead(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error updating lead {lead_id}: {str(e)}")
+        logger.error(f"Error updating lead {lead_id}: {str(e)}", exc_info=True)
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to update lead")
 
 
 @router.delete("/{lead_id}", status_code=204)
@@ -306,6 +306,6 @@ async def delete_lead(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting lead {lead_id}: {str(e)}")
+        logger.error(f"Error deleting lead {lead_id}: {str(e)}", exc_info=True)
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Failed to delete lead")
