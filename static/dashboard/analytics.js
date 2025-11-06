@@ -1043,13 +1043,19 @@ class Analytics {
         }
         
         // Fallback implementation
-        const response = await fetch(endpoint, {
+        const options = {
             method,
             headers: {
                 'Content-Type': 'application/json',
-            },
-            body: body ? JSON.stringify(body) : null
-        });
+            }
+        };
+        
+        // Only include body for non-GET requests
+        if (body && method !== 'GET') {
+            options.body = JSON.stringify(body);
+        }
+        
+        const response = await fetch(endpoint, options);
         
         if (!response.ok) {
             throw new Error(`API call failed: ${response.status}`);

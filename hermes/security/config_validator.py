@@ -172,8 +172,9 @@ class ConfigurationValidator:
         # Check API host configuration
         api_host = os.getenv("API_HOST", "127.0.0.1")
         if api_host == "0.0.0.0" and self.is_production:
-            self.security_warnings.append(
-                "API is bound to 0.0.0.0 in production - consider specific interface binding"
+            self.validation_errors.append(
+                "API is bound to 0.0.0.0 in production - this is a security risk. "
+                "Bind to a specific interface (e.g., 127.0.0.1 with reverse proxy)"
             )
 
         # Check CORS configuration

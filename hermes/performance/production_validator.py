@@ -486,112 +486,24 @@ class ProductionValidator:
             test_duration_seconds = 30
             requests_per_user = 20
 
-            response_times = []
-            error_count = 0
-            total_requests = 0
-
-            async def simulate_law_firm_user(user_id: int):
-                """Simulate a law firm user's typical usage pattern."""
-                user_response_times = []
-                user_errors = 0
-
-                for request_num in range(requests_per_user):
-                    try:
-                        request_start = time.time()
-
-                        # Simulate typical law firm operations
-                        if request_num % 5 == 0:
-                            # Voice processing request (heavy)
-                            await self._simulate_voice_processing()
-                        elif request_num % 3 == 0:
-                            # Database query (medium)
-                            await self._simulate_database_query()
-                        else:
-                            # API call (light)
-                            await self._simulate_api_call()
-
-                        response_time = (time.time() - request_start) * 1000
-                        user_response_times.append(response_time)
-
-                        # Random delay between requests (realistic usage)
-                        await asyncio.sleep(0.1 + (request_num * 0.05))
-
-                    except Exception as e:
-                        user_errors += 1
-                        logger.warning(f"User {user_id} request {request_num} failed: {e}")
-
-                return user_response_times, user_errors
-
-            # Run concurrent user simulation
-            logger.info(f"Starting load test with {concurrent_users} concurrent users")
-            tasks = [simulate_law_firm_user(i) for i in range(concurrent_users)]
-
-            user_results = await asyncio.gather(*tasks, return_exceptions=True)
-
-            # Collect metrics
-            for user_result in user_results:
-                if isinstance(user_result, tuple):
-                    user_times, user_errors = user_result
-                    response_times.extend(user_times)
-                    error_count += user_errors
-                    total_requests += len(user_times) + user_errors
+            # Run load test simulation
+            response_times, error_count, total_requests = await self._simulate_load_test(
+                concurrent_users, requests_per_user
+            )
 
             if response_times:
-                # Calculate performance metrics
-                performance_metrics = PerformanceMetrics(
-                    avg_response_time_ms=statistics.mean(response_times),
-                    p95_response_time_ms=statistics.quantiles(response_times, n=20)[18],
-                    p99_response_time_ms=statistics.quantiles(response_times, n=100)[98],
-                    throughput_rps=total_requests / test_duration_seconds,
-                    error_rate_percent=(error_count / max(total_requests, 1)) * 100,
-                    concurrent_connections=concurrent_users,
-                    memory_usage_mb=200,  # Would measure actual memory usage
-                    cpu_usage_percent=45   # Would measure actual CPU usage
+                # Calculate and evaluate performance
+                performance_metrics = self._calculate_performance_metrics(
+                    response_times, error_count, total_requests, 
+                    concurrent_users, test_duration_seconds
                 )
-
-                # Evaluate against thresholds
-                performance_score = 100
-                issues = []
-
-                if performance_metrics.avg_response_time_ms > self.performance_thresholds["max_response_time_ms"]:
-                    performance_score -= 20
-                    issues.append(f"Average response time too high: {performance_metrics.avg_response_time_ms:.1f}ms")
-
-                if performance_metrics.p95_response_time_ms > self.performance_thresholds["max_response_time_ms"] * 2:
-                    performance_score -= 15
-                    issues.append(f"P95 response time too high: {performance_metrics.p95_response_time_ms:.1f}ms")
-
-                if performance_metrics.throughput_rps < self.performance_thresholds["min_throughput_rps"]:
-                    performance_score -= 25
-                    issues.append(f"Throughput too low: {performance_metrics.throughput_rps:.1f} RPS")
-
-                if performance_metrics.error_rate_percent > self.performance_thresholds["max_error_rate_percent"]:
-                    performance_score -= 30
-                    issues.append(f"Error rate too high: {performance_metrics.error_rate_percent:.2f}%")
-
-                # Determine status based on score
-                if performance_score >= 90:
-                    result.status = "PASS"
-                    result.recommendations = [
-                        "Performance meets enterprise law firm requirements",
-                        "Monitor performance metrics in production",
-                        "Consider performance optimization for future scaling"
-                    ]
-                elif performance_score >= 70:
-                    result.status = "WARNING"
-                    result.recommendations = [
-                        "Performance issues detected - optimization needed",
-                        "Review and optimize slow operations",
-                        "Consider infrastructure scaling"
-                    ]
-                else:
-                    result.status = "FAIL"
-                    result.recommendations = [
-                        "Critical performance issues - not ready for $2,497/month clients",
-                        "Significant optimization required before production deployment",
-                        "Consider architectural changes for better performance"
-                    ]
-
+                
+                # Evaluate performance against thresholds
+                performance_score, issues = self._evaluate_performance_metrics(performance_metrics)
+                
+                # Set result status and recommendations
+                self._set_performance_result_status(result, performance_score)
+                
                 result.score = max(0, performance_score)
                 result.details = {
                     "performance_metrics": {
@@ -625,6 +537,172 @@ class ProductionValidator:
         finally:
             result.execution_time_ms = (time.time() - start_time) * 1000
             self.validation_results.append(result)
+
+    async def _simulate_load_test(
+        self, 
+        concurrent_users: int, 
+        requests_per_user: int
+    ) -> Tuple[List[float], int, int]:
+        """
+        Simulate concurrent user load test.
+        
+        Args:
+            concurrent_users: Number of concurrent users to simulate
+            requests_per_user: Number of requests each user makes
+            
+        Returns:
+            Tuple of (response_times, error_count, total_requests)
+        """
+        response_times = []
+        error_count = 0
+        total_requests = 0
+
+        async def simulate_law_firm_user(user_id: int):
+            """Simulate a law firm user's typical usage pattern."""
+            user_response_times = []
+            user_errors = 0
+
+            for request_num in range(requests_per_user):
+                try:
+                    request_start = time.time()
+
+                    # Simulate typical law firm operations
+                    if request_num % 5 == 0:
+                        # Voice processing request (heavy)
+                        await self._simulate_voice_processing()
+                    elif request_num % 3 == 0:
+                        # Database query (medium)
+                        await self._simulate_database_query()
+                    else:
+                        # API call (light)
+                        await self._simulate_api_call()
+
+                    response_time = (time.time() - request_start) * 1000
+                    user_response_times.append(response_time)
+
+                    # Random delay between requests (realistic usage)
+                    await asyncio.sleep(0.1 + (request_num * 0.05))
+
+                except Exception as e:
+                    user_errors += 1
+                    logger.warning(f"User {user_id} request {request_num} failed: {e}")
+
+            return user_response_times, user_errors
+
+        # Run concurrent user simulation
+        logger.info(f"Starting load test with {concurrent_users} concurrent users")
+        tasks = [simulate_law_firm_user(i) for i in range(concurrent_users)]
+        user_results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Collect metrics
+        for user_result in user_results:
+            if isinstance(user_result, tuple):
+                user_times, user_errors = user_result
+                response_times.extend(user_times)
+                error_count += user_errors
+                total_requests += len(user_times) + user_errors
+
+        return response_times, error_count, total_requests
+
+    def _calculate_performance_metrics(
+        self,
+        response_times: List[float],
+        error_count: int,
+        total_requests: int,
+        concurrent_users: int,
+        test_duration_seconds: int
+    ) -> PerformanceMetrics:
+        """
+        Calculate performance metrics from load test results.
+        
+        Args:
+            response_times: List of response times in milliseconds
+            error_count: Number of errors encountered
+            total_requests: Total number of requests made
+            concurrent_users: Number of concurrent users
+            test_duration_seconds: Duration of the test
+            
+        Returns:
+            PerformanceMetrics object with calculated metrics
+        """
+        return PerformanceMetrics(
+            avg_response_time_ms=statistics.mean(response_times),
+            p95_response_time_ms=statistics.quantiles(response_times, n=20)[18],
+            p99_response_time_ms=statistics.quantiles(response_times, n=100)[98],
+            throughput_rps=total_requests / test_duration_seconds,
+            error_rate_percent=(error_count / max(total_requests, 1)) * 100,
+            concurrent_connections=concurrent_users,
+            memory_usage_mb=200,  # Would measure actual memory usage
+            cpu_usage_percent=45   # Would measure actual CPU usage
+        )
+
+    def _evaluate_performance_metrics(
+        self, 
+        performance_metrics: PerformanceMetrics
+    ) -> Tuple[int, List[str]]:
+        """
+        Evaluate performance metrics against thresholds.
+        
+        Args:
+            performance_metrics: Calculated performance metrics
+            
+        Returns:
+            Tuple of (performance_score, issues_list)
+        """
+        performance_score = 100
+        issues = []
+
+        if performance_metrics.avg_response_time_ms > self.performance_thresholds["max_response_time_ms"]:
+            performance_score -= 20
+            issues.append(f"Average response time too high: {performance_metrics.avg_response_time_ms:.1f}ms")
+
+        if performance_metrics.p95_response_time_ms > self.performance_thresholds["max_response_time_ms"] * 2:
+            performance_score -= 15
+            issues.append(f"P95 response time too high: {performance_metrics.p95_response_time_ms:.1f}ms")
+
+        if performance_metrics.throughput_rps < self.performance_thresholds["min_throughput_rps"]:
+            performance_score -= 25
+            issues.append(f"Throughput too low: {performance_metrics.throughput_rps:.1f} RPS")
+
+        if performance_metrics.error_rate_percent > self.performance_thresholds["max_error_rate_percent"]:
+            performance_score -= 30
+            issues.append(f"Error rate too high: {performance_metrics.error_rate_percent:.2f}%")
+
+        return performance_score, issues
+
+    def _set_performance_result_status(
+        self, 
+        result: ValidationResult, 
+        performance_score: int
+    ) -> None:
+        """
+        Set result status and recommendations based on performance score.
+        
+        Args:
+            result: ValidationResult object to update
+            performance_score: Calculated performance score
+        """
+        if performance_score >= 90:
+            result.status = "PASS"
+            result.recommendations = [
+                "Performance meets enterprise law firm requirements",
+                "Monitor performance metrics in production",
+                "Consider performance optimization for future scaling"
+            ]
+        elif performance_score >= 70:
+            result.status = "WARNING"
+            result.recommendations = [
+                "Performance issues detected - optimization needed",
+                "Review and optimize slow operations",
+                "Consider infrastructure scaling"
+            ]
+        else:
+            result.status = "FAIL"
+            result.recommendations = [
+                "Critical performance issues - not ready for $2,497/month clients",
+                "Significant optimization required before production deployment",
+                "Consider architectural changes for better performance"
+            ]
 
     async def _simulate_voice_processing(self):
         """Simulate voice processing workload."""
@@ -759,8 +837,8 @@ class ProductionValidator:
                         if tenant_status.get("resource_limits"):
                             rate_limiting_score += 15
                             features_validated.append(f"Rate limits configured for {tenant_id}")
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug(f"Failed to check rate limits for tenant {tenant_id}: {e}")
 
             # 4. Fair usage enforcement
             rate_limiting_score += 20
@@ -829,8 +907,8 @@ class ProductionValidator:
                 if current_metrics:
                     monitoring_score += 30
                     monitoring_features.append("Database performance metrics")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Failed to collect database performance metrics: {e}")
 
             # 2. Tenant monitoring
             if tenant_isolation_manager._initialized:
@@ -849,8 +927,8 @@ class ProductionValidator:
                 if security_report.get("overall_status") == "SECURE":
                     monitoring_score += 20
                     monitoring_features.append("Security compliance monitoring")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Failed to validate security implementation: {e}")
 
             # 4. Performance monitoring
             monitoring_score += 10
@@ -942,8 +1020,8 @@ class ProductionValidator:
                 from ..auth.jwt_handler import jwt_handler
                 compliance_score += 15
                 compliance_features.append("JWT authentication system")
-            except ImportError:
-                pass
+            except ImportError as e:
+                logger.debug(f"JWT handler module not available: {e}")
 
             # 3. Audit logging
             compliance_score += 20
@@ -963,8 +1041,8 @@ class ProductionValidator:
                 if security_validation.get("overall_status") == "SECURE":
                     compliance_score += 20
                     compliance_features.append("Security controls validation")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Failed to validate security configuration: {e}")
 
             # HIPAA-specific requirements for law firms handling health data
             hipaa_requirements = {
@@ -1154,8 +1232,8 @@ class ProductionValidator:
             for session in self.load_test_sessions:
                 try:
                     await session.close()
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Failed to close test session: {e}")
 
             self.test_tenants.clear()
             self.load_test_sessions.clear()
