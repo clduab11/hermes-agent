@@ -650,21 +650,32 @@ class MultiLanguageProcessor:
 
 # Helper function to load audio from bytes (for Whisper compatibility)
 def load_audio_from_bytes(audio_bytes: bytes):
-    """Load audio from bytes for Whisper processing"""
+    """
+    Load audio from bytes for Whisper processing.
+    
+    Uses secure temporary file handling to prevent orphaned files and
+    potential security issues with file permissions.
+    
+    Args:
+        audio_bytes: Raw audio data as bytes
+        
+    Returns:
+        numpy.ndarray: Audio data loaded at 16kHz sample rate
+    """
     import tempfile
-
     import librosa
 
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+    # Use context manager for automatic cleanup and better security
+    # tempfile.NamedTemporaryFile creates files with mode 0600 (owner read/write only)
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as temp_file:
         temp_file.write(audio_bytes)
         temp_file.flush()
-
+        
         # Load with librosa for Whisper compatibility
+        # Read while file is still open and secured
         audio, _ = librosa.load(temp_file.name, sr=16000, mono=True)
-
-        # Clean up temp file
-        os.unlink(temp_file.name)
-
+        
+        # File is automatically deleted when context exits
         return audio
 
 

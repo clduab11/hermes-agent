@@ -759,8 +759,8 @@ class ProductionValidator:
                         if tenant_status.get("resource_limits"):
                             rate_limiting_score += 15
                             features_validated.append(f"Rate limits configured for {tenant_id}")
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug(f"Failed to check rate limits for tenant {tenant_id}: {e}")
 
             # 4. Fair usage enforcement
             rate_limiting_score += 20
@@ -829,8 +829,8 @@ class ProductionValidator:
                 if current_metrics:
                     monitoring_score += 30
                     monitoring_features.append("Database performance metrics")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Failed to collect database performance metrics: {e}")
 
             # 2. Tenant monitoring
             if tenant_isolation_manager._initialized:
@@ -849,8 +849,8 @@ class ProductionValidator:
                 if security_report.get("overall_status") == "SECURE":
                     monitoring_score += 20
                     monitoring_features.append("Security compliance monitoring")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Failed to validate security implementation: {e}")
 
             # 4. Performance monitoring
             monitoring_score += 10
@@ -942,8 +942,8 @@ class ProductionValidator:
                 from ..auth.jwt_handler import jwt_handler
                 compliance_score += 15
                 compliance_features.append("JWT authentication system")
-            except ImportError:
-                pass
+            except ImportError as e:
+                logger.debug(f"JWT handler module not available: {e}")
 
             # 3. Audit logging
             compliance_score += 20
@@ -963,8 +963,8 @@ class ProductionValidator:
                 if security_validation.get("overall_status") == "SECURE":
                     compliance_score += 20
                     compliance_features.append("Security controls validation")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Failed to validate security configuration: {e}")
 
             # HIPAA-specific requirements for law firms handling health data
             hipaa_requirements = {
@@ -1154,8 +1154,8 @@ class ProductionValidator:
             for session in self.load_test_sessions:
                 try:
                     await session.close()
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Failed to close test session: {e}")
 
             self.test_tenants.clear()
             self.load_test_sessions.clear()
