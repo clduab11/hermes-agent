@@ -66,15 +66,35 @@ class TTSFactory:
             if backend == TTSBackend.KOKORO:
                 return KokoroTTS(config)
             elif backend == TTSBackend.OPENAI:
-                # Import OpenAI TTS when implemented
-                from .openai_tts import OpenAITTS
-                return OpenAITTS(config)
+                # OpenAI TTS backend not yet implemented
+                # TODO: Implement OpenAI TTS backend
+                raise NotImplementedError(
+                    "OpenAI TTS backend is not yet implemented. "
+                    "Please use 'kokoro' backend or configure a fallback."
+                )
             elif backend == TTSBackend.EXISTING:
-                # Import existing/legacy TTS when available
-                from ..text_to_speech import get_tts_engine as get_legacy_tts
-                return get_legacy_tts()
+                # Legacy TTS backend integration
+                # TODO: Integrate with existing text_to_speech module
+                raise NotImplementedError(
+                    "Legacy TTS backend integration is not yet implemented. "
+                    "Please use 'kokoro' backend or configure a fallback."
+                )
             else:
                 raise ValueError(f"Unsupported TTS backend: {backend}")
+                
+        except NotImplementedError as e:
+            logger.warning(f"Backend not implemented: {e}")
+            
+            # Try fallback if available
+            if fallback_backend and fallback_backend != backend:
+                logger.info(f"Attempting fallback to {fallback_backend.value}")
+                return TTSFactory.create(backend=fallback_backend, config=config, fallback_backend=None)
+            
+            # No fallback available
+            raise ValueError(
+                f"TTS backend '{backend.value}' is not implemented and no fallback is configured. "
+                f"Available backends: kokoro"
+            ) from e
                 
         except Exception as e:
             logger.error(f"Failed to create TTS backend '{backend.value}': {e}")

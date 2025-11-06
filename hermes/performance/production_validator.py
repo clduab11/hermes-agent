@@ -17,7 +17,7 @@ import asyncio
 import logging
 import time
 import json
-from typing import Dict, Any, List, Optional, Tuple, Tuple
+from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import statistics
