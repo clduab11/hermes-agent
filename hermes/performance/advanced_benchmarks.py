@@ -95,6 +95,48 @@ class PerformanceBenchmarkSuite:
         self._system_metrics: List[Dict[str, Any]] = []
         self._baseline_metrics: Optional[Dict[str, Any]] = None
 
+    def _process_benchmark_results(
+        self, 
+        results: List[Dict[str, Any]], 
+        bytes_transferred: int = 0
+    ) -> Dict[str, Any]:
+        """
+        Process benchmark operation results into standardized metrics.
+        
+        Args:
+            results: List of operation results with 'success', 'response_time', optional 'error'
+            bytes_transferred: Total bytes transferred during operations
+            
+        Returns:
+            Dict with response_times, errors, successful/failed request counts
+        """
+        response_times = []
+        errors = []
+        successful_requests = 0
+        failed_requests = 0
+        
+        for result in results:
+            if result.get("success", False):
+                successful_requests += 1
+                # Accumulate bytes if provided in result
+                if "bytes" in result:
+                    bytes_transferred += result["bytes"]
+            else:
+                failed_requests += 1
+                if "error" in result:
+                    errors.append(result["error"])
+            
+            if "response_time" in result:
+                response_times.append(result["response_time"])
+        
+        return {
+            "response_times": response_times,
+            "errors": errors,
+            "successful_requests": successful_requests,
+            "failed_requests": failed_requests,
+            "bytes_transferred": bytes_transferred
+        }
+
     async def run_benchmark(self, config: BenchmarkConfig) -> BenchmarkResult:
         """Run a single benchmark test."""
         logger.info(f"Starting benchmark: {config.name}")
@@ -348,11 +390,6 @@ class PerformanceBenchmarkSuite:
 
     async def _run_database_performance_test(self, config: BenchmarkConfig) -> Dict[str, Any]:
         """Run database performance test."""
-        response_times = []
-        errors = []
-        successful_requests = 0
-        failed_requests = 0
-
         # This would integrate with the actual database manager
         # For now, simulate database operations
 
@@ -382,23 +419,8 @@ class PerformanceBenchmarkSuite:
         tasks = [simulate_db_operation() for _ in range(total_operations)]
         results = await asyncio.gather(*tasks)
 
-        # Process results
-        for result in results:
-            if result["success"]:
-                successful_requests += 1
-            else:
-                failed_requests += 1
-                errors.append(result["error"])
-
-            response_times.append(result["response_time"])
-
-        return {
-            "response_times": response_times,
-            "errors": errors,
-            "successful_requests": successful_requests,
-            "failed_requests": failed_requests,
-            "bytes_transferred": 0
-        }
+        # Process results using helper method
+        return self._process_benchmark_results(results)
 
     async def _run_cache_throughput_test(self, config: BenchmarkConfig) -> Dict[str, Any]:
         """Run cache throughput test."""
@@ -435,9 +457,6 @@ class PerformanceBenchmarkSuite:
     async def _run_voice_pipeline_test(self, config: BenchmarkConfig) -> Dict[str, Any]:
         """Run voice pipeline performance test."""
         # Simulate voice processing pipeline
-        response_times = []
-        successful_requests = 0
-        failed_requests = 0
 
         async def process_voice_sample():
             """Simulate voice processing."""
@@ -467,31 +486,11 @@ class PerformanceBenchmarkSuite:
         tasks = [process_voice_sample() for _ in range(total_samples)]
         results = await asyncio.gather(*tasks)
 
-        errors = []
-        for result in results:
-            if result["success"]:
-                successful_requests += 1
-            else:
-                failed_requests += 1
-                errors.append(result["error"])
-
-            response_times.append(result["response_time"])
-
-        return {
-            "response_times": response_times,
-            "errors": errors,
-            "successful_requests": successful_requests,
-            "failed_requests": failed_requests,
-            "bytes_transferred": 0
-        }
+        # Process results using helper method
+        return self._process_benchmark_results(results)
 
     async def _run_memory_stress_test(self, config: BenchmarkConfig) -> Dict[str, Any]:
         """Run memory stress test."""
-        response_times = []
-        successful_requests = 0
-        failed_requests = 0
-        errors = []
-
         async def memory_intensive_task():
             """Perform memory-intensive operations."""
             start_time = time.perf_counter()
@@ -525,22 +524,8 @@ class PerformanceBenchmarkSuite:
         tasks = [memory_intensive_task() for _ in range(total_operations)]
         results = await asyncio.gather(*tasks)
 
-        for result in results:
-            if result["success"]:
-                successful_requests += 1
-            else:
-                failed_requests += 1
-                errors.append(result["error"])
-
-            response_times.append(result["response_time"])
-
-        return {
-            "response_times": response_times,
-            "errors": errors,
-            "successful_requests": successful_requests,
-            "failed_requests": failed_requests,
-            "bytes_transferred": 0
-        }
+        # Process results using helper method
+        return self._process_benchmark_results(results)
 
     async def _run_concurrent_users_test(self, config: BenchmarkConfig) -> Dict[str, Any]:
         """Run concurrent users simulation test."""
