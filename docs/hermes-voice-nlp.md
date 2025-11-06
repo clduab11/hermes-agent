@@ -329,9 +329,12 @@ transcription, _ = await voice_processor.process_audio_conversation(
 llm_response = await generate_response(transcription.text)
 
 # Synthesize voice response
+# Note: Language enum value is a tuple: (display_name, code, locale)
+# Index 2 represents the locale string (e.g., 'en-US', 'es-ES')
+LANGUAGE_LOCALE_INDEX = 2
 synthesis_request = SynthesisRequest(
     text=llm_response,
-    locale=transcription.language.value[2],  # Use detected language
+    locale=transcription.language.value[LANGUAGE_LOCALE_INDEX],  # Use detected language locale
     voice_id="kokoro-en-us-female-1"
 )
 

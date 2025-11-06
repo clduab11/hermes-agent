@@ -4,11 +4,10 @@ TTS Interface and Base Classes
 Defines the abstract interface that all TTS backends must implement.
 """
 
-import asyncio
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -26,7 +25,7 @@ class TTSBackend(Enum):
 class SynthesisRequest:
     """Request for TTS synthesis."""
     text: str
-    locale: str = "en-US"  # BCP 47 language tag (e.g., 'en-US', 'es-ES')
+    locale: str = "en-US"  # BCP 47 language tag (use hyphens, e.g., 'en-US', 'es-ES'; not underscores like 'en_US')
     voice_id: Optional[str] = None
     speed: float = 1.0
     pitch: float = 1.0
@@ -46,7 +45,7 @@ class SynthesisResult:
     locale: str
     voice_id: str
     backend: TTSBackend
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     @property

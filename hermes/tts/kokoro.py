@@ -10,9 +10,13 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 
+try:
+    import httpx
+except ImportError:
+    httpx = None
+
 from .interface import (
     TTSBackend,
-    TTSError,
     TTSInitializationError,
     TTSInterface,
     TTSSynthesisError,
@@ -98,8 +102,13 @@ class KokoroTTS(TTSInterface):
         try:
             if self.api_url:
                 # API mode - initialize HTTP client
+                if httpx is None:
+                    raise TTSInitializationError(
+                        "httpx library is required for Kokoro API mode. "
+                        "Install it with: pip install httpx"
+                    )
+                    
                 logger.info(f"Initializing Kokoro TTS in API mode: {self.api_url}")
-                import httpx
                 self._client = httpx.AsyncClient(
                     base_url=self.api_url,
                     timeout=30.0,

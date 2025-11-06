@@ -97,23 +97,22 @@ class PerformanceBenchmarkSuite:
 
     def _process_benchmark_results(
         self, 
-        results: List[Dict[str, Any]], 
-        bytes_transferred: int = 0
+        results: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """
         Process benchmark operation results into standardized metrics.
         
         Args:
-            results: List of operation results with 'success', 'response_time', optional 'error'
-            bytes_transferred: Total bytes transferred during operations
+            results: List of operation results with 'success', 'response_time', optional 'error', optional 'bytes'
             
         Returns:
-            Dict with response_times, errors, successful/failed request counts
+            Dict with response_times, errors, successful/failed request counts, bytes_transferred
         """
         response_times = []
         errors = []
         successful_requests = 0
         failed_requests = 0
+        bytes_transferred = 0  # Initialize locally to accumulate correctly
         
         for result in results:
             if result.get("success", False):
