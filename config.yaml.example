@@ -1,0 +1,117 @@
+# HERMES Configuration Example
+# This shows the complete configuration structure for the hermes-agent system
+
+# ===== TTS Configuration =====
+tts:
+  backend: kokoro  # Options: kokoro, openai, existing
+  voice: "en-US-female-1"
+  locale: "en-US"
+  fallback_backend: "existing"
+  
+  # Kokoro-specific settings
+  kokoro:
+    # API mode
+    api_url: null  # Set to Kokoro API endpoint if using API mode
+    api_key: null  # Set to your Kokoro API key
+    
+    # Local mode  
+    model_path: null  # Path to local Kokoro models
+    device: "cpu"  # or "cuda" for GPU acceleration
+    cache_dir: "./cache/kokoro"
+  
+  # Performance
+  max_latency_ms: 500
+  enable_caching: true
+  cache_size: 100
+
+# ===== Embedder Configuration =====
+embedder:
+  backend: "openai"  # Options: openai, sentence-transformers, cohere
+  model: "text-embedding-3-large"
+  chunk_tokens: 800
+  overlap_tokens: 120
+  
+  # OpenAI-specific
+  openai:
+    api_key: "${OPENAI_API_KEY}"
+    batch_size: 10
+    
+  # Alternative providers
+  # sentence_transformers:
+  #   model_name: "all-MiniLM-L6-v2"
+  #   device: "cpu"
+
+# ===== Vector Store Configuration =====
+vector_store:
+  backend: "pgvector"  # Options: pgvector, pinecone, weaviate
+  connection: "${SUPABASE_URL}"
+  table: "embeddings_v1"
+  dimension: 3072  # text-embedding-3-large dimension
+  
+  # Indexing
+  index_type: "ivfflat"  # or "hnsw"
+  index_params:
+    lists: 100
+    probes: 10
+
+# ===== Clio Integration =====
+clio:
+  enable_semantic_population: true
+  dry_run: true
+  api_key: "${CLIO_API_KEY}"
+  api_url: "https://app.clio.com/api/v4"
+  
+  # Field mapping configuration
+  field_mapping:
+    contact:
+      - source: "client_name"
+        target: "name"
+      - source: "client_email"  
+        target: "email_addresses[0].address"
+    matter:
+      - source: "case_type"
+        target: "practice_area"
+      - source: "description"
+        target: "description"
+
+# ===== Security Configuration =====
+security:
+  bind_interface: "127.0.0.1"  # Never use 0.0.0.0 in production
+  temp_dir: "/secure/tmp"
+  enable_error_logging: true
+  
+  # API security
+  cors_allow_origins:
+    - "https://yourdomain.com"
+  api_key_rotation_days: 90
+
+# ===== Database Configuration =====
+database:
+  url: "${DATABASE_URL}"
+  pool_size: 20
+  max_overflow: 10
+  pool_timeout: 30
+  
+# ===== Redis Configuration =====
+redis:
+  url: "${REDIS_URL}"
+  max_connections: 50
+  socket_timeout: 5
+  
+# ===== Monitoring =====
+monitoring:
+  enable_metrics: true
+  metrics_port: 9090
+  log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  
+  # Performance thresholds
+  thresholds:
+    max_response_time_ms: 500
+    max_error_rate_percent: 0.1
+
+# ===== Feature Flags =====
+features:
+  enable_kokoro_tts: true
+  enable_semantic_ingestion: true
+  enable_clio_sync: true
+  enable_voice_emotion_detection: true
