@@ -11,7 +11,7 @@ import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -344,78 +344,36 @@ class VoiceContextManager:
         audio_features: Dict[str, float] = None,
         session_id: str = None,
     ) -> EmotionMetrics:
-        """Detect emotional state from text and audio features"""
-
-        emotion_scores = {}
-        stress_indicators = []
-
-        # Text-based emotion detection
-        if text:
-            text_lower = text.lower()
-
-            for emotion, patterns in self.emotion_patterns.items():
-                score = 0.0
-
-                # Check keywords
-                for keyword in patterns["keywords"]:
-                    if keyword in text_lower:
-                        score += 0.3
-
-                # Check phrase patterns
-                for pattern in patterns["phrase_patterns"]:
-                    if pattern in text_lower:
-                        score += 0.4
-
-                emotion_scores[emotion] = min(score, 1.0)
-
-        # Audio-based emotion detection
-        if audio_features:
-            for emotion, patterns in self.emotion_patterns.items():
-                if "speech_indicators" in patterns:
-                    audio_score = 0.0
-
-                    for indicator, (min_val, max_val) in patterns[
-                        "speech_indicators"
-                    ].items():
-                        if indicator in audio_features:
-                            value = audio_features[indicator]
-                            if min_val <= value <= max_val:
-                                audio_score += 0.2
-
-                    if emotion in emotion_scores:
-                        emotion_scores[emotion] = (
-                            emotion_scores[emotion] + audio_score
-                        ) / 2
-                    else:
-                        emotion_scores[emotion] = audio_score
-
+        """
+        Detect emotional state from text and audio features.
+        
+        Args:
+            text: Optional text to analyze for emotion
+            audio_features: Optional audio features for emotion detection
+            session_id: Optional session ID for context
+            
+        Returns:
+            EmotionMetrics: Detected emotion metrics including primary emotion,
+                           confidence, secondary emotions, and stress indicators
+        """
+        # Detect emotions from text
+        text_emotion_scores = self._detect_text_emotions(text) if text else {}
+        
+        # Detect emotions from audio
+        audio_emotion_scores = self._detect_audio_emotions(audio_features) if audio_features else {}
+        
+        # Combine text and audio emotion scores
+        emotion_scores = self._combine_emotion_scores(text_emotion_scores, audio_emotion_scores)
+        
         # Determine primary and secondary emotions
-        if emotion_scores:
-            sorted_emotions = sorted(
-                emotion_scores.items(), key=lambda x: x[1], reverse=True
-            )
-            primary_emotion = sorted_emotions[0][0]
-            primary_confidence = sorted_emotions[0][1]
-            secondary_emotions = [
-                emotion for emotion, score in sorted_emotions[1:3] if score > 0.3
-            ]
-        else:
-            primary_emotion = EmotionalState.NEUTRAL
-            primary_confidence = 0.5
-            secondary_emotions = []
-
-        # Calculate emotional intensity and stress indicators
+        primary_emotion, primary_confidence, secondary_emotions = self._rank_emotions(emotion_scores)
+        
+        # Calculate emotional intensity
         intensity = max(emotion_scores.values()) if emotion_scores else 0.0
-
-        if audio_features:
-            # Detect stress indicators from audio
-            if audio_features.get("speaking_rate", 1.0) > 1.5:
-                stress_indicators.append("rapid_speech")
-            if audio_features.get("volume", 0.5) > 0.8:
-                stress_indicators.append("elevated_volume")
-            if audio_features.get("pitch_variance", 0.5) > 0.7:
-                stress_indicators.append("pitch_instability")
-
+        
+        # Detect stress indicators from audio
+        stress_indicators = self._detect_stress_indicators(audio_features) if audio_features else []
+        
         return EmotionMetrics(
             primary_emotion=primary_emotion,
             confidence=primary_confidence,
@@ -425,6 +383,150 @@ class VoiceContextManager:
             speech_patterns=audio_features or {},
             voice_characteristics={},
         )
+    
+    def _detect_text_emotions(self, text: str) -> Dict[str, float]:
+        """
+        Detect emotions from text content using keyword and pattern matching.
+        
+        Args:
+            text: Text to analyze
+            
+        Returns:
+            Dict mapping emotion names to confidence scores (0.0-1.0)
+        """
+        emotion_scores = {}
+        text_lower = text.lower()
+        
+        for emotion, patterns in self.emotion_patterns.items():
+            score = 0.0
+            
+            # Check keywords
+            for keyword in patterns["keywords"]:
+                if keyword in text_lower:
+                    score += 0.3
+            
+            # Check phrase patterns
+            for pattern in patterns["phrase_patterns"]:
+                if pattern in text_lower:
+                    score += 0.4
+            
+            emotion_scores[emotion] = min(score, 1.0)
+        
+        return emotion_scores
+    
+    def _detect_audio_emotions(self, audio_features: Dict[str, float]) -> Dict[str, float]:
+        """
+        Detect emotions from audio features like pitch, volume, and speaking rate.
+        
+        Args:
+            audio_features: Dictionary of audio feature measurements
+            
+        Returns:
+            Dict mapping emotion names to confidence scores (0.0-1.0)
+        """
+        emotion_scores = {}
+        
+        for emotion, patterns in self.emotion_patterns.items():
+            if "speech_indicators" not in patterns:
+                continue
+            
+            audio_score = 0.0
+            
+            for indicator, (min_val, max_val) in patterns["speech_indicators"].items():
+                if indicator in audio_features:
+                    value = audio_features[indicator]
+                    if min_val <= value <= max_val:
+                        audio_score += 0.2
+            
+            emotion_scores[emotion] = audio_score
+        
+        return emotion_scores
+    
+    def _combine_emotion_scores(
+        self, 
+        text_scores: Dict[str, float], 
+        audio_scores: Dict[str, float]
+    ) -> Dict[str, float]:
+        """
+        Combine text and audio emotion scores using weighted averaging.
+        
+        Args:
+            text_scores: Emotion scores from text analysis
+            audio_scores: Emotion scores from audio analysis
+            
+        Returns:
+            Combined emotion scores
+        """
+        combined_scores = {}
+        all_emotions = set(text_scores.keys()) | set(audio_scores.keys())
+        
+        for emotion in all_emotions:
+            text_score = text_scores.get(emotion, 0.0)
+            audio_score = audio_scores.get(emotion, 0.0)
+            
+            # Average if both present, otherwise use whichever is available
+            if text_score > 0 and audio_score > 0:
+                combined_scores[emotion] = (text_score + audio_score) / 2
+            else:
+                combined_scores[emotion] = max(text_score, audio_score)
+        
+        return combined_scores
+    
+    def _rank_emotions(
+        self, 
+        emotion_scores: Dict[str, float]
+    ) -> Tuple[EmotionalState, float, List[str]]:
+        """
+        Rank emotions to determine primary and secondary emotions.
+        
+        Args:
+            emotion_scores: Dictionary of emotion scores
+            
+        Returns:
+            Tuple of (primary_emotion, confidence, secondary_emotions_list)
+        """
+        if not emotion_scores:
+            return EmotionalState.NEUTRAL, 0.5, []
+        
+        sorted_emotions = sorted(
+            emotion_scores.items(), 
+            key=lambda x: x[1], 
+            reverse=True
+        )
+        
+        primary_emotion = sorted_emotions[0][0]
+        primary_confidence = sorted_emotions[0][1]
+        secondary_emotions = [
+            emotion for emotion, score in sorted_emotions[1:3] if score > 0.3
+        ]
+        
+        return primary_emotion, primary_confidence, secondary_emotions
+    
+    def _detect_stress_indicators(self, audio_features: Dict[str, float]) -> List[str]:
+        """
+        Detect stress indicators from audio features.
+        
+        Args:
+            audio_features: Dictionary of audio feature measurements
+            
+        Returns:
+            List of detected stress indicator names
+        """
+        stress_indicators = []
+        
+        # Rapid speech detection
+        if audio_features.get("speaking_rate", 1.0) > 1.5:
+            stress_indicators.append("rapid_speech")
+        
+        # Elevated volume detection
+        if audio_features.get("volume", 0.5) > 0.8:
+            stress_indicators.append("elevated_volume")
+        
+        # Pitch instability detection
+        if audio_features.get("pitch_variance", 0.5) > 0.7:
+            stress_indicators.append("pitch_instability")
+        
+        return stress_indicators
 
     async def detect_conversation_phase(
         self, text: str, context: ConversationContext
