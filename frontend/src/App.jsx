@@ -446,8 +446,13 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
+          {/* Marketing & HERMES routes */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/habits" element={<HabitTrackerApp />} />
+
+          {/* HabitFlow routes */}
+          <Route path="/habits/*" element={<HabitTrackerApp />} />
+
+          {/* HERMES Dashboard routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardOverview />} />
             <Route path="leads" element={<LeadsPage />} />

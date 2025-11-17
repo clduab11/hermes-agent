@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { Home, TrendingUp, Users, Trophy, Menu, X, LogOut } from 'lucide-react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Home, TrendingUp, Users, Trophy, Menu, X, LogOut, CreditCard } from 'lucide-react';
 import { DashboardPage } from './pages/DashboardPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SocialPage } from './pages/SocialPage';
+import { PricingPage } from './pages/PricingPage';
+import { BillingPage } from './pages/BillingPage';
 import { AuthPage } from './components/auth/AuthPage';
 import { useStore } from './store/useStore';
 import { authHelpers } from './services/supabase';
 import { userApi } from './services/api';
 import { Toaster } from 'react-hot-toast';
 
-type Page = 'dashboard' | 'analytics' | 'social' | 'challenges';
+type Page = 'dashboard' | 'analytics' | 'social' | 'challenges' | 'pricing' | 'billing';
 
 export const HabitTrackerApp: React.FC = () => {
   const { user, setUser } = useStore();
