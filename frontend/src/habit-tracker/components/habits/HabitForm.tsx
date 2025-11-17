@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { X } from 'lucide-react';
 import type { Habit, HabitCategory, HabitFrequency } from '../../types';
-import { getCategoryColor, getCategoryIcon } from '../../utils/habitHelpers';
+import { getCategoryIcon } from '../../utils/habitHelpers';
 
 interface HabitFormProps {
   onSubmit: (habit: Omit<Habit, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => void;
@@ -26,7 +26,7 @@ const PRESET_COLORS = [
   '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#64748b',
 ];
 
-export const HabitForm: React.FC<HabitFormProps> = ({ onSubmit, onCancel, initialData }) => {
+const HabitFormComponent: React.FC<HabitFormProps> = ({ onSubmit, onCancel, initialData }) => {
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [category, setCategory] = useState<HabitCategory>(initialData?.category || 'health');
@@ -293,3 +293,6 @@ export const HabitForm: React.FC<HabitFormProps> = ({ onSubmit, onCancel, initia
     </div>
   );
 };
+
+// Memoize to prevent re-renders when parent state changes
+export const HabitForm = memo(HabitFormComponent);

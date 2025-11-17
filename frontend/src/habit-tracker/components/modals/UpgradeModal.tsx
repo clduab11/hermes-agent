@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { X, Crown, Sparkles, Zap } from 'lucide-react';
 import { stripeHelpers } from '../../services/stripe';
 import { PRICING_PLANS } from '../../types/subscription';
@@ -10,7 +10,7 @@ interface UpgradeModalProps {
   reason?: 'habit_limit' | 'ai_limit' | 'social_feature' | 'analytics' | 'export';
 }
 
-export const UpgradeModal: React.FC<UpgradeModalProps> = ({
+const UpgradeModalComponent: React.FC<UpgradeModalProps> = ({
   isOpen,
   onClose,
   userId,
@@ -143,3 +143,6 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({
     </div>
   );
 };
+
+// Memoize to prevent re-renders when parent state changes but modal props stay the same
+export const UpgradeModal = memo(UpgradeModalComponent);

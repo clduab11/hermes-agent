@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Check, Flame, Target, MoreVertical, Edit, Trash } from 'lucide-react';
 import type { Habit, HabitEntry } from '../../types';
-import { calculateStreak, formatStreakText, getHabitColor, getCategoryIcon } from '../../utils/habitHelpers';
-import { format } from 'date-fns';
+import { calculateStreak, getHabitColor, getCategoryIcon } from '../../utils/habitHelpers';
 
 interface HabitCardProps {
   habit: Habit;
@@ -13,7 +12,7 @@ interface HabitCardProps {
   isCompleted: boolean;
 }
 
-export const HabitCard: React.FC<HabitCardProps> = ({
+const HabitCardComponent: React.FC<HabitCardProps> = ({
   habit,
   entries,
   onComplete,
@@ -172,3 +171,16 @@ export const HabitCard: React.FC<HabitCardProps> = ({
     </div>
   );
 };
+
+// Memoize component to prevent unnecessary re-renders when sibling habits change
+// Only re-render if habit data, entries, or isCompleted status changes
+export const HabitCard = memo(HabitCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.habit.id === nextProps.habit.id &&
+    prevProps.habit.title === nextProps.habit.title &&
+    prevProps.habit.color === nextProps.habit.color &&
+    prevProps.habit.goalValue === nextProps.habit.goalValue &&
+    prevProps.isCompleted === nextProps.isCompleted &&
+    prevProps.entries.length === nextProps.entries.length
+  );
+});

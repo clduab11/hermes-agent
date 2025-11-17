@@ -1,18 +1,31 @@
-import React, { useEffect, useState } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { Home, TrendingUp, Users, Trophy, Menu, X, LogOut, CreditCard } from 'lucide-react';
-import { DashboardPage } from './pages/DashboardPage';
-import { AnalyticsPage } from './pages/AnalyticsPage';
-import { SocialPage } from './pages/SocialPage';
-import { PricingPage } from './pages/PricingPage';
-import { BillingPage } from './pages/BillingPage';
-import { AuthPage } from './components/auth/AuthPage';
+import React, { useEffect, useState, lazy, Suspense, memo } from 'react';
+import { Home, TrendingUp, Users, Trophy, Menu, X, LogOut } from 'lucide-react';
 import { useStore } from './store/useStore';
 import { authHelpers } from './services/supabase';
 import { userApi } from './services/api';
 import { Toaster } from 'react-hot-toast';
 
+// Lazy load pages for code splitting - reduces initial bundle size
+const DashboardPage = lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
+const SocialPage = lazy(() => import('./pages/SocialPage').then(m => ({ default: m.SocialPage })));
+const PricingPage = lazy(() => import('./pages/PricingPage').then(m => ({ default: m.PricingPage })));
+const BillingPage = lazy(() => import('./pages/BillingPage').then(m => ({ default: m.BillingPage })));
+const AuthPage = lazy(() => import('./components/auth/AuthPage').then(m => ({ default: m.AuthPage })));
+
 type Page = 'dashboard' | 'analytics' | 'social' | 'challenges' | 'pricing' | 'billing';
+
+// Loading fallback component - memoized to prevent re-renders
+const PageLoader = memo(() => (
+  <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="text-center">
+      <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+      <p className="text-gray-600">Loading...</p>
+    </div>
+  </div>
+));
+
+PageLoader.displayName = 'PageLoader';
 
 export const HabitTrackerApp: React.FC = () => {
   const { user, setUser } = useStore();
@@ -40,7 +53,7 @@ export const HabitTrackerApp: React.FC = () => {
     return () => {
       data?.subscription?.unsubscribe();
     };
-  }, []);
+  }, [setUser]);
 
   const checkUser = async () => {
     const { user: authUser } = await authHelpers.getCurrentUser();
@@ -70,7 +83,11 @@ export const HabitTrackerApp: React.FC = () => {
   }
 
   if (!user) {
-    return <AuthPage />;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AuthPage />
+      </Suspense>
+    );
   }
 
   const navigation = [
@@ -131,6 +148,7 @@ export const HabitTrackerApp: React.FC = () => {
                 onClick={handleSignOut}
                 className="p-2 hover:bg-white/10 rounded-lg transition"
                 title="Sign out"
+                aria-label="Sign out"
               >
                 <LogOut size={18} />
               </button>
@@ -146,6 +164,7 @@ export const HabitTrackerApp: React.FC = () => {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="p-2 hover:bg-white/10 rounded-lg transition"
+            aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -187,24 +206,28 @@ export const HabitTrackerApp: React.FC = () => {
         )}
       </div>
 
-      {/* Main Content */}
+      {/* Main Content with lazy loading */}
       <div className="lg:pl-64 pt-16 lg:pt-0">
-        {currentPage === 'dashboard' && <DashboardPage />}
-        {currentPage === 'analytics' && <AnalyticsPage />}
-        {currentPage === 'social' && <SocialPage />}
-        {currentPage === 'challenges' && (
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-              <Trophy size={64} className="text-indigo-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Challenges Coming Soon!
-              </h2>
-              <p className="text-gray-600">
-                Compete with friends and join community challenges.
-              </p>
+        <Suspense fallback={<PageLoader />}>
+          {currentPage === 'dashboard' && <DashboardPage />}
+          {currentPage === 'analytics' && <AnalyticsPage />}
+          {currentPage === 'social' && <SocialPage />}
+          {currentPage === 'pricing' && <PricingPage />}
+          {currentPage === 'billing' && <BillingPage />}
+          {currentPage === 'challenges' && (
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="text-center">
+                <Trophy size={64} className="text-indigo-600 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Challenges Coming Soon!
+                </h2>
+                <p className="text-gray-600">
+                  Compete with friends and join community challenges.
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </Suspense>
       </div>
     </div>
   );

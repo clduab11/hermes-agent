@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Check, Crown, Sparkles } from 'lucide-react';
 import type { PricingPlan } from '../../types/subscription';
 import { stripeHelpers } from '../../services/stripe';
@@ -11,7 +11,7 @@ interface PricingCardProps {
   billingPeriod: 'monthly' | 'annual';
 }
 
-export const PricingCard: React.FC<PricingCardProps> = ({
+const PricingCardComponent: React.FC<PricingCardProps> = ({
   plan,
   userId,
   currentTier,
@@ -128,3 +128,6 @@ export const PricingCard: React.FC<PricingCardProps> = ({
     </div>
   );
 };
+
+// Memoize to prevent re-renders when sibling pricing cards change
+export const PricingCard = memo(PricingCardComponent);
