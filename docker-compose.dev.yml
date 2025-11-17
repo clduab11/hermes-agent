@@ -1,0 +1,100 @@
+version: '3.9'
+
+# ===== HERMES Development Docker Compose =====
+# Optimized for local development with hot reload
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: hermes-api:dev
+    container_name: hermes-api-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/hermes_dev
+      - REDIS_URL=redis://redis:6379/0
+      - DEVELOPMENT_MODE=true
+      - LOG_LEVEL=debug
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - TESTING=false
+    env_file:
+      - .env.example
+    volumes:
+      # Mount source code for hot reload
+      - .:/app:delegated
+      # Prevent overwriting of these
+      - /app/hermes/__pycache__
+      - /app/.pytest_cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hermes-dev-network
+    command: uvicorn hermes.main:app --host 0.0.0.0 --port 8000 --reload
+    stdin_open: true
+    tty: true
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: hermes-postgres-dev
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=hermes_dev
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+      - ./db/sql:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5433:5432"
+    networks:
+      - hermes-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: hermes-redis-dev
+    command: redis-server
+    ports:
+      - "6380:6379"
+    networks:
+      - hermes-dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ===== Testing Database (separate from dev) =====
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: hermes-postgres-test
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=hermes_test
+    tmpfs:
+      - /var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    networks:
+      - hermes-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+volumes:
+  postgres-dev-data:
+
+networks:
+  hermes-dev-network:
+    driver: bridge

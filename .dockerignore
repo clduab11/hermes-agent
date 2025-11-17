@@ -1,0 +1,138 @@
+# ===== HERMES .dockerignore =====
+# Optimize Docker build context size
+
+# Version control
+.git
+.gitignore
+.github
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+.pyre/
+
+# Environment files (keep .example files)
+.env
+.env.*
+!.env.example
+!.env.production.complete
+!.env.enterprise.example
+!.env.tts.example
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# Documentation
+*.md
+!README.md
+docs/
+.roo/
+.claude/
+
+# Testing
+tests/
+pytest.ini
+.coveragerc
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/.nuxt/
+
+# Deployment
+deployment/
+monitoring/prometheus-data/
+monitoring/grafana-data/
+.lighthouserc.json
+
+# Data directories
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Media files
+*.mp3
+*.wav
+*.ogg
+*.flac
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Jupyter Notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Security scans
+bandit-*.json
+security.yaml
+
+# Large documentation files
+ARCHITECTURE_ANALYSIS.md
+CODE_REVIEW_IMPROVEMENTS.md
+DEPLOYMENT_GUIDE.md
+IMPLEMENTATION_ROADMAP.md
+PRODUCTION_*.md
+SPRINT_MAPPING.md
+UI_PREVIEW.md

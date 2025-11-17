@@ -1,0 +1,47 @@
+# ===== HERMES AI Voice Agent - Development Dockerfile =====
+# Development environment with hot reload and debugging tools
+
+FROM python:3.11-slim
+
+LABEL maintainer="Parallax Analytics"
+LABEL description="HERMES AI Voice Agent - Development Environment"
+
+# Install development dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    ffmpeg \
+    libsndfile1 \
+    git \
+    curl \
+    vim \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install Python dependencies
+COPY requirements.txt requirements-ci.txt ./
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt -r requirements-ci.txt && \
+    pip install --no-cache-dir \
+    pytest-watch \
+    ipython \
+    ipdb \
+    black \
+    flake8 \
+    isort
+
+# Copy application code
+COPY . .
+
+# Development mode - run with hot reload
+ENV PYTHONUNBUFFERED=1 \
+    DEVELOPMENT_MODE=true \
+    LOG_LEVEL=debug \
+    PYTHONPATH=/app
+
+EXPOSE 8000
+
+# Use uvicorn with reload for development
+CMD ["uvicorn", "hermes.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
