@@ -11,6 +11,7 @@ import LeadsPage from './pages/LeadsPage.jsx';
 import SocialMediaPage from './pages/SocialMediaPage.jsx';
 import AnalyticsPage from './pages/AnalyticsPage.jsx';
 import TechnicalDocsPage from './pages/TechnicalDocsPage.jsx';
+import { HabitTrackerApp } from './habit-tracker/HabitTrackerApp.tsx';
 
 const queryClient = new QueryClient();
 
@@ -446,6 +447,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/habits" element={<HabitTrackerApp />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardOverview />} />
             <Route path="leads" element={<LeadsPage />} />
