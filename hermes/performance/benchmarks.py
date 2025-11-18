@@ -6,11 +6,14 @@ Provides comprehensive performance benchmarking and profiling tools.
 """
 
 import asyncio
+import logging
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional
 import statistics
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -79,7 +82,7 @@ class PerformanceBenchmark:
                 await func(**kwargs)
                 successes += 1
             except Exception as e:
-                print(f"Benchmark error: {e}")
+                logger.warning(f"Benchmark error: {e}")
 
             elapsed = (time.perf_counter() - start) * 1000  # Convert to ms
             times.append(elapsed)
@@ -160,16 +163,17 @@ class PerformanceBenchmark:
 
     def print_results(self):
         """Print benchmark results in a formatted table"""
-        print("\n" + "="*80)
-        print("PERFORMANCE BENCHMARK RESULTS")
-        print("="*80)
-        print()
+        lines = []
+        lines.append("\n" + "="*80)
+        lines.append("PERFORMANCE BENCHMARK RESULTS")
+        lines.append("="*80)
+        lines.append("")
 
-        print(f"{'Benchmark':<40} {'Avg (ms)':<12} {'Min (ms)':<12} {'Max (ms)':<12} {'Success %':<10}")
-        print("-"*80)
+        lines.append(f"{'Benchmark':<40} {'Avg (ms)':<12} {'Min (ms)':<12} {'Max (ms)':<12} {'Success %':<10}")
+        lines.append("-"*80)
 
         for result in self.results:
-            print(
+            lines.append(
                 f"{result.name:<40} "
                 f"{result.avg_time_ms:<12.2f} "
                 f"{result.min_time_ms:<12.2f} "
@@ -177,8 +181,11 @@ class PerformanceBenchmark:
                 f"{result.success_rate*100:<10.1f}"
             )
 
-        print("="*80)
-        print()
+        lines.append("="*80)
+        lines.append("")
+
+        for line in lines:
+            logger.info(line)
 
     def generate_report(self) -> str:
         """Generate a detailed performance report"""
@@ -231,8 +238,7 @@ async def benchmark_legal_ai_system():
 
     benchmark = PerformanceBenchmark()
 
-    print("Starting comprehensive performance benchmarks...")
-    print()
+    logger.info("Starting comprehensive performance benchmarks...")
 
     # Initialize components
     engine = LegalReasoningEngine()
@@ -240,7 +246,7 @@ async def benchmark_legal_ai_system():
     security = LegalAISecurityManager()
 
     # Benchmark 1: Legal reasoning analysis
-    print("Benchmarking legal reasoning engine...")
+    logger.info("Benchmarking legal reasoning engine...")
 
     async def run_reasoning():
         await engine.analyze_legal_query(
@@ -258,7 +264,7 @@ async def benchmark_legal_ai_system():
     )
 
     # Benchmark 2: Citation graph PageRank
-    print("Benchmarking citation graph PageRank...")
+    logger.info("Benchmarking citation graph PageRank...")
 
     # Add sample nodes
     for i in range(10):
@@ -281,7 +287,7 @@ async def benchmark_legal_ai_system():
     )
 
     # Benchmark 3: Encryption operations
-    print("Benchmarking encryption...")
+    logger.info("Benchmarking encryption...")
 
     test_data = "Attorney-client privileged communication" * 10
 
@@ -297,7 +303,7 @@ async def benchmark_legal_ai_system():
     )
 
     # Benchmark 4: Audit logging
-    print("Benchmarking audit logging...")
+    logger.info("Benchmarking audit logging...")
 
     async def run_audit_log():
         await security.audit_log.log_event(
@@ -334,4 +340,4 @@ if __name__ == "__main__":
     with open("performance_benchmark_report.txt", "w") as f:
         f.write(report)
 
-    print("\nDetailed report saved to: performance_benchmark_report.txt")
+    logger.info("Detailed report saved to: performance_benchmark_report.txt")
