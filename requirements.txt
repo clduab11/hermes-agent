@@ -3,17 +3,17 @@
 # This version deduplicates previous requirements files and aligns with CI/dev tooling.
 
 # --- Core API & Async Stack ---
-fastapi==0.115.6
-uvicorn[standard]==0.32.1
-pydantic==2.10.4
-pydantic-settings==2.6.1
+fastapi==0.121.2
+uvicorn[standard]==0.38.0
+pydantic==2.12.4
+pydantic-settings==2.12.0
 python-multipart==0.0.18
 httpx==0.28.1
 websockets==14.1
 mcp>=1.0.0
 
 # --- Data & Caching Layer ---
-sqlalchemy[asyncio]==2.0.36
+sqlalchemy[asyncio]==2.0.44
 asyncpg==0.30.0
 redis[hiredis]==5.1.1
 
