@@ -1,5 +1,7 @@
+-r requirements.txt
+
 # HERMES Development Dependencies
-# Install with: pip install -r requirements.txt -r requirements-dev.txt
+# Install with: pip install -r requirements-dev.txt
 # These tools are for local development only and should not be deployed to production
 # Updated: 2025-11-18
 
