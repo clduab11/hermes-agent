@@ -145,7 +145,11 @@ deploy_docker() {
     # Run security scan on the image
     print_status "Running security scan on Docker image..."
     if command -v trivy &> /dev/null; then
-        trivy image --severity HIGH,CRITICAL "$image_tag" || print_warning "Security scan found issues"
+        if ! trivy image --severity HIGH,CRITICAL "$image_tag"; then
+            print_error "Critical vulnerabilities detected in Docker image"
+            exit 1
+        fi
+        print_success "Security scan passed"
     else
         print_warning "Trivy not installed - skipping security scan"
     fi
@@ -295,7 +299,8 @@ main() {
                 shift 2
                 ;;
             *)
-                shift
+                print_error "Unknown parameter passed: $1"
+                exit 1
                 ;;
         esac
     done
