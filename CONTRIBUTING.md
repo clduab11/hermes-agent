@@ -38,7 +38,7 @@ Welcome to HERMES! We're excited that you're interested in contributing to our A
 
 3. **Install dependencies**
    ```bash
-   pip install -r requirements.txt -r requirements-dev.txt
+   pip install -r requirements-dev.txt
    ```
 
 4. **Configure environment**
