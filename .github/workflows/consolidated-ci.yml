@@ -103,7 +103,7 @@ jobs:
 
           # Basic secret detection - look for literal string assignments only
           # Exclude test files, examples, documentation, and configuration files
-          if grep -rE '(api[_-]?key|secret|password)\s*=\s*["\047][^"\047]{20,}["\047]' . \
+          if grep -rE '(api[_-]?key|secret|password)\s*=\s*["''][^"']{20,}["'']' . \
             --exclude-dir=.git \
             --exclude-dir=tests \
             --exclude-dir=docs \
