@@ -47,19 +47,7 @@ responses==0.24.1          # HTTP mocking
 # =============================================================================
 # Essential Production Dependencies (for tests to import)
 # =============================================================================
-fastapi>=0.115.0
-uvicorn>=0.30.0
-pydantic>=2.5.0
-pydantic-settings>=2.1.0
-httpx>=0.25.0
-requests>=2.31.0
-redis>=5.0.0
-sqlalchemy>=2.0.0
-python-jose[cryptography]>=3.3.0
-pyjwt[crypto]>=2.8.0
-cryptography>=41.0.0
-python-dotenv>=1.0.0
-structlog>=23.2.0
+-r requirements.txt
 
 # =============================================================================
 # Build Tools
