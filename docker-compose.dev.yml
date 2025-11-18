@@ -32,7 +32,7 @@ services:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONUNBUFFERED=1
     env_file:
-      - .env.example
+      - .env
     volumes:
       - ./hermes:/app/hermes
       - ./tests:/app/tests

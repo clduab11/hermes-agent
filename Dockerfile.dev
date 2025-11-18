@@ -21,15 +21,10 @@ RUN groupadd -r hermesdev -g 1000 && \
 WORKDIR /app
 
 # Copy requirements files
-COPY requirements.txt requirements-ci.txt ./
+COPY requirements.txt requirements-dev.txt ./
 
 # Install all dependencies including dev tools
-RUN pip install --no-cache-dir -r requirements.txt -r requirements-ci.txt && \
-    pip install --no-cache-dir \
-    ipython \
-    ipdb \
-    debugpy \
-    watchdog
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt debugpy
 
 # Set ownership for development
 RUN chown -R hermesdev:hermesdev /app
