@@ -201,14 +201,14 @@ async def test_matter_creation():
 ### Example
 
 ```python
-from typing import Optional
+from typing import Optional, Any
 
 async def create_matter(
     client_name: str,
     matter_type: str,
     jurisdiction: str,
     description: Optional[str] = None
-) -> dict[str, any]:
+) -> dict[str, Any]:
     """Create a new legal matter."""
     ...
 ```
