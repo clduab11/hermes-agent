@@ -113,17 +113,12 @@ mypy-report
 *.sqlite
 *.db
 
-# Backup files
-*.bak
-*.backup
-*~
+# Backup files (*.bak, *.backup, *~ already covered above on lines 37-39)
 
-# macOS
-.DS_Store
+# macOS (additional files beyond .DS_Store on line 38)
 .AppleDouble
 .LSOverride
 
-# Windows
-Thumbs.db
+# Windows (additional files beyond Thumbs.db on line 39)
 ehthumbs.db
 Desktop.ini
