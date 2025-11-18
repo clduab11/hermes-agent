@@ -31,7 +31,7 @@ supabase==2.8.7
 postgrest==0.17.2
 PyGithub==2.5.0
 pygit2==1.16.0
-mem0ai==0.0.12
+mem0ai==1.0.1
 stripe==12.1.0
 zapier-platform-cli==15.0.0
 playwright==1.40.0
