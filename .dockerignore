@@ -114,6 +114,8 @@ mypy-report
 *.db
 
 # Backup files (*.bak, *.backup, *~ already covered above on lines 37-39)
+*.bak
+*.backup
 
 # macOS (additional files beyond .DS_Store on line 38)
 .AppleDouble
