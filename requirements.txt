@@ -19,7 +19,7 @@ redis[hiredis]==5.1.1
 
 # --- AI, Voice, and Core Utilities ---
 openai==1.54.5
-openai-whisper==20231117
+openai-whisper==20250625
 torch>=2.2.0
 torchaudio>=2.2.0
 numpy==1.26.4
