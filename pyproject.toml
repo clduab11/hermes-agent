@@ -53,18 +53,27 @@ known_third_party = ["fastapi", "pydantic", "redis", "openai"]
 
 [tool.mypy]
 python_version = "3.11"
+# Strict mode settings for better type safety
 warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_any_generics = true
+strict_optional = true
 check_untyped_defs = true
-disallow_untyped_decorators = false
 no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
+# Show error codes for easier debugging
+show_error_codes = true
+# Enable incremental mode for faster checks
+incremental = true
 
+# Third-party library overrides (no type stubs available)
 [[tool.mypy.overrides]]
 module = [
     "whisper.*",
@@ -73,8 +82,24 @@ module = [
     "scipy.*",
     "sklearn.*",
     "transformers.*",
+    "mem0ai.*",
+    "playwright.*",
+    "supabase.*",
+    "postgrest.*",
+    "zapier_platform_cli.*",
 ]
 ignore_missing_imports = true
+
+# Gradual strict mode adoption - start with core modules
+# Remove these overrides as type hints are added
+[[tool.mypy.overrides]]
+module = [
+    "hermes.integrations.*",
+    "hermes.automation.*",
+    "hermes.mcp.*",
+]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -96,7 +121,12 @@ markers = [
     "e2e: marks tests as end-to-end (deselect with '-m \"not e2e\"')",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
+    "security: marks tests as security tests",
+    "performance: marks tests as performance tests",
+    "smoke: marks tests as smoke tests",
 ]
+asyncio_mode = "auto"
+timeout = 300
 
 [tool.coverage.run]
 source = ["hermes"]
@@ -106,7 +136,10 @@ omit = [
     "*/.venv/*",
     "*/migrations/*",
     "*/alembic/*",
+    "*/scripts/*",
+    "*/deployment/*",
 ]
+branch = true
 
 [tool.coverage.report]
 exclude_lines = [
@@ -120,6 +153,9 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
+    "@overload",
+    "if TYPE_CHECKING:",
+    "pass",
 ]
 
 [tool.bandit]

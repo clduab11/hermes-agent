@@ -1,0 +1,56 @@
+# HERMES Development Dockerfile
+# Optimized for development with hot-reload and debugging
+
+FROM python:3.11-slim
+
+# Install development dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    build-essential \
+    libpq-dev \
+    git \
+    curl \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user with permissive settings for development
+RUN groupadd -r hermesdev -g 1000 && \
+    useradd -r -g hermesdev -u 1000 -m hermesdev
+
+# Set working directory
+WORKDIR /app
+
+# Copy requirements files
+COPY requirements.txt requirements-dev.txt ./
+
+# Install all dependencies including dev tools
+RUN pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt debugpy
+
+# Set ownership for development
+RUN chown -R hermesdev:hermesdev /app
+
+# Switch to development user
+USER hermesdev
+
+# Expose ports
+# 8000 - API
+# 5678 - debugpy remote debugging
+EXPOSE 8000 5678
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Set environment variables for development
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app \
+    DEBUG=true
+
+# Labels for development identification
+LABEL maintainer="HERMES Development Team" \
+      environment="development" \
+      description="HERMES AI Voice Agent - Development Image"
+
+# Run with uvicorn in reload mode for hot-reloading
+CMD ["uvicorn", "hermes.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--log-level", "debug"]

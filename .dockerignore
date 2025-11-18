@@ -1,0 +1,126 @@
+# HERMES Docker Ignore File
+# Excludes unnecessary files from Docker build context
+
+# Version Control
+.git
+.gitignore
+.gitattributes
+
+# Python artifacts
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+.eggs
+*.whl
+
+# Virtual environments
+venv
+.venv
+env
+.env
+ENV
+.python-version
+
+# IDE and Editor files
+.vscode
+.idea
+*.swp
+*.swo
+*.swn
+*~
+.DS_Store
+Thumbs.db
+
+# Testing artifacts
+.pytest_cache
+.coverage
+htmlcov
+.tox
+.mypy_cache
+coverage.xml
+test-results.xml
+*.cover
+.hypothesis
+
+# Documentation (not needed in container)
+docs
+*.md
+!README.md
+
+# CI/CD (not needed in container)
+.github
+
+# Deployment scripts (not needed in container)
+deployment
+scripts
+
+# Logs
+*.log
+logs
+log
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+tmp
+temp
+
+# Docker files (prevent recursive inclusion)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Environment files (secrets should not be in image)
+.env*
+*.env
+
+# Alembic (migrations run separately)
+alembic.ini
+alembic/versions/*.py
+
+# Frontend build artifacts (if building separately)
+frontend/node_modules
+frontend/dist
+frontend/.next
+frontend/build
+
+# Monitoring configuration
+monitoring
+
+# Reports and artifacts
+bandit-*.json
+pip-audit.json
+*.xml
+mypy-report
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints
+
+# Data files
+*.csv
+*.json
+!package.json
+!package-lock.json
+*.sqlite
+*.db
+
+# Backup files (*.bak, *.backup, *~ already covered above on lines 37-39)
+*.bak
+*.backup
+
+# macOS (additional files beyond .DS_Store on line 38)
+.AppleDouble
+.LSOverride
+
+# Windows (additional files beyond Thumbs.db on line 39)
+ehthumbs.db
+Desktop.ini

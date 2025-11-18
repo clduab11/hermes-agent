@@ -1,14 +1,17 @@
 #!/bin/bash
 
-# HERMES Enterprise SaaS Deployment Script for GCP App Engine
-# Prevents self-hosting and enforces controlled SaaS deployment
-# Law firm clients pay $2,497/month - no self-hosting allowed
+# HERMES Enterprise Deployment Script for GCP App Engine and Docker
+# Supports both App Engine (primary production) and Docker deployments
+# Law firm clients pay $2,497/month for SaaS offering
 
 set -e
 
-echo "🚀 HERMES Enterprise SaaS Deployment Starting..."
-echo "💼 Enterprise Law Firm Deployment ($2,497/month)"
-echo "🔒 Self-hosting prevention: Active"
+# Deployment mode: appengine (default) or docker
+DEPLOY_MODE="${DEPLOY_MODE:-appengine}"
+
+echo "🚀 HERMES Enterprise Deployment Starting..."
+echo "💼 Enterprise Law Firm Deployment (\$2,497/month)"
+echo "📦 Deployment Mode: $DEPLOY_MODE"
 
 # Color codes for output
 RED='\033[0;31m'
@@ -118,14 +121,66 @@ validate_enterprise_setup() {
         fi
     done
 
-    # Verify no Docker files exist (anti-self-hosting)
-    if [ -f "Dockerfile" ] || [ -f "docker-compose.yml" ]; then
-        print_error "Docker files found - these must be removed for SaaS deployment"
-        print_error "Self-hosting is not permitted with enterprise SaaS license"
-        exit 1
+    # Note: Docker files are now supported for development and optional self-hosted deployments
+    # App Engine remains the primary production deployment target for SaaS offering
+    if [ "$DEPLOY_MODE" = "appengine" ]; then
+        print_status "Deploying to App Engine (primary production target)"
+    elif [ "$DEPLOY_MODE" = "docker" ]; then
+        print_status "Deploying via Docker (development/self-hosted)"
     fi
 
     print_success "Enterprise prerequisites validated"
+}
+
+# Deploy via Docker (for development or self-hosted deployments)
+deploy_docker() {
+    print_status "Building and deploying HERMES via Docker..."
+
+    # Build the Docker image
+    local image_tag="hermes:$(date +%Y%m%d%H%M%S)"
+
+    print_status "Building Docker image: $image_tag"
+    docker build -t "$image_tag" -t hermes:latest .
+
+    # Run security scan on the image
+    print_status "Running security scan on Docker image..."
+    if command -v trivy &> /dev/null; then
+        if ! trivy image --severity HIGH,CRITICAL "$image_tag"; then
+            print_error "Critical vulnerabilities detected in Docker image"
+            exit 1
+        fi
+        print_success "Security scan passed"
+    else
+        print_warning "Trivy not installed - skipping security scan"
+    fi
+
+    # Optionally push to registry
+    if [ -n "$DOCKER_REGISTRY" ]; then
+        print_status "Pushing to registry: $DOCKER_REGISTRY"
+        docker tag "$image_tag" "$DOCKER_REGISTRY/$image_tag"
+        docker push "$DOCKER_REGISTRY/$image_tag"
+        print_success "Image pushed to registry"
+    fi
+
+    # Optionally deploy to Cloud Run
+    if [ "$DEPLOY_TO_CLOUD_RUN" = "true" ] && [ -n "$PROJECT_ID" ]; then
+        print_status "Deploying to Cloud Run..."
+        gcloud run deploy hermes \
+            --image "$DOCKER_REGISTRY/$image_tag" \
+            --platform managed \
+            --region "$REGION" \
+            --project "$PROJECT_ID" \
+            --allow-unauthenticated \
+            --port 8000
+        print_success "Deployed to Cloud Run"
+    fi
+
+    print_success "Docker deployment completed"
+    echo ""
+    echo "📋 Docker Deployment Summary:"
+    echo "   • Image: $image_tag"
+    echo "   • Run locally: docker-compose up"
+    echo "   • Run production: docker-compose -f docker-compose.yml up"
 }
 
 # Deploy to App Engine
@@ -222,12 +277,49 @@ generate_deployment_report() {
 # Main deployment function
 main() {
     echo "================================================================"
-    echo "  HERMES Enterprise SaaS Deployment for Law Firms"
-    echo "  Self-hosting prevention enabled"
-    echo "  Enterprise pricing: $2,497/month per firm"
+    echo "  HERMES Enterprise Deployment for Law Firms"
+    echo "  Deployment Mode: $DEPLOY_MODE"
+    echo "  Enterprise pricing: \$2,497/month per firm"
     echo "================================================================"
     echo ""
 
+    # Parse command line arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --mode)
+                DEPLOY_MODE="$2"
+                shift 2
+                ;;
+            --project)
+                PROJECT_ID="$2"
+                shift 2
+                ;;
+            --region)
+                REGION="$2"
+                shift 2
+                ;;
+            *)
+                print_error "Unknown parameter passed: $1"
+                exit 1
+                ;;
+        esac
+    done
+
+    # Validate deployment mode
+    if [ "$DEPLOY_MODE" != "appengine" ] && [ "$DEPLOY_MODE" != "docker" ]; then
+        print_error "Invalid deployment mode: $DEPLOY_MODE"
+        print_error "Valid modes: appengine, docker"
+        exit 1
+    fi
+
+    # Docker deployment path
+    if [ "$DEPLOY_MODE" = "docker" ]; then
+        validate_enterprise_setup
+        deploy_docker
+        return
+    fi
+
+    # App Engine deployment path (default)
     # Get project ID if not set
     if [ -z "$PROJECT_ID" ]; then
         read -p "Enter GCP Project ID: " PROJECT_ID
