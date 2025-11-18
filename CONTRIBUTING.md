@@ -80,7 +80,7 @@ docker-compose -f docker-compose.dev.yml up
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-```
+```text
 <type>(<scope>): <subject>
 
 <body>
@@ -91,7 +91,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 **Types**: feat, fix, docs, style, refactor, perf, test, chore
 
 **Example**:
-```
+```text
 feat(voice): implement VAD for natural turn-taking
 
 Added Voice Activity Detection using WebRTC VAD to detect when
