@@ -1,5 +1,6 @@
-# HERMES CI/CD Dependencies
-# Essential packages for continuous integration and testing
+# HERMES Development Dependencies
+# Install with: pip install -r requirements.txt -r requirements-dev.txt
+# These tools are for local development only and should not be deployed to production
 # Updated: 2025-11-18
 
 # =============================================================================
@@ -20,6 +21,7 @@ black==24.1.1
 flake8==7.0.0
 isort==5.13.2
 pylint==3.0.3
+vulture==2.11              # Dead code detection
 
 # =============================================================================
 # Type Checking
@@ -27,6 +29,7 @@ pylint==3.0.3
 mypy==1.8.0
 types-requests==2.31.0.10
 types-redis==4.6.0.20240106
+types-PyYAML==6.0.12.12
 
 # =============================================================================
 # Security Scanning
@@ -36,6 +39,14 @@ pip-audit==2.6.1
 safety==3.0.1
 
 # =============================================================================
+# Development Tools
+# =============================================================================
+ipython==8.20.0            # Enhanced REPL
+ipdb==0.13.13              # Debugger
+pre-commit==3.6.0          # Git hooks
+watchdog==3.0.0            # File watching
+
+# =============================================================================
 # Test Utilities
 # =============================================================================
 hypothesis==6.92.0         # Property-based testing
@@ -43,26 +54,17 @@ factory-boy==3.3.0         # Test data factories
 faker==22.0.0              # Test data generation
 freezegun==1.4.0           # Time mocking
 responses==0.24.1          # HTTP mocking
+pytest-httpx==0.28.0       # httpx mocking
 
 # =============================================================================
-# Essential Production Dependencies (for tests to import)
+# Performance Profiling
 # =============================================================================
-fastapi>=0.115.0
-uvicorn>=0.30.0
-pydantic>=2.5.0
-pydantic-settings>=2.1.0
-httpx>=0.25.0
-requests>=2.31.0
-redis>=5.0.0
-sqlalchemy>=2.0.0
-python-jose[cryptography]>=3.3.0
-pyjwt[crypto]>=2.8.0
-cryptography>=41.0.0
-python-dotenv>=1.0.0
-structlog>=23.2.0
+py-spy==0.3.14             # Profiler
+memory-profiler==0.61.0
 
 # =============================================================================
-# Build Tools
+# Documentation (optional)
 # =============================================================================
-wheel
-setuptools
+# sphinx==7.2.6
+# sphinx-rtd-theme==2.0.0
+# mkdocs==1.5.3

@@ -1,0 +1,99 @@
+# HERMES Production-like Docker Compose Configuration
+# For local testing with production-like settings
+#
+# Usage:
+#   docker-compose up                    # Start all services
+#   docker-compose up -d                 # Start in background
+#   docker-compose down                  # Stop all services
+#   docker-compose logs -f hermes-api    # View logs
+#
+# Note: Production uses Supabase and App Engine (see app.yaml)
+# This configuration is for local testing only
+
+version: '3.8'
+
+services:
+  hermes-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hermes-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=false
+      - DEMO_MODE=false
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://hermes:hermes_password@postgres:5432/hermes
+      # Add other environment variables from .env.production
+    env_file:
+      - .env.production
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    networks:
+      - hermes-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: hermes-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - hermes-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: hermes-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: hermes
+      POSTGRES_USER: hermes
+      POSTGRES_PASSWORD: hermes_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hermes -d hermes"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - hermes-network
+
+networks:
+  hermes-network:
+    driver: bridge
+    name: hermes-network
+
+volumes:
+  redis-data:
+    name: hermes-redis-data
+  postgres-data:
+    name: hermes-postgres-data

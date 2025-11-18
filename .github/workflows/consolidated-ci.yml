@@ -51,6 +51,8 @@ jobs:
         with:
           path: |
             ~/.cache/pip
+            ~/.mypy_cache
+            .pytest_cache
             frontend/node_modules
           key: ${{ runner.os }}-deps-${{ hashFiles('requirements-ci.txt', 'frontend/package-lock.json') }}
           restore-keys: |
@@ -72,29 +74,39 @@ jobs:
       - name: Code formatting and linting
         run: |
           echo "🔍 Running Black formatter check..."
-          black --check --diff . || (echo "❌ Code formatting issues found" && exit 1)
+          black --check --diff .
           echo "🔍 Running Flake8 linting..."
-          flake8 hermes tests --max-line-length=88 --extend-ignore=E203,W503 --count --statistics || echo "⚠️ Linting issues found but non-blocking"
+          flake8 hermes tests --max-line-length=88 --extend-ignore=E203,W503 --count --statistics
           echo "🔍 Running isort import sorting check..."
-          pip install isort || echo "⚠️ isort installation warning"
-          isort --check-only --diff . || echo "⚠️ Import sorting issues found but non-blocking"
+          isort --check-only --diff .
+
+      - name: Type checking with MyPy
+        run: |
+          echo "🔍 Running MyPy type checking..."
+          pip install mypy types-requests types-redis
+          mypy hermes --config-file pyproject.toml --no-error-summary || (echo "❌ Type errors found" && exit 1)
+          echo "✅ Type checking passed"
 
       - name: Security scanning
         id: security
         run: |
           echo "🔒 Running comprehensive security scan..."
-          # Bandit security analysis
-          bandit -r hermes --skip B101 -f json -o bandit-report.json || echo "⚠️ Bandit found issues but continuing"
-          bandit -r hermes --skip B101 -f txt || echo "⚠️ Security analysis completed with warnings"
-          
-          # Dependency vulnerability scan
-          pip-audit --desc -r requirements-ci.txt --format=json --output=pip-audit.json || echo "⚠️ Some vulnerabilities found but continuing"
-          pip-audit --desc -r requirements-ci.txt --format=table || echo "⚠️ Security scan completed with warnings"
-          
+          # Bandit security analysis - fail on high severity
+          bandit -r hermes --skip B101 -f json -o bandit-report.json -ll
+          bandit -r hermes --skip B101 -f txt -ll
+          echo "✅ Bandit security scan passed"
+
+          # Dependency vulnerability scan - fail on high/critical
+          pip install pip-audit
+          pip-audit --desc -r requirements-ci.txt --format=json --output=pip-audit.json
+          pip-audit --desc -r requirements-ci.txt --format=table
+          echo "✅ Dependency vulnerability scan passed"
+
           # Basic secret detection
           if grep -r "api.key\|secret\|password" . --exclude-dir=.git --exclude="*.yml" --exclude="*.yaml" --exclude="*.md" --exclude="*.json" | grep -v "test\|example"; then
-            echo "⚠️ Potential secrets detected! Please review."
+            echo "❌ Potential secrets detected! Please review."
             echo "status=warning" >> $GITHUB_OUTPUT
+            exit 1
           else
             echo "✅ No obvious secrets found in code"
             echo "status=ok" >> $GITHUB_OUTPUT
@@ -116,9 +128,13 @@ jobs:
           OPENAI_API_KEY: test-key-for-ci
           DEBUG: true
         run: |
-          coverage run -m pytest -xvs --tb=short -k "not e2e" --junitxml=test-results.xml || echo "⚠️ Some tests failed but continuing for demo deployment"
-          coverage report --show-missing --fail-under=15 || echo "⚠️ Coverage below 15% but continuing"
-          coverage xml || echo "⚠️ Coverage XML generation failed"
+          # Run tests with parallel execution and coverage
+          coverage run -m pytest -xvs --tb=short -k "not e2e" --junitxml=test-results.xml
+          # Enforce 80% coverage threshold (as configured in pyproject.toml)
+          coverage report --show-missing --fail-under=80
+          coverage xml
+          coverage html -d coverage-html
+          echo "✅ Tests passed with coverage >= 80%"
 
       - name: Upload test and security artifacts
         uses: actions/upload-artifact@v4
@@ -128,6 +144,7 @@ jobs:
           path: |
             test-results.xml
             coverage.xml
+            coverage-html/
             bandit-report.json
             pip-audit.json
           retention-days: 30

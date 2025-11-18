@@ -1,0 +1,129 @@
+# HERMES Development Docker Compose Configuration
+# Optimized for local development with hot-reload
+#
+# Usage:
+#   docker-compose -f docker-compose.dev.yml up              # Start development environment
+#   docker-compose -f docker-compose.dev.yml up --profile debug  # Include debug tools
+#   docker-compose -f docker-compose.dev.yml down            # Stop all services
+#   docker-compose -f docker-compose.dev.yml logs -f         # View all logs
+#
+# Access:
+#   API: http://localhost:8000
+#   API Docs: http://localhost:8000/docs
+#   Redis Commander: http://localhost:8081 (with --profile debug)
+#   pgAdmin: http://localhost:5050 (with --profile debug)
+
+version: '3.8'
+
+services:
+  hermes-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: hermes-api-dev
+    ports:
+      - "8000:8000"   # API
+      - "5678:5678"   # debugpy
+    environment:
+      - DEBUG=true
+      - DEMO_MODE=true
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://hermes:hermes_dev_password@postgres:5432/hermes_dev
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env.example
+    volumes:
+      - ./hermes:/app/hermes
+      - ./tests:/app/tests
+      - ./static:/app/static
+      - ./templates:/app/templates
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - hermes-dev-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: hermes-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-dev-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hermes-dev-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: hermes-postgres-dev
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: hermes_dev
+      POSTGRES_USER: hermes
+      POSTGRES_PASSWORD: hermes_dev_password
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hermes -d hermes_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hermes-dev-network
+
+  # Optional: Redis Commander for debugging Redis
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: hermes-redis-commander
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    depends_on:
+      - redis
+    profiles:
+      - debug
+    networks:
+      - hermes-dev-network
+
+  # Optional: pgAdmin for debugging PostgreSQL
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: hermes-pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@hermes.local
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - postgres
+    profiles:
+      - debug
+    networks:
+      - hermes-dev-network
+
+networks:
+  hermes-dev-network:
+    driver: bridge
+    name: hermes-dev-network
+
+volumes:
+  redis-dev-data:
+    name: hermes-redis-dev-data
+  postgres-dev-data:
+    name: hermes-postgres-dev-data
