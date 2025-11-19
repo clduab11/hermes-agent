@@ -20,8 +20,10 @@ redis[hiredis]==5.1.1
 # --- AI, Voice, and Core Utilities ---
 openai==1.54.5
 openai-whisper==20250625
-torch>=2.2.0
-torchaudio>=2.2.0
+# Pin torch versions for reproducibility and faster Docker builds
+# Note: Using CPU-only version to reduce image size
+torch==2.2.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+torchaudio==2.2.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu
 numpy==1.26.4
 requests==2.32.9
 
