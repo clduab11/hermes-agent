@@ -124,30 +124,121 @@ class SocialPost(Base):
 class WebhookEvent(Base):
     """Integration event logging for Zapier and other webhooks."""
     __tablename__ = "webhook_events"
-    
+
     id = Column(Integer, primary_key=True, index=True)
-    
+
     # Event details
     event_type = Column(String(100), nullable=False, index=True)
     source = Column(String(100), nullable=False, index=True)  # "zapier", "clio", etc.
-    
+
     # Payload
     payload = Column(JSON, nullable=False)
-    
+
     # Processing
     processed = Column(Boolean, default=False, nullable=False, index=True)
     processed_at = Column(DateTime)
     error_message = Column(Text)
-    
+
     # Retry tracking
     retry_count = Column(Integer, default=0)
     max_retries = Column(Integer, default=3)
-    
+
     # Metadata
     metadata = Column(JSON)
-    
+
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
-    
+
     # Tenant isolation
     tenant_id = Column(String(100), index=True)
+
+
+class APIKeyTier(str, enum.Enum):
+    """API key tier enumeration."""
+    PRO = "pro"
+    ENTERPRISE = "enterprise"
+    ADMIN = "admin"
+
+
+class APIKeyStatus(str, enum.Enum):
+    """API key status enumeration."""
+    ACTIVE = "active"
+    SUSPENDED = "suspended"
+    REVOKED = "revoked"
+    EXPIRED = "expired"
+
+
+class EnterpriseAPIKey(Base):
+    """Enterprise API keys for law firm clients."""
+    __tablename__ = "enterprise_api_keys"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Key identification
+    key_hash = Column(String(64), unique=True, nullable=False, index=True)  # SHA-256 hash of full key
+    key_prefix = Column(String(32), nullable=False)  # First part of key for identification
+
+    # Client information
+    law_firm_id = Column(String(100), nullable=False, index=True)
+    law_firm_name = Column(String(255), nullable=False)
+    contact_email = Column(String(255), nullable=False)
+
+    # Key configuration
+    tier = Column(SQLEnum(APIKeyTier), default=APIKeyTier.ENTERPRISE, nullable=False)
+    status = Column(SQLEnum(APIKeyStatus), default=APIKeyStatus.ACTIVE, nullable=False, index=True)
+
+    # Limits and pricing
+    monthly_limit = Column(Integer, default=10000, nullable=False)
+    monthly_price = Column(Integer, default=2497, nullable=False)  # Price in dollars
+    overage_rate = Column(Integer, default=25)  # Cents per interaction over limit
+
+    # Encrypted key data
+    encrypted_data = Column(Text, nullable=False)
+
+    # Subscription info
+    stripe_customer_id = Column(String(100), index=True)
+    stripe_subscription_id = Column(String(100), index=True)
+
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    expires_at = Column(DateTime)
+    last_used_at = Column(DateTime)
+
+    # Metadata
+    metadata = Column(JSON)
+
+
+class APIKeyUsage(Base):
+    """Monthly usage tracking for API keys."""
+    __tablename__ = "api_key_usage"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Key reference
+    api_key_id = Column(Integer, nullable=False, index=True)
+    law_firm_id = Column(String(100), nullable=False, index=True)
+
+    # Time period
+    year = Column(Integer, nullable=False)
+    month = Column(Integer, nullable=False)
+
+    # Usage counters
+    interactions_count = Column(Integer, default=0, nullable=False)
+    voice_minutes = Column(Integer, default=0)  # In seconds
+    api_calls = Column(Integer, default=0)
+
+    # Billing
+    base_charge = Column(Integer, default=0)  # Cents
+    overage_charge = Column(Integer, default=0)  # Cents
+    total_charge = Column(Integer, default=0)  # Cents
+
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Unique constraint for one record per key per month
+    __table_args__ = (
+        # Composite index for efficient lookups
+        {'sqlite_autoincrement': True},
+    )

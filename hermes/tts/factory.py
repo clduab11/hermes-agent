@@ -10,6 +10,8 @@ from typing import Any, Dict, Optional
 
 from .interface import TTSBackend, TTSInterface
 from .kokoro import KokoroTTS
+from .openai_tts import OpenAITTS
+from .existing_adapter import ExistingTTSAdapter
 
 logger = logging.getLogger(__name__)
 
@@ -66,19 +68,15 @@ class TTSFactory:
             if backend == TTSBackend.KOKORO:
                 return KokoroTTS(config)
             elif backend == TTSBackend.OPENAI:
-                # OpenAI TTS backend not yet implemented
-                # TODO: Implement OpenAI TTS backend
-                raise NotImplementedError(
-                    "OpenAI TTS backend is not yet implemented. "
-                    "Please use 'kokoro' backend or configure a fallback."
-                )
+                # Ensure OpenAI API key is available
+                if "api_key" not in config and "openai_api_key" not in config:
+                    openai_key = os.getenv("OPENAI_API_KEY")
+                    if openai_key:
+                        config["api_key"] = openai_key
+                return OpenAITTS(config)
             elif backend == TTSBackend.EXISTING:
                 # Legacy TTS backend integration
-                # TODO: Integrate with existing text_to_speech module
-                raise NotImplementedError(
-                    "Legacy TTS backend integration is not yet implemented. "
-                    "Please use 'kokoro' backend or configure a fallback."
-                )
+                return ExistingTTSAdapter(config)
             else:
                 raise ValueError(f"Unsupported TTS backend: {backend}")
                 
@@ -92,8 +90,8 @@ class TTSFactory:
             
             # No fallback available
             raise ValueError(
-                f"TTS backend '{backend.value}' is not implemented and no fallback is configured. "
-                f"Available backends: kokoro"
+                f"TTS backend '{backend.value}' failed to initialize and no fallback is configured. "
+                f"Available backends: kokoro, openai, existing"
             ) from e
                 
         except Exception as e:

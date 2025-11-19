@@ -62,7 +62,16 @@ class DatabaseSecurityManager:
     async def set_tenant_context(session: AsyncSession, tenant_id: str) -> None:
         """Set the current tenant context for RLS policies."""
         try:
-            await session.execute(text(f"SET app.current_tenant = '{tenant_id}'"))
+            # Validate tenant_id to prevent SQL injection
+            import re
+            if not re.match(r'^[a-zA-Z0-9_-]+$', tenant_id):
+                raise ValueError(f"Invalid tenant_id format: {tenant_id}")
+
+            # Use set_config function with parameterized query for security
+            await session.execute(
+                text("SELECT set_config('app.current_tenant', :tenant_id, true)"),
+                {"tenant_id": tenant_id}
+            )
             logger.debug(f"Set database tenant context: {tenant_id}")
         except Exception as e:
             logger.error(f"Failed to set tenant context: {e}")
@@ -273,8 +282,22 @@ class SecureAsyncSession:
     async def set_user_context(self, user_id: str, role: str) -> None:
         """Set user context for the session."""
         try:
-            await self.session.execute(text(f"SET app.current_user = '{user_id}'"))
-            await self.session.execute(text(f"SET app.user_role = '{role}'"))
+            # Validate inputs to prevent SQL injection
+            import re
+            if not re.match(r'^[a-zA-Z0-9_-]+$', user_id):
+                raise ValueError(f"Invalid user_id format: {user_id}")
+            if not re.match(r'^[a-zA-Z0-9_]+$', role):
+                raise ValueError(f"Invalid role format: {role}")
+
+            # Use set_config function with parameterized queries for security
+            await self.session.execute(
+                text("SELECT set_config('app.current_user', :user_id, true)"),
+                {"user_id": user_id}
+            )
+            await self.session.execute(
+                text("SELECT set_config('app.user_role', :role, true)"),
+                {"role": role}
+            )
             self._user_set = True
             logger.debug(f"Set database user context: {user_id} with role {role}")
         except Exception as e:

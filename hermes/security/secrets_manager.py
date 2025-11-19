@@ -655,16 +655,150 @@ class SecretsManager:
 
     def _update_secret_in_provider(self, key: str, new_value: str) -> bool:
         """Update secret in the configured provider."""
-        # Note: This is a simplified implementation
-        # In production, you'd implement provider-specific update methods
-        if self.provider == "env":
-            # Can't update environment variables at runtime
-            logger.warning("Cannot update environment variables at runtime")
+        try:
+            if self.provider == "env":
+                # Can't update environment variables at runtime
+                logger.warning("Cannot update environment variables at runtime. Manual update required.")
+                return False
+            elif self.provider == "gcp":
+                return self._update_secret_in_gcp(key, new_value)
+            elif self.provider == "aws":
+                return self._update_secret_in_aws(key, new_value)
+            elif self.provider == "azure":
+                return self._update_secret_in_azure(key, new_value)
+            elif self.provider == "vault":
+                return self._update_secret_in_vault(key, new_value)
+            else:
+                logger.warning(f"Secret rotation not implemented for provider: {self.provider}")
+                return False
+        except Exception as e:
+            logger.error(f"Failed to update secret {key} in {self.provider}: {e}")
             return False
 
-        # For cloud providers, implement actual update logic
-        logger.warning(f"Secret rotation not implemented for provider: {self.provider}")
-        return False
+    def _update_secret_in_gcp(self, key: str, new_value: str) -> bool:
+        """Update secret in GCP Secret Manager."""
+        try:
+            from google.cloud import secretmanager
+
+            # Add a new version to the secret
+            secret_name = f"projects/{self.project_id}/secrets/{key}"
+
+            # First check if secret exists, create if not
+            try:
+                self.client.get_secret(request={"name": secret_name})
+            except Exception:
+                # Create the secret
+                parent = f"projects/{self.project_id}"
+                self.client.create_secret(
+                    request={
+                        "parent": parent,
+                        "secret_id": key,
+                        "secret": {"replication": {"automatic": {}}}
+                    }
+                )
+                logger.info(f"Created new secret {key} in GCP")
+
+            # Add new version
+            self.client.add_secret_version(
+                request={
+                    "parent": secret_name,
+                    "payload": {"data": new_value.encode("UTF-8")}
+                }
+            )
+
+            logger.info(f"Added new version for secret {key} in GCP")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to update secret in GCP: {e}")
+            raise
+
+    def _update_secret_in_aws(self, key: str, new_value: str) -> bool:
+        """Update secret in AWS Secrets Manager."""
+        try:
+            # Try to update existing secret
+            try:
+                self.client.put_secret_value(
+                    SecretId=key,
+                    SecretString=new_value
+                )
+            except self.client.exceptions.ResourceNotFoundException:
+                # Create new secret
+                self.client.create_secret(
+                    Name=key,
+                    SecretString=new_value
+                )
+                logger.info(f"Created new secret {key} in AWS")
+
+            logger.info(f"Updated secret {key} in AWS")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to update secret in AWS: {e}")
+            raise
+
+    def _update_secret_in_azure(self, key: str, new_value: str) -> bool:
+        """Update secret in Azure Key Vault."""
+        try:
+            self.client.set_secret(key, new_value)
+            logger.info(f"Updated secret {key} in Azure Key Vault")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to update secret in Azure: {e}")
+            raise
+
+    def _update_secret_in_vault(self, key: str, new_value: str) -> bool:
+        """Update secret in HashiCorp Vault."""
+        try:
+            mount_point = os.getenv("VAULT_MOUNT_POINT", "secret")
+            path = f"hermes/{key}"
+
+            self.client.secrets.kv.v2.create_or_update_secret(
+                path=path,
+                secret={"value": new_value},
+                mount_point=mount_point
+            )
+
+            logger.info(f"Updated secret {key} in HashiCorp Vault")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to update secret in Vault: {e}")
+            raise
+
+    async def rotate_all_expiring_secrets(self) -> Dict[str, Any]:
+        """Rotate all secrets that need rotation based on policy."""
+        results = {
+            "rotated": [],
+            "failed": [],
+            "skipped": []
+        }
+
+        for key, metadata in self._metadata.items():
+            if metadata.needs_rotation() or metadata.is_compromised:
+                try:
+                    # For automated rotation, we'd need to generate new values
+                    # This is a placeholder - in production you'd implement
+                    # service-specific rotation logic
+                    logger.warning(
+                        f"Secret {key} needs rotation but automatic generation not implemented. "
+                        "Manual rotation required."
+                    )
+                    results["skipped"].append({
+                        "key": key,
+                        "reason": "Automatic value generation not implemented"
+                    })
+                except Exception as e:
+                    results["failed"].append({
+                        "key": key,
+                        "error": str(e)
+                    })
+
+        self._audit_log(
+            "rotation_batch_complete",
+            "system",
+            f"Batch rotation completed: {len(results['rotated'])} rotated, "
+            f"{len(results['failed'])} failed, {len(results['skipped'])} skipped"
+        )
+
+        return results
 
     def mark_secret_compromised(self, key: str):
         """Mark a secret as compromised for immediate attention."""

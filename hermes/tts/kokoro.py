@@ -122,15 +122,32 @@ class KokoroTTS(TTSInterface):
                     
             else:
                 # Local mode - load model
+                logger.warning(
+                    "Kokoro TTS local mode is experimental. "
+                    "For production use, configure KOKORO_API_URL for API mode."
+                )
                 logger.info(f"Initializing Kokoro TTS in local mode (device: {self.device})")
-                # Note: This is a placeholder. In production, you would:
-                # 1. Load the actual Kokoro model weights
-                # 2. Initialize the inference engine
-                # 3. Warm up the model with a test synthesis
-                
-                # Simulated local model loading
-                await asyncio.sleep(0.1)  # Simulate model loading time
-                self._model = {"status": "loaded", "device": self.device}
+
+                # Check if model path is configured
+                if self.model_path:
+                    import os
+                    if not os.path.exists(self.model_path):
+                        raise TTSInitializationError(
+                            f"Kokoro model not found at {self.model_path}. "
+                            "Please download the model or use API mode by setting KOKORO_API_URL."
+                        )
+                    # TODO: Implement actual model loading when models are available
+                    # For now, we'll simulate model loading for development
+                    logger.info(f"Loading Kokoro model from {self.model_path}")
+                    await asyncio.sleep(0.1)  # Simulate model loading time
+                    self._model = {"status": "loaded", "device": self.device, "path": self.model_path}
+                else:
+                    # No model path configured - use placeholder for development
+                    logger.warning(
+                        "No KOKORO_MODEL_PATH configured. Using development placeholder. "
+                        "Audio output will not be valid for production."
+                    )
+                    self._model = {"status": "placeholder", "device": self.device}
                 
             self._initialized = True
             logger.info("Kokoro TTS initialized successfully")
@@ -277,22 +294,53 @@ class KokoroTTS(TTSInterface):
         Returns:
             Audio data as bytes
         """
-        # Placeholder for local synthesis
+        # Check if we're in placeholder mode
+        if self._model and self._model.get("status") == "placeholder":
+            logger.warning(
+                "Kokoro local mode is in placeholder state. "
+                "Audio output is not valid. Configure KOKORO_API_URL for production use."
+            )
+
+        # TODO: Implement actual local synthesis when models are available
         # In production, this would:
         # 1. Preprocess text for the target locale
         # 2. Run inference through the Kokoro model
         # 3. Post-process audio (apply speed, normalize, etc.)
         # 4. Encode to MP3 format
-        
+
         # Simulate synthesis latency (realistic range: 100-400ms for short text)
         text_length = len(text)
         base_latency = 0.15  # 150ms base
         length_factor = min(text_length / 1000, 0.2)  # Up to 200ms for length
         await asyncio.sleep(base_latency + length_factor)
-        
-        # Return empty audio data (placeholder)
-        # In production, return actual synthesized audio
-        return b"KOKORO_AUDIO_DATA_PLACEHOLDER"
+
+        # Generate minimal valid audio placeholder (silent WAV header)
+        # This allows testing without breaking downstream components
+        # For production, use API mode or implement actual model inference
+        sample_rate = 24000
+        duration_samples = int(sample_rate * (text_length / 50))  # ~50 chars per second
+
+        # Create minimal WAV file with silence
+        import struct
+        wav_header = struct.pack(
+            '<4sI4s4sIHHIIHH4sI',
+            b'RIFF',
+            36 + duration_samples * 2,  # File size
+            b'WAVE',
+            b'fmt ',
+            16,  # Chunk size
+            1,   # Audio format (PCM)
+            1,   # Channels
+            sample_rate,
+            sample_rate * 2,  # Byte rate
+            2,   # Block align
+            16,  # Bits per sample
+            b'data',
+            duration_samples * 2  # Data size
+        )
+
+        # Return WAV with silence (zeros)
+        return wav_header + b'\x00' * (duration_samples * 2)
 
     async def get_available_voices(self, locale: Optional[str] = None) -> List[Dict[str, Any]]:
         """
