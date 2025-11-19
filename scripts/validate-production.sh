@@ -293,11 +293,52 @@ validate_cloud_readiness() {
         validate_check "Google Cloud SDK" "FAIL" "gcloud CLI not installed"
     fi
     
-    # Check for Dockerfile (should not exist for SaaS deployment)
-    if [[ -f "Dockerfile" ]] || [[ -f "dockerfile" ]]; then
-        validate_check "Docker Files" "FAIL" "Docker files found - remove for SaaS-only deployment"
+    # Note: Docker files are OK for dev/testing, App Engine builds use them
+    # Not a deployment blocker
+}
+
+# Validate pre-deployment requirements (--pre-deploy mode)
+validate_pre_deployment() {
+    log_info "Validating pre-deployment requirements..."
+    
+    # Check .env or secrets are configured
+    if [[ -f ".env" ]] || [[ -f ".env.secrets" ]]; then
+        validate_check "Secrets Configuration" "PASS" "Secrets file found"
     else
-        validate_check "Docker Files" "PASS" "No Docker files found (SaaS deployment only)"
+        validate_check "Secrets Configuration" "FAIL" ".env or .env.secrets required - run ./scripts/generate-secrets.sh"
+    fi
+    
+    # Check GCP APIs are enabled
+    local required_apis=("appengine" "secretmanager" "compute")
+    local missing_apis=()
+    
+    for api in "${required_apis[@]}"; do
+        if ! gcloud services list --enabled --filter="name:$api.googleapis.com" --format="value(name)" 2>/dev/null | grep -q "$api"; then
+            missing_apis+=("$api")
+        fi
+    done
+    
+    if [[ ${#missing_apis[@]} -eq 0 ]]; then
+        validate_check "GCP APIs" "PASS" "All required APIs enabled"
+    else
+        validate_check "GCP APIs" "FAIL" "Missing APIs: ${missing_apis[*]} - enable with ./scripts/deploy-gcp.sh"
+    fi
+    
+    # Check Secret Manager secrets exist (if using GCP)
+    if gcloud secrets list --limit=1 &>/dev/null 2>&1; then
+        local has_secrets=$(gcloud secrets list --format="value(name)" | wc -l)
+        if [[ $has_secrets -gt 0 ]]; then
+            validate_check "GCP Secrets" "PASS" "$has_secrets secrets found in Secret Manager"
+        else
+            validate_check "GCP Secrets" "WARN" "No secrets in Secret Manager - run ./scripts/upload-secrets.sh"
+        fi
+    fi
+    
+    # Check VPC connector (optional but recommended)
+    if gcloud compute networks vpc-access connectors list --format="value(name)" 2>/dev/null | grep -q "hermes"; then
+        validate_check "VPC Connector" "PASS" "VPC connector configured"
+    else
+        validate_check "VPC Connector" "WARN" "VPC connector not found - run ./scripts/setup-vpc-connector.sh (optional)"
     fi
 }
 
@@ -346,8 +387,29 @@ generate_report() {
 
 # Main validation function
 main() {
+    local pre_deploy_mode=false
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --pre-deploy)
+                pre_deploy_mode=true
+                shift
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                echo "Usage: $0 [--pre-deploy]"
+                exit 1
+                ;;
+        esac
+    done
+    
     echo "🔍 Starting HERMES Production Validation..."
-    echo "🏛️  Ensuring deployment readiness for law firm clients"
+    if [[ "$pre_deploy_mode" = true ]]; then
+        echo "🚀 Pre-deployment mode: Checking deployment prerequisites"
+    else
+        echo "🏛️  Standard mode: Ensuring deployment readiness for law firm clients"
+    fi
     echo ""
     
     # Run all validation checks
@@ -360,6 +422,11 @@ main() {
     validate_static_files
     validate_database
     validate_cloud_readiness
+    
+    # Run pre-deployment checks if requested
+    if [[ "$pre_deploy_mode" = true ]]; then
+        validate_pre_deployment
+    fi
     
     # Generate final report
     generate_report
