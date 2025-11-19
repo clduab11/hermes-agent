@@ -1,198 +1,219 @@
 # HERMES 🏛️
-## Enterprise SaaS Legal AI Platform
+## High-performance Enterprise Reception & Matter Engagement System
 
-**Professional Legal Communication Intelligence - Cloud-Native SaaS Only**
+**Production-grade AI voice agent platform for law firms**
 
-HERMES is an enterprise-grade cloud-native AI voice agent platform exclusively designed for law firms. Our secure, SOC 2 compliant Google Cloud infrastructure delivers 24/7 legal communication intelligence as a fully managed service. No self-hosting, no deployment complexity—just enterprise-ready legal AI.
+HERMES is a 24/7 AI-powered voice agent designed specifically for law firms, handling client intake, matter management, CRM integration, and administrative workflows while maintaining attorney-client privilege and legal compliance.
 
-⚠️ **IMPORTANT: SaaS-Only Deployment**
-This software is licensed for managed SaaS deployment only. Self-hosting is not permitted under the enterprise license terms. Contact info@parallax-ai.app for authorized access.
+> 📢 **For marketing materials and pricing information, see [MARKETING.md](MARKETING.md)**
 
-## ✨ Enterprise Features
-
-### 🎤 Advanced Voice Processing
-- **Sub-100ms Response Times**: Ultra-low latency voice pipeline optimized for legal conversations
-- **Real-time WebSocket Streaming**: Enterprise-grade connection management and failover
-- **Multi-language Support**: Global legal practice support with Whisper STT + GPT-4
-- **Professional TTS**: Natural conversation quality with legal terminology optimization
-
-### 🏛️ Legal Industry Specialization
-- **Attorney-Client Privilege Protection**: Built-in confidentiality safeguards with audit trails
-- **Multi-Jurisdiction Compliance**: HIPAA, GDPR, SOC2, and state bar regulations
-- **Legal Disclaimer Integration**: Automatic malpractice protection protocols
-- **Client Intake Automation**: Streamlined onboarding with legal screening workflows
-
-### 🤖 AI-Powered Legal Intelligence
-- **Legal NLP Processing**: Specialized understanding of legal terminology and contexts
-- **Client-Attorney Matching**: Intelligent routing based on practice areas and availability
-- **Real-time Risk Assessment**: Compliance monitoring with escalation protocols
-- **Contextual Response Generation**: Legal-aware responses with disclaimer integration
-
-### 🔒 Enterprise Security & Compliance
-- **SOC 2 Type II Certified**: Independent security audit verification
-- **HIPAA Business Associate**: Full compliance with healthcare privacy requirements
-- **Zero-Trust Architecture**: End-to-end encryption with GCP Secret Manager integration
-- **Multi-tenant Isolation**: Enterprise-grade data separation and access controls
-- **Audit Trail**: Immutable logging for legal discovery and compliance
-
-## 💰 Enterprise Pricing
-
-### Enterprise Law Firm Plan - $2,497/month
-
-**Comprehensive Legal AI Platform for Modern Law Practices**
-
-#### ✅ What's Included:
-- **10,000 client interactions/month** (additional at $0.25 each)
-- **AI Voice Reception**: 24/7 professional client engagement
-- **Legal NLP Processing**: Intelligent legal document understanding
-- **Client Intake Automation**: Streamlined onboarding workflows
-- **Clio Integration**: Seamless CRM synchronization
-- **Multi-language Support**: Global client communication
-- **Real-time Analytics**: Practice performance insights
-- **HIPAA & SOC2 Compliance**: Full regulatory compliance included
-- **24/7 Enterprise Support**: Dedicated legal tech specialists
-- **Custom API Access**: Integration with existing systems
-- **Advanced Reporting**: Comprehensive practice analytics
-- **White-label Dashboard**: Branded client interface
-
-#### 🏛️ Legal Industry Benefits:
-- **Attorney-Client Privilege**: Built-in confidentiality protection
-- **Malpractice Insurance Approved**: Carrier-verified compliance
-- **State Bar Compliant**: Multi-jurisdiction regulatory adherence
-- **Discovery Ready**: Immutable audit logs and data retention
-- **Conflict Checking**: Automated client conflict screening
-
-#### 📊 Enterprise ROI:
-- **99.9% Uptime SLA**: Guaranteed availability for client communications
-- **85% Reduction** in missed client opportunities
-- **60% Decrease** in administrative overhead
-- **Average $47,000/year** saved in operational costs
-- **3-month payback period** for typical implementation
-
-## 🚀 Enterprise Integration
-
-### Getting Started (Enterprise Clients Only)
-
-1. **Contact Enterprise Sales**
-   - Email: info@parallax-ai.app
-   - Phone: 1-800-HERMES-AI
-   - Schedule consultation: [calendly.com/hermes-enterprise](https://calendly.com/hermes-enterprise)
-
-2. **Security Assessment**
-   - Complete security questionnaire
-   - Review compliance requirements
-   - Sign Business Associate Agreement (BAA)
-
-3. **API Key Provisioning**
-   - Receive enterprise API credentials
-   - Configure authentication endpoints
-   - Test integration in sandbox environment
-
-4. **Production Deployment**
-   - Configure DNS and SSL certificates
-   - Integrate with existing phone systems
-   - Train staff on enterprise dashboard
-
-### API Integration
-
-```bash
-# Enterprise API Authentication
-curl -H "Authorization: Bearer herm_ent_[your-api-key]" \
-     -H "Content-Type: application/json" \
-     https://api.hermes-ai.com/v1/voice/process
-```
-
-### Supported Integrations
-
-- **Clio**: Full CRM synchronization and client management
-- **LawPay**: Automated billing and payment processing
-- **Zapier**: 1000+ legal workflow automations
-- **Microsoft 365**: Calendar, email, and document integration
-- **SIP Trunks**: Direct phone system connectivity
-- **Custom APIs**: Bespoke integrations via enterprise support
+---
 
 ## 🏗️ Architecture Overview
 
-### Cloud-Native SaaS Infrastructure
+HERMES is built on a modern, cloud-native architecture:
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Law Firm      │────│  HERMES API      │────│  GCP App Engine │
-│   Phone System  │    │  (Authenticated) │    │  (Auto-scaling) │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                                │                        │
-                       ┌──────────────────┐    ┌─────────────────┐
-                       │  Enterprise      │────│  Supabase       │
-                       │  Dashboard       │    │  (Database)     │
-                       └──────────────────┘    └─────────────────┘
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   Client     │────▶│  FastAPI     │────▶│  Supabase    │
+│  (Voice/Web) │     │  Backend     │     │  PostgreSQL  │
+└──────────────┘     └──────────────┘     └──────────────┘
+                            │
+                    ┌───────┴───────┐
+                    ▼               ▼
+            ┌──────────────┐ ┌──────────────┐
+            │  OpenAI      │ │  Stripe      │
+            │  (AI/Voice)  │ │  (Billing)   │
+            └──────────────┘ └──────────────┘
 ```
 
-### Security Architecture
+### Core Technologies
 
-- **GCP Secret Manager**: Centralized secrets and API key management
-- **Supabase Database**: Enterprise PostgreSQL with row-level security
-- **TLS 1.3**: All communications encrypted in transit
-- **AES-256**: Data encrypted at rest with enterprise key management
-- **API Rate Limiting**: 1000 requests/minute per enterprise client
-- **IP Whitelisting**: Optional network-level access controls
+- **Backend**: FastAPI (Python 3.11+), async/await architecture
+- **Database**: Supabase (PostgreSQL) with Row-Level Security
+- **AI/Voice**: OpenAI API (GPT-4, Whisper STT), Kokoro TTS
+- **Billing**: Stripe (subscriptions, usage metering)
+- **Integrations**: Clio CRM, LawPay, Zapier
+- **Automation**: Playwright for web automation
+- **Deployment**: Google Cloud Platform (App Engine)
+- **Monitoring**: Prometheus metrics, Cloud Logging
 
-## 🛡️ Compliance & Security
+---
 
-### Certifications & Compliance
+## 📁 Project Structure
 
-- ✅ **SOC 2 Type II**: Annual independent security audits
-- ✅ **HIPAA Business Associate**: Full healthcare privacy compliance
-- ✅ **GDPR Compliant**: European data protection regulations
-- ✅ **State Bar Approved**: Multi-jurisdiction legal compliance
-- ✅ **ISO 27001**: Information security management standards
+```
+hermes/
+├── hermes/                  # Main application package
+│   ├── api/                # FastAPI routes and endpoints
+│   ├── core/               # Core business logic
+│   ├── integrations/       # External service integrations
+│   ├── security/           # Security and compliance modules
+│   ├── billing/            # Stripe billing integration
+│   ├── voice/              # Voice pipeline components
+│   └── main.py             # Application entry point
+├── alembic/                # Database migrations
+├── scripts/                # Deployment and utility scripts
+├── deployment/             # Deployment configurations
+├── docs/                   # Documentation
+├── tests/                  # Test suite
+├── static/                 # Static assets
+├── templates/              # HTML templates
+├── requirements.txt        # Python dependencies
+├── app.yaml                # GCP App Engine config
+└── security.yaml           # Security headers config
+```
 
-### Data Protection
+---
 
-- **Data Residency**: Choose US, EU, or Canada hosting regions
-- **Encryption**: End-to-end encryption for all client communications
-- **Audit Logs**: Immutable logging for legal discovery requirements
-- **Retention Policies**: Configurable data retention (90 days to 7 years)
-- **Right to Deletion**: GDPR-compliant data removal capabilities
+## 🚀 Quick Start
 
-## 📞 Enterprise Support
+See **[QUICKSTART.md](QUICKSTART.md)** for detailed local development setup instructions.
 
-### 24/7 Legal Tech Support
+### Prerequisites
 
-- **Tier 1**: General platform and integration support
-- **Tier 2**: Advanced technical and compliance issues
-- **Tier 3**: Custom development and enterprise architecture
-- **Legal Liaisons**: Bar-certified support specialists
+- Python 3.11+
+- Google Cloud account (for deployment)
+- Supabase project
+- OpenAI API key
+- Stripe account (for billing features)
 
-### Professional Services
+### Quick Setup
 
-- **Implementation**: White-glove setup and configuration (included)
-- **Training**: Staff training and certification programs (included)
-- **Custom Development**: Bespoke features and integrations (available)
-- **Compliance Consulting**: Regulatory guidance and audit support (available)
+```bash
+# Clone the repository
+git clone https://github.com/clduab11/hermes-agent.git
+cd hermes-agent
 
-## 📄 Legal & Licensing
+# Install dependencies
+pip install -r requirements.txt
 
-### Enterprise SaaS License
+# Copy environment template
+cp .env.template .env
+# Edit .env with your configuration
 
-This software is provided under an enterprise SaaS license. Key terms:
+# Run database migrations
+alembic upgrade head
 
-- ❌ **Self-hosting prohibited**: Software must be used via authorized SaaS deployment only
-- ✅ **Enterprise use permitted**: Licensed for professional legal practice use
-- ✅ **API integration allowed**: Full programmatic access via enterprise APIs
-- ✅ **White-labeling permitted**: Custom branding for enterprise clients
-- ❌ **Redistribution prohibited**: Software cannot be redistributed or resold
+# Start the development server
+uvicorn hermes.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-### Contact Information
+Visit http://localhost:8000/docs for the interactive API documentation.
 
+---
+
+## 🚢 Deployment
+
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for complete production deployment instructions.
+
+### Prerequisites
+
+Before deploying, review:
+- **[DEPLOYMENT_PREREQUISITES.md](DEPLOYMENT_PREREQUISITES.md)** - Required accounts and services
+- **[COST_ESTIMATION.md](COST_ESTIMATION.md)** - Monthly cost breakdown
+- **[SECURITY.md](SECURITY.md)** - Security checklist
+
+### Deployment Process
+
+```bash
+# 1. Validate prerequisites
+./scripts/validate-production.sh --pre-deploy
+
+# 2. Configure secrets
+./scripts/generate-secrets.sh
+./scripts/upload-secrets.sh
+
+# 3. Setup VPC connector (if needed)
+./scripts/setup-vpc-connector.sh
+
+# 4. Deploy to GCP
+./scripts/deploy-gcp.sh
+```
+
+---
+
+## 🔒 Security & Compliance
+
+HERMES implements enterprise-grade security:
+
+- **Authentication**: JWT-based auth with RS256
+- **Encryption**: TLS 1.3 in transit, AES-256 at rest
+- **Secrets Management**: GCP Secret Manager (production)
+- **Database**: Row-Level Security (RLS) policies
+- **Audit Logging**: Immutable logs for compliance
+- **Rate Limiting**: API rate limits per endpoint
+
+### Compliance Features
+
+- HIPAA-compliant data handling
+- GDPR data protection support
+- Attorney-client privilege protection
+- SOC 2 security controls
+
+See **[SECURITY.md](SECURITY.md)** for complete security documentation.
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run unit tests
+pytest tests/
+
+# Run with coverage
+pytest --cov=hermes --cov-report=html tests/
+
+# Run integration tests
+pytest tests/integration/
+
+# Run E2E tests
+python tests/e2e_test_suite.py
+```
+
+---
+
+## 📚 Documentation
+
+- **[QUICKSTART.md](QUICKSTART.md)** - Local development setup
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Production deployment guide
+- **[DEPLOYMENT_PREREQUISITES.md](DEPLOYMENT_PREREQUISITES.md)** - Required services
+- **[COST_ESTIMATION.md](COST_ESTIMATION.md)** - Cost breakdown
+- **[SECURITY.md](SECURITY.md)** - Security documentation
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
+- **[MARKETING.md](MARKETING.md)** - Marketing and pricing info
+- **docs/services/** - External service setup guides
+  - [Supabase Setup](docs/services/supabase-setup.md)
+  - [Stripe Setup](docs/services/stripe-setup.md)
+  - [OpenAI Setup](docs/services/openai-setup.md)
+  - [Redis Setup](docs/services/redis-setup.md)
+  - [GCP Secret Manager](docs/services/gcp-secret-manager-setup.md)
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+
+- Code style guidelines (PEP 8, type hints, docstrings)
+- Development workflow
+- Testing requirements
+- Pull request process
+
+---
+
+## 📄 License
+
+See [LICENSE](LICENSE) for license information.
+
+---
+
+## 📞 Support
+
+- **Technical Issues**: Create an issue on GitHub
+- **Security Issues**: security@parallax-ai.app
 - **General Contact**: info@parallax-ai.app
-- **Privacy Contact**: privacy@parallax-ai.app
-- **Technical Support**: info@parallax-ai.app
-- **Legal & Compliance**: info@parallax-ai.app
-- **Billing & Accounts**: info@parallax-ai.app
 
 ---
 
 **© 2024 Parallax Analytics LLC. All rights reserved.**
-**HERMES® is a registered trademark. Enterprise SaaS deployment only.**
-
-*Attorney advertising. Prior results do not guarantee similar outcomes. This software does not provide legal advice and cannot replace qualified legal counsel.*

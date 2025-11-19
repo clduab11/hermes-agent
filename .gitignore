@@ -47,6 +47,8 @@ cover/
 
 # Environments
 .env
+.env.*
+.env.secrets
 .env.local
 .env.*.local
 .env.development.local

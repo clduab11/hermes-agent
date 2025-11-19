@@ -1,38 +1,44 @@
 # ====================================================================
-# HERMES Production Deployment Configuration (Google App Engine)
+# HERMES Demo/Development Deployment Configuration (Google App Engine)
 # ====================================================================
-# This configuration is for high-performance production deployments.
-# For development/demo with lower costs, use: app.yaml.demo
+# This is a cost-optimized configuration for development and demos.
+# Uses minimal resources to reduce costs while maintaining functionality.
+#
+# Expected Cost: $50-100/month (vs. $300-480/month for production)
+#
+# Use this for:
+# - Initial testing and validation
+# - Development environments
+# - Proof-of-concept demonstrations
+# - Cost-sensitive deployments
+#
+# For high-performance production, use: app.yaml
 #
 # Prerequisites:
 # 1. Complete setup in DEPLOYMENT_PREREQUISITES.md
 # 2. Configure secrets: ./scripts/upload-secrets.sh
-# 3. Setup VPC (optional): ./scripts/setup-vpc-connector.sh
-# 4. Validate: ./scripts/validate-production.sh --pre-deploy
-# 5. Deploy: ./scripts/deploy-gcp.sh
-#
-# Cost Estimate: $300-480/month (see COST_ESTIMATION.md)
+# 3. Validate: ./scripts/validate-production.sh --pre-deploy
+# 4. Deploy: gcloud app deploy app.yaml.demo
 # ====================================================================
 
 runtime: python311
 service: default
 
-# Enterprise SaaS Configuration for Law Firm Clients
+# Cost-optimized scaling configuration
 automatic_scaling:
-  min_instances: 3
-  max_instances: 100
-  target_cpu_utilization: 0.65
-  target_throughput_utilization: 0.70
-  cool_down_period_sec: 120
-  max_concurrent_requests: 1000
-  max_idle_instances: 5
+  min_instances: 1  # Keep at least 1 instance warm (faster response)
+  max_instances: 10  # Limit max instances to control costs
+  target_cpu_utilization: 0.75  # Higher threshold to reduce scaling
+  target_throughput_utilization: 0.80
+  cool_down_period_sec: 180  # Longer cooldown to reduce churn
+  max_concurrent_requests: 80  # Lower concurrent requests per instance
+  max_idle_instances: 2  # Limit idle instances
 
-# Enterprise resource allocation with enhanced performance
-# COST WARNING: These resources cost $300-480/month at production scale
-# For development/demo, see app.yaml.demo (1 CPU, 2GB RAM ~$50-100/month)
+# Cost-optimized resource allocation
+# COST: ~$50-100/month (vs. $300-480 for production config)
 resources:
-  cpu: 4
-  memory_gb: 8
+  cpu: 1  # Single CPU (vs. 4 in production)
+  memory_gb: 2  # 2GB RAM (vs. 8GB in production)
 
 # Security headers for law firm compliance
 env_variables:
@@ -75,7 +81,7 @@ env_variables:
   SECRETS_PROVIDER: "gcp"
   GCP_PROJECT_ID: "PROJECT_ID_PLACEHOLDER"  # Replaced by deployment script
 
-# Health check configuration
+# Health check configuration (same as production)
 readiness_check:
   path: "/ready"
   check_interval_sec: 5
@@ -90,14 +96,16 @@ liveness_check:
   failure_threshold: 4
   success_threshold: 2
 
-# Network security
+# Network security (same as production)
 network:
   session_affinity: false
 
-# VPC connector for private Supabase access (enterprise security)
-# NOTE: VPC connector must be created before deployment
-# Run: ./scripts/setup-vpc-connector.sh
-# Then uncomment and update the line below with your project/region:
+# VPC connector for private Supabase access (optional for demo)
+# NOTE: VPC connector adds ~$30/month cost
+# For demo environments, you can skip VPC and use public Supabase URLs
+# To enable:
+# 1. Run: ./scripts/setup-vpc-connector.sh
+# 2. Uncomment and update the lines below:
 # vpc_access_connector:
 #   name: "projects/[YOUR-PROJECT-ID]/locations/[YOUR-REGION]/connectors/hermes-connector"
 
@@ -117,3 +125,18 @@ handlers:
 # Security headers for HIPAA/SOC2 compliance
 includes:
   - security.yaml
+
+# ====================================================================
+# Performance Notes for Demo Configuration:
+# ====================================================================
+# - Response times may be 2-3x slower than production (still usable)
+# - Supports ~10-50 concurrent users (vs. 500+ in production)
+# - Cold starts may take 5-10 seconds (vs. <2s in production)
+# - Good for development, testing, and small-scale demos
+#
+# Upgrade to production app.yaml when:
+# - Deploying for actual law firm clients
+# - Need faster response times (<500ms)
+# - Expecting >50 concurrent users
+# - Running 24/7 production workload
+# ====================================================================
