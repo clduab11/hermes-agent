@@ -2,7 +2,7 @@
 # Production deployment requirements - no development dependencies
 
 # Core FastAPI and async support
-fastapi==0.121.2
+fastapi==0.121.3
 uvicorn[standard]==0.38.0
 python-multipart==0.0.6
 
