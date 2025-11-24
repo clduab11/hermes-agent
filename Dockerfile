@@ -15,7 +15,7 @@
 
 # Stage 1: Builder
 # Pin Python version for reproducibility
-FROM python:3.11-slim as builder
+FROM python:3.14-slim as builder
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -33,7 +33,7 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /wheels -r requirements.txt
 
 # Stage 2: Runtime
 # Pin Python version for reproducibility
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 # Install runtime dependencies only
 RUN apt-get update && apt-get install -y --no-install-recommends \
