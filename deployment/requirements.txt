@@ -45,5 +45,5 @@ httpx==0.28.1
 tenacity==8.2.3
 
 # Security and compliance
-bandit==1.9.1
+bandit==1.9.2
 safety==2.3.5
