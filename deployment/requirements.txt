@@ -46,4 +46,4 @@ tenacity==8.2.3
 
 # Security and compliance
 bandit==1.9.2
-safety==2.3.5
+safety==3.7.0
