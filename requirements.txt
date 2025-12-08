@@ -3,7 +3,7 @@
 # This version deduplicates previous requirements files and aligns with CI/dev tooling.
 
 # --- Core API & Async Stack ---
-fastapi==0.123.0
+fastapi==0.124.0
 uvicorn[standard]==0.38.0
 pydantic==2.12.5
 pydantic-settings==2.12.0
