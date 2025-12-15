@@ -2,13 +2,13 @@
 # Production deployment requirements - no development dependencies
 
 # Core FastAPI and async support
-fastapi==0.123.0
+fastapi==0.124.4
 uvicorn[standard]==0.38.0
 python-multipart==0.0.6
 
 # Database connectivity (Supabase only)
 asyncpg==0.29.0
-sqlalchemy[asyncio]==2.0.44
+sqlalchemy[asyncio]==2.0.45
 
 # Authentication and security
 cryptography==41.0.8
