@@ -15,7 +15,7 @@ mcp>=1.0.0
 # --- Data & Caching Layer ---
 sqlalchemy[asyncio]==2.0.45
 asyncpg==0.30.0
-redis[hiredis]==5.1.1
+redis[hiredis]==7.1.0
 
 # --- AI, Voice, and Core Utilities ---
 openai==1.54.5
