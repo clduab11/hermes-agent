@@ -11,7 +11,7 @@ pytest-cov==4.1.0
 pytest-xdist==3.8.0        # Parallel test execution
 pytest-mock==3.15.1        # Better mocking
 pytest-timeout==2.4.0      # Test timeouts
-coverage[toml]==7.12.0
+coverage[toml]==7.13.0
 
 # =============================================================================
 # Code Quality & Formatting
@@ -24,7 +24,7 @@ pylint==3.0.3
 # =============================================================================
 # Type Checking
 # =============================================================================
-mypy==1.19.0
+mypy==1.19.1
 types-requests==2.31.0.10
 types-redis==4.6.0.20240106
 
